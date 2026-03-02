@@ -1,4 +1,4 @@
-# Hi, I'm [Nilutpal] 👋
+# Hi, I'm Nilutpal 👋
 
 I'm a student passionate about computing.
 
