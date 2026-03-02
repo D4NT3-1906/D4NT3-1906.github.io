@@ -1,16 +1,16 @@
 # Hi, I'm [Nilutpal] 👋
 
-I'm a [student] passionate about [computing].
+I'm a student passionate about computing.
 
-- 🔭 I’m currently working on [SAMS]
-- 🌱 I’m currently learning [Java]
-- 📫 How to reach me: [deysarkar.nilutpal69@gmail.com]
+- 🔭 I’m currently working on SAMS
+- 🌱 I’m currently learning Java
+- 📫 How to reach me: deysarkar.nilutpal69@gmail.com
 
 ---
 
 ### My Skills
-* **Languages:** HTML, CSS, JavaScript, Python
-* **Tools:** Git, VS Code, Docker
+* **Languages:** Java, C++
+* **Tools:** Git, Zed, OCI
 
 ---
 
