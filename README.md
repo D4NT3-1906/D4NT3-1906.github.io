@@ -1,18 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>About Me</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <header class="masthead">
-        <p>Hello! My name is</p>
-        <h1>John Doe</h1>
-    </header>
-    <section class="content">
-        <h1>Introduction</h1>
-        <p>Web developer passionate about creating functional websites.</p>
-    </section>
-</body>
-</html>
+# Hi, I'm [Nilutpal] 👋
+
+I'm a [student] passionate about [computing].
+
+- 🔭 I’m currently working on [SAMS]
+- 🌱 I’m currently learning [Java]
+- 📫 How to reach me: [deysarkar.nilutpal69@gmail.com]
+
+---
+
+### My Skills
+* **Languages:** HTML, CSS, JavaScript, Python
+* **Tools:** Git, VS Code, Docker
+
+---
+
+### GitHub Stats
+<!-- Use services like [GitHub README Stats](https://github.com/anuraghazra/github-readme-stats) to add dynamic cards -->
+(https://github-readme-stats.vercel.app)
