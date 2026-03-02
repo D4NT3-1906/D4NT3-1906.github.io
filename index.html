@@ -12,8 +12,7 @@
 </head>
 <body>
     <div class="container">
-        <h1 class="text-center">Student Attendance Dashboard</h1>
-        
+        <h1 class="text-center">SAMS Dashboard</h1>
         <div class="table-container">
             <table class="table table-striped table-bordered">
                 <thead class="table-dark">
@@ -30,26 +29,21 @@
             </table>
         </div>
     </div>
-
     <script>
-        [span_12](start_span)// Replace with the actual URL of your Namecheap API[span_12](end_span)
+        [span_12](start_span)
         const apiBaseUrl = 'https://your-namecheap-domain.com/api'; 
-
         async function fetchAttendanceData() {
             try {
-                [span_13](start_span)// Fetch data from your Namecheap PHP script[span_13](end_span)
+                [span_13](start_span)
                 const response = await fetch(`${apiBaseUrl}/get_attendance.php`);
                 const data = await response.json();
-
                 const tableBody = document.getElementById('attendance-data');
-                tableBody.innerHTML = ''; // Clear existing data
-
+                tableBody.innerHTML = ''; 
                 data.forEach(student => {
-                    [span_14](start_span)[span_15](start_span)// Calculate attendance percentage[span_14](end_span)[span_15](end_span)
+                    [span_14](start_span)[span_15](start_span)
                     const percentage = student.total_classes > 0 
                         ? ((student.attended_classes / student.total_classes) * 100).toFixed(2)
                         : 0;
-
                     const row = `
                         <tr>
                             <td>${student.name}</td>
@@ -76,8 +70,6 @@
                 console.error('Error fetching attendance data:', error);
             }
         }
-
-        // Fetch data on page load
         fetchAttendanceData();
     </script>
 </body>
