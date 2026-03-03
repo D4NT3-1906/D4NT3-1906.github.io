@@ -3,251 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance System Dashboard</title>
+    <title>Subject Attendance Portal</title>
     <style>
-        /* CSS Variables for easy color management */
         :root {
-            --primary: #1e40af;
-            --secondary: #f3f4f6;
-            --success: #166534;
-            --accent: #6b21a8;
-            --text-dark: #1f2937;
+            --primary: #2563eb;
+            --bg: #f3f4f6;
             --white: #ffffff;
+            --border: #e5e7eb;
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            background-color: #f9fafb;
-            color: var(--text-dark);
-        }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 0; }
+        
+        /* Navigation */
+        nav { background: var(--primary); color: white; padding: 15px 30px; display: flex; justify-content: space-between; }
 
-        /* Login Overlay Styles */
-        #login-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(17, 24, 39, 0.95);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
 
-        .login-card {
+        /* Search & Filter Section */
+        .controls {
             background: var(--white);
-            padding: 2rem;
+            padding: 20px;
             border-radius: 8px;
-            width: 320px;
-            text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        input {
-            width: 90%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
+        input[type="text"], select {
+            padding: 10px;
+            border: 1px solid var(--border);
             border-radius: 4px;
+            flex-grow: 1;
         }
 
-        .btn-login {
-            width: 100%;
-            padding: 12px;
-            background: var(--primary);
+        .btn-calc {
+            background: #059669;
             color: white;
             border: none;
+            padding: 10px 20px;
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
         }
 
-        /* Navbar */
-        nav {
-            background: var(--primary);
-            color: white;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        /* Table */
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+        th { background: #f9fafb; padding: 15px; text-align: left; border-bottom: 2px solid var(--border); color: #4b5563; }
+        td { padding: 15px; border-bottom: 1px solid var(--border); }
 
-        /* Dashboard Layout */
-        .container {
-            max-width: 1100px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            border-left: 5px solid var(--primary);
-        }
-
-        .stat-card.success { border-left-color: #22c55e; }
-        .stat-card h3 { margin: 0.5rem 0; font-size: 1.5rem; }
-        .stat-card p { color: #666; font-size: 0.9rem; margin: 0; }
-
-        /* Table Styles */
-        .table-container {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            overflow: hidden;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            background: #f8fafc;
-            text-align: left;
-            padding: 1rem;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            color: #64748b;
-            border-bottom: 1px solid #eee;
-        }
-
-        td {
-            padding: 1rem;
-            border-bottom: 1px solid #eee;
-        }
-
-        .badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
+        .perc-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
             font-weight: bold;
+            font-size: 0.85rem;
         }
 
-        .badge-present { background: #dcfce7; color: #166534; }
-        .badge-waiting { background: #fef9c3; color: #854d0e; }
+        .high { background: #dcfce7; color: #166534; }
+        .low { background: #fee2e2; color: #991b1b; }
 
-        /* Helpers */
-        .hidden { display: none !important; }
-        #error-msg { color: #dc2626; font-size: 0.8rem; margin-top: 10px; }
+        /* Login stays same as before */
+        #login-overlay { position: fixed; inset: 0; background: #111827; display: flex; justify-content: center; align-items: center; z-index: 100; }
+        .login-box { background: white; padding: 30px; border-radius: 8px; width: 300px; text-align: center; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
     <div id="login-overlay">
-        <div class="login-card">
-            <h2>Admin Login</h2>
-            <input type="text" id="username" placeholder="Enter Name">
-            <input type="password" id="passcode" placeholder="Passcode">
-            <button class="btn-login" onclick="validateUser()">Login</button>
-            <p id="error-msg" class="hidden">Invalid Name or Passcode</p>
+        <div class="login-box">
+            <h2>Teacher Login</h2>
+            <input type="text" id="t-name" placeholder="Name" style="width:90%"><br><br>
+            <input type="password" id="t-pass" placeholder="Passcode" style="width:90%"><br><br>
+            <button onclick="doLogin()" class="btn-calc" style="width:100%">Verify & Enter</button>
         </div>
     </div>
 
-    <div id="dashboard-content" class="hidden">
+    <div id="app" class="hidden">
         <nav>
-            <strong>Attendance Portal</strong>
-            <div>
-                <span id="display-user"></span> | 
-                <a href="#" onclick="location.reload()" style="color:white; font-size: 0.8rem;">Logout</a>
-            </div>
+            <strong>RFID Admin Dashboard</strong>
+            <span id="user-tag"></span>
         </nav>
 
         <div class="container">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <p>Current Subject</p>
-                    <h3 id="subject-name">Embedded Systems</h3>
-                </div>
-                <div class="stat-card success">
-                    <p>Attendance Percentage</p>
-                    <h3 id="calc-percent">0%</h3>
-                </div>
-                <div class="stat-card">
-                    <p>Class Size</p>
-                    <h3>45 Students</h3>
-                </div>
+            <div class="controls">
+                <input type="text" id="search-name" placeholder="Search Student Name..." onkeyup="filterData()">
+                <select id="subject-select">
+                    <option value="Embedded Systems">Embedded Systems</option>
+                    <option value="Data Structures">Data Structures</option>
+                </select>
+                <button class="btn-calc" onclick="generateReport()">Generate Percentage</button>
             </div>
 
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Student Name</th>
-                            <th>Entry Time</th>
-                            <th>Exit Time</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="attendance-rows">
-                        </tbody>
-                </table>
-            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Subject</th>
+                        <th>Classes Attended</th>
+                        <th>Total Classes</th>
+                        <th>Attendance %</th>
+                    </tr>
+                </thead>
+                <tbody id="report-table">
+                    </tbody>
+            </table>
         </div>
     </div>
 
     <script>
-        // Temporary data (Mock Database)
-        const students = [
-            { name: "Rahul Sharma", in: "09:02 AM", out: "10:05 AM", status: "Present" },
-            { name: "Priya Das", in: "09:15 AM", out: "--", status: "In Class" },
-            { name: "Amit Kumar", in: "09:00 AM", out: "10:10 AM", status: "Present" }
+        // Mock Database: In reality, your ESP32 logs entries here
+        const attendanceData = [
+            { name: "Rahul Sharma", subject: "Embedded Systems", attended: 18 },
+            { name: "Priya Das", subject: "Embedded Systems", attended: 12 },
+            { name: "Amit Kumar", subject: "Embedded Systems", attended: 20 },
+            { name: "Rahul Sharma", subject: "Data Structures", attended: 15 }
         ];
 
-        function validateUser() {
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('passcode').value;
+        const TOTAL_CLASSES = 20; // Set by admin
 
-            // Simple logic: If Name exists and Passcode is 1234
-            if(user.length > 2 && pass === "1234") {
+        function doLogin() {
+            const user = document.getElementById('t-name').value;
+            const pass = document.getElementById('t-pass').value;
+            if(pass === "1234") {
                 document.getElementById('login-overlay').classList.add('hidden');
-                document.getElementById('dashboard-content').classList.remove('hidden');
-                document.getElementById('display-user').innerText = user;
-                renderTable();
-                calculateAttendance();
-            } else {
-                document.getElementById('error-msg').classList.remove('hidden');
+                document.getElementById('app').classList.remove('hidden');
+                document.getElementById('user-tag').innerText = "Welcome, " + user;
+                generateReport();
             }
         }
 
-        function renderTable() {
-            const tbody = document.getElementById('attendance-rows');
-            tbody.innerHTML = ""; // Clear existing
+        function generateReport() {
+            const selectedSub = document.getElementById('subject-select').value;
+            const table = document.getElementById('report-table');
+            table.innerHTML = "";
 
-            students.forEach(s => {
-                const row = `
+            // Filter data by selected subject
+            const filtered = attendanceData.filter(item => item.subject === selectedSub);
+
+            filtered.forEach(item => {
+                const percentage = ((item.attended / TOTAL_CLASSES) * 100).toFixed(1);
+                const statusClass = percentage >= 75 ? 'high' : 'low';
+
+                table.innerHTML += `
                     <tr>
-                        <td><strong>${s.name}</strong></td>
-                        <td>${s.in}</td>
-                        <td>${s.out}</td>
-                        <td>
-                            <span class="badge ${s.status === 'Present' ? 'badge-present' : 'badge-waiting'}">
-                                ${s.status}
-                            </span>
-                        </td>
+                        <td><strong>${item.name}</strong></td>
+                        <td>${item.subject}</td>
+                        <td>${item.attended}</td>
+                        <td>${TOTAL_CLASSES}</td>
+                        <td><span class="perc-badge ${statusClass}">${percentage}%</span></td>
                     </tr>
                 `;
-                tbody.innerHTML += row;
             });
         }
 
-        function calculateAttendance() {
-            // Simple math for the percentage display
-            const total = 45;
-            const present = students.length;
-            const percent = ((present / total) * 100).toFixed(1);
-            document.getElementById('calc-percent').innerText = percent + "%";
+        function filterData() {
+            let input = document.getElementById("search-name").value.toUpperCase();
+            let rows = document.getElementById("report-table").getElementsByTagName("tr");
+
+            for (let i = 0; i < rows.length; i++) {
+                let td = rows[i].getElementsByTagName("td")[0];
+                if (td) {
+                    let textValue = td.textContent || td.innerText;
+                    rows[i].style.display = textValue.toUpperCase().indexOf(input) > -1 ? "" : "none";
+                }
+            }
         }
     </script>
 </body>
