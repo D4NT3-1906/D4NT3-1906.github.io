@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subject Attendance Portal</title>
+    <title>Attendance System - Student Portal</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -12,14 +12,61 @@
             --border: #e5e7eb;
         }
 
-        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 0; }
         
-        /* Navigation */
-        nav { background: var(--primary); color: white; padding: 15px 30px; display: flex; justify-content: space-between; }
+        /* LOGIN OVERLAY */
+        #login-overlay { 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: #111827; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 9999; 
+        }
+
+        .login-box { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 12px; 
+            width: 320px; 
+            text-align: center; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .login-box h2 { margin-top: 0; color: #1f2937; }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            box-sizing: border-box; /* Crucial for width alignment */
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .btn-primary:hover { background: #1d4ed8; }
+
+        /* MAIN CONTENT (Initially Hidden) */
+        #main-dashboard { display: none; }
+
+        nav { background: var(--primary); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
 
         .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
 
-        /* Search & Filter Section */
         .controls {
             background: var(--white);
             padding: 20px;
@@ -28,33 +75,18 @@
             display: flex;
             gap: 15px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            flex-wrap: wrap;
         }
 
-        input[type="text"], select {
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            flex-grow: 1;
-        }
-
-        .btn-calc {
-            background: #059669;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        /* Table */
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+        /* TABLE STYLES */
+        .table-wrapper { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; }
         th { background: #f9fafb; padding: 15px; text-align: left; border-bottom: 2px solid var(--border); color: #4b5563; }
         td { padding: 15px; border-bottom: 1px solid var(--border); }
 
         .perc-badge {
-            padding: 5px 10px;
-            border-radius: 15px;
+            padding: 5px 12px;
+            border-radius: 20px;
             font-weight: bold;
             font-size: 0.85rem;
         }
@@ -62,113 +94,136 @@
         .high { background: #dcfce7; color: #166534; }
         .low { background: #fee2e2; color: #991b1b; }
 
-        /* Login stays same as before */
-        #login-overlay { position: fixed; inset: 0; background: #111827; display: flex; justify-content: center; align-items: center; z-index: 100; }
-        .login-box { background: white; padding: 30px; border-radius: 8px; width: 300px; text-align: center; }
-        .hidden { display: none; }
+        #error-txt { color: #dc2626; font-size: 0.85rem; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
 
     <div id="login-overlay">
         <div class="login-box">
-            <h2>Teacher Login</h2>
-            <input type="text" id="t-name" placeholder="Name" style="width:90%"><br><br>
-            <input type="password" id="t-pass" placeholder="Passcode" style="width:90%"><br><br>
-            <button onclick="doLogin()" class="btn-calc" style="width:100%">Verify & Enter</button>
+            <h2>Admin Portal</h2>
+            <p style="color: #666; font-size: 0.9rem;">Enter details to view logs</p>
+            <input type="text" id="t-name" placeholder="Full Name">
+            <input type="password" id="t-pass" placeholder="Passcode">
+            <button onclick="handleLogin()" class="btn-primary">Login Now</button>
+            <p id="error-txt">Incorrect name or passcode!</p>
         </div>
     </div>
 
-    <div id="app" class="hidden">
+    <div id="main-dashboard">
         <nav>
-            <strong>RFID Admin Dashboard</strong>
-            <span id="user-tag"></span>
+            <strong style="font-size: 1.2rem;">RFID Attendance System</strong>
+            <div>
+                <span id="user-display" style="margin-right: 15px;"></span>
+                <button onclick="location.reload()" style="background:none; border:1px solid white; color:white; padding:5px 10px; border-radius:4px; cursor:pointer;">Logout</button>
+            </div>
         </nav>
 
         <div class="container">
             <div class="controls">
-                <input type="text" id="search-name" placeholder="Search Student Name..." onkeyup="filterData()">
-                <select id="subject-select">
+                <input type="text" id="search-box" placeholder="Search Student Name..." onkeyup="runSearch()">
+                <select id="subject-filter" style="padding: 10px; border-radius: 4px; border: 1px solid #ddd;">
                     <option value="Embedded Systems">Embedded Systems</option>
-                    <option value="Data Structures">Data Structures</option>
+                    <option value="Computer Networks">Computer Networks</option>
                 </select>
-                <button class="btn-calc" onclick="generateReport()">Generate Percentage</button>
+                <button onclick="updateDisplay()" class="btn-primary" style="width: auto; padding: 10px 25px;">Refresh Data</button>
             </div>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>Student Name</th>
-                        <th>Subject</th>
-                        <th>Classes Attended</th>
-                        <th>Total Classes</th>
-                        <th>Attendance %</th>
-                    </tr>
-                </thead>
-                <tbody id="report-table">
-                    </tbody>
-            </table>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Subject</th>
+                            <th>Attended</th>
+                            <th>Total Classes</th>
+                            <th>Attendance %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="data-table-body">
+                        </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
-        // Mock Database: In reality, your ESP32 logs entries here
-        const attendanceData = [
-            { name: "Rahul Sharma", subject: "Embedded Systems", attended: 18 },
-            { name: "Priya Das", subject: "Embedded Systems", attended: 12 },
-            { name: "Amit Kumar", subject: "Embedded Systems", attended: 20 },
-            { name: "Rahul Sharma", subject: "Data Structures", attended: 15 }
+        // MOCK DATA (This replaces your database for now)
+        const studentData = [
+            { name: "Arjun Mehta", subject: "Embedded Systems", attended: 18, total: 20 },
+            { name: "Sara Khan", subject: "Embedded Systems", attended: 14, total: 20 },
+            { name: "John Doe", subject: "Embedded Systems", attended: 19, total: 20 },
+            { name: "Arjun Mehta", subject: "Computer Networks", attended: 15, total: 20 },
+            { name: "Sara Khan", subject: "Computer Networks", attended: 10, total: 20 }
         ];
 
-        const TOTAL_CLASSES = 20; // Set by admin
+        // LOGIN FUNCTION
+        function handleLogin() {
+            const nameInput = document.getElementById('t-name').value;
+            const passInput = document.getElementById('t-pass').value;
+            const errorLabel = document.getElementById('error-txt');
 
-        function doLogin() {
-            const user = document.getElementById('t-name').value;
-            const pass = document.getElementById('t-pass').value;
-            if(pass === "1234") {
-                document.getElementById('login-overlay').classList.add('hidden');
-                document.getElementById('app').classList.remove('hidden');
-                document.getElementById('user-tag').innerText = "Welcome, " + user;
-                generateReport();
+            // Set your credentials here
+            if (nameInput.length > 2 && passInput === "1234") {
+                // SUCCESS: Switch screens
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('main-dashboard').style.display = 'block';
+                document.getElementById('user-display').innerText = "Logged in as: " + nameInput;
+                
+                // Initialize Table
+                updateDisplay();
+            } else {
+                // FAIL: Show error
+                errorLabel.style.display = 'block';
             }
         }
 
-        function generateReport() {
-            const selectedSub = document.getElementById('subject-select').value;
-            const table = document.getElementById('report-table');
-            table.innerHTML = "";
+        // TABLE UPDATE FUNCTION
+        function updateDisplay() {
+            const selectedSub = document.getElementById('subject-filter').value;
+            const tableBody = document.getElementById('data-table-body');
+            tableBody.innerHTML = "";
 
-            // Filter data by selected subject
-            const filtered = attendanceData.filter(item => item.subject === selectedSub);
+            // Filter data based on selected subject
+            const filtered = studentData.filter(s => s.subject === selectedSub);
 
-            filtered.forEach(item => {
-                const percentage = ((item.attended / TOTAL_CLASSES) * 100).toFixed(1);
-                const statusClass = percentage >= 75 ? 'high' : 'low';
+            filtered.forEach(student => {
+                const percentage = ((student.attended / student.total) * 100).toFixed(1);
+                const colorClass = percentage >= 75 ? 'high' : 'low';
 
-                table.innerHTML += `
+                const row = `
                     <tr>
-                        <td><strong>${item.name}</strong></td>
-                        <td>${item.subject}</td>
-                        <td>${item.attended}</td>
-                        <td>${TOTAL_CLASSES}</td>
-                        <td><span class="perc-badge ${statusClass}">${percentage}%</span></td>
+                        <td><strong>${student.name}</strong></td>
+                        <td>${student.subject}</td>
+                        <td>${student.attended}</td>
+                        <td>${student.total}</td>
+                        <td><span class="perc-badge ${colorClass}">${percentage}%</span></td>
                     </tr>
                 `;
+                tableBody.innerHTML += row;
             });
         }
 
-        function filterData() {
-            let input = document.getElementById("search-name").value.toUpperCase();
-            let rows = document.getElementById("report-table").getElementsByTagName("tr");
+        // SEARCH FUNCTION
+        function runSearch() {
+            let input = document.getElementById("search-box").value.toUpperCase();
+            let rows = document.getElementById("data-table-body").getElementsByTagName("tr");
 
             for (let i = 0; i < rows.length; i++) {
-                let td = rows[i].getElementsByTagName("td")[0];
-                if (td) {
-                    let textValue = td.textContent || td.innerText;
-                    rows[i].style.display = textValue.toUpperCase().indexOf(input) > -1 ? "" : "none";
+                let nameColumn = rows[i].getElementsByTagName("td")[0];
+                if (nameColumn) {
+                    let text = nameColumn.textContent || nameColumn.innerText;
+                    rows[i].style.display = text.toUpperCase().indexOf(input) > -1 ? "" : "none";
                 }
             }
         }
+
+        // Add "Enter" key support for login
+        document.getElementById("t-pass").addEventListener("keyup", function(event) {
+            if (event.key === "Enter") {
+                handleLogin();
+            }
+        });
     </script>
 </body>
 </html>
