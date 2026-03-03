@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance System - Student Portal</title>
+    <title>SAMS - Student Portal</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -112,7 +112,7 @@
 
     <div id="main-dashboard">
         <nav>
-            <strong style="font-size: 1.2rem;">RFID Attendance System</strong>
+            <strong style="font-size: 1.2rem;">SMART ATTENDANCE MONITORING SYSTEM</strong>
             <div>
                 <span id="user-display" style="margin-right: 15px;"></span>
                 <button onclick="location.reload()" style="background:none; border:1px solid white; color:white; padding:5px 10px; border-radius:4px; cursor:pointer;">Logout</button>
@@ -123,8 +123,8 @@
             <div class="controls">
                 <input type="text" id="search-box" placeholder="Search Student Name..." onkeyup="runSearch()">
                 <select id="subject-filter" style="padding: 10px; border-radius: 4px; border: 1px solid #ddd;">
-                    <option value="Embedded Systems">Embedded Systems</option>
-                    <option value="Computer Networks">Computer Networks</option>
+                    <option value="Embedded Systems">JAVA</option>
+                    <option value="Computer Networks">CNS</option>
                 </select>
                 <button onclick="updateDisplay()" class="btn-primary" style="width: auto; padding: 10px 25px;">Refresh Data</button>
             </div>
@@ -150,11 +150,11 @@
     <script>
         // MOCK DATA (This replaces your database for now)
         const studentData = [
-            { name: "Arjun Mehta", subject: "Embedded Systems", attended: 18, total: 20 },
-            { name: "Sara Khan", subject: "Embedded Systems", attended: 14, total: 20 },
-            { name: "John Doe", subject: "Embedded Systems", attended: 19, total: 20 },
-            { name: "Arjun Mehta", subject: "Computer Networks", attended: 15, total: 20 },
-            { name: "Sara Khan", subject: "Computer Networks", attended: 10, total: 20 }
+            { name: "Arjun", subject: "JAVA", attended: 18, total: 20 },
+            { name: "Sita", subject: "JAVA", attended: 14, total: 20 },
+            { name: "John", subject: "JAVA", attended: 19, total: 20 },
+            { name: "Arjun", subject: "CNS", attended: 15, total: 20 },
+            { name: "Sita", subject: "CNS", attended: 10, total: 20 }
         ];
 
         // LOGIN FUNCTION
