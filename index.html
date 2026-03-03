@@ -11,10 +11,7 @@
             --white: #ffffff;
             --border: #e5e7eb;
         }
-
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 0; }
-        
-        /* LOGIN OVERLAY */
         #login-overlay { 
             position: fixed; 
             top: 0; left: 0; 
@@ -25,7 +22,6 @@
             align-items: center; 
             z-index: 9999; 
         }
-
         .login-box { 
             background: white; 
             padding: 40px; 
@@ -34,18 +30,15 @@
             text-align: center; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
-
         .login-box h2 { margin-top: 0; color: #1f2937; }
-
         input {
             width: 100%;
             padding: 12px;
             margin: 10px 0;
             border: 1px solid var(--border);
             border-radius: 6px;
-            box-sizing: border-box; /* Crucial for width alignment */
+            box-sizing: border-box;
         }
-
         .btn-primary {
             width: 100%;
             background: var(--primary);
@@ -57,16 +50,10 @@
             font-weight: bold;
             font-size: 1rem;
         }
-
         .btn-primary:hover { background: #1d4ed8; }
-
-        /* MAIN CONTENT (Initially Hidden) */
         #main-dashboard { display: none; }
-
         nav { background: var(--primary); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-
         .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
-
         .controls {
             background: var(--white);
             padding: 20px;
@@ -77,28 +64,22 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             flex-wrap: wrap;
         }
-
-        /* TABLE STYLES */
         .table-wrapper { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         table { width: 100%; border-collapse: collapse; }
         th { background: #f9fafb; padding: 15px; text-align: left; border-bottom: 2px solid var(--border); color: #4b5563; }
         td { padding: 15px; border-bottom: 1px solid var(--border); }
-
         .perc-badge {
             padding: 5px 12px;
             border-radius: 20px;
             font-weight: bold;
             font-size: 0.85rem;
         }
-
         .high { background: #dcfce7; color: #166534; }
         .low { background: #fee2e2; color: #991b1b; }
-
         #error-txt { color: #dc2626; font-size: 0.85rem; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
-
     <div id="login-overlay">
         <div class="login-box">
             <h2>Admin Portal</h2>
@@ -109,7 +90,6 @@
             <p id="error-txt">Incorrect name or passcode!</p>
         </div>
     </div>
-
     <div id="main-dashboard">
         <nav>
             <strong style="font-size: 1.2rem;">SMART ATTENDANCE MONITORING SYSTEM</strong>
@@ -123,12 +103,11 @@
             <div class="controls">
                 <input type="text" id="search-box" placeholder="Search Student Name..." onkeyup="runSearch()">
                 <select id="subject-filter" style="padding: 10px; border-radius: 4px; border: 1px solid #ddd;">
-                    <option value="Embedded Systems">JAVA</option>
-                    <option value="Computer Networks">CNS</option>
+                    <option value="JAVA">JAVA</option>
+                    <option value="CNS">CNS</option>
                 </select>
                 <button onclick="updateDisplay()" class="btn-primary" style="width: auto; padding: 10px 25px;">Refresh Data</button>
             </div>
-
             <div class="table-wrapper">
                 <table>
                     <thead>
@@ -146,9 +125,7 @@
             </div>
         </div>
     </div>
-
     <script>
-        // MOCK DATA (This replaces your database for now)
         const studentData = [
             { name: "Arjun", subject: "JAVA", attended: 18, total: 20 },
             { name: "Sita", subject: "JAVA", attended: 14, total: 20 },
@@ -156,41 +133,27 @@
             { name: "Arjun", subject: "CNS", attended: 15, total: 20 },
             { name: "Sita", subject: "CNS", attended: 10, total: 20 }
         ];
-
-        // LOGIN FUNCTION
         function handleLogin() {
             const nameInput = document.getElementById('t-name').value;
             const passInput = document.getElementById('t-pass').value;
             const errorLabel = document.getElementById('error-txt');
-
-            // Set your credentials here
             if (nameInput.length > 2 && passInput === "1234") {
-                // SUCCESS: Switch screens
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('main-dashboard').style.display = 'block';
                 document.getElementById('user-display').innerText = "Logged in as: " + nameInput;
-                
-                // Initialize Table
                 updateDisplay();
             } else {
-                // FAIL: Show error
                 errorLabel.style.display = 'block';
             }
         }
-
-        // TABLE UPDATE FUNCTION
         function updateDisplay() {
             const selectedSub = document.getElementById('subject-filter').value;
             const tableBody = document.getElementById('data-table-body');
             tableBody.innerHTML = "";
-
-            // Filter data based on selected subject
             const filtered = studentData.filter(s => s.subject === selectedSub);
-
             filtered.forEach(student => {
                 const percentage = ((student.attended / student.total) * 100).toFixed(1);
                 const colorClass = percentage >= 75 ? 'high' : 'low';
-
                 const row = `
                     <tr>
                         <td><strong>${student.name}</strong></td>
@@ -203,8 +166,6 @@
                 tableBody.innerHTML += row;
             });
         }
-
-        // SEARCH FUNCTION
         function runSearch() {
             let input = document.getElementById("search-box").value.toUpperCase();
             let rows = document.getElementById("data-table-body").getElementsByTagName("tr");
@@ -217,8 +178,6 @@
                 }
             }
         }
-
-        // Add "Enter" key support for login
         document.getElementById("t-pass").addEventListener("keyup", function(event) {
             if (event.key === "Enter") {
                 handleLogin();
