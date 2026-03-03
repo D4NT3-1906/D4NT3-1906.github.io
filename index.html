@@ -1,1 +1,254 @@
-under construction...
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance System Dashboard</title>
+    <style>
+        /* CSS Variables for easy color management */
+        :root {
+            --primary: #1e40af;
+            --secondary: #f3f4f6;
+            --success: #166534;
+            --accent: #6b21a8;
+            --text-dark: #1f2937;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: #f9fafb;
+            color: var(--text-dark);
+        }
+
+        /* Login Overlay Styles */
+        #login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(17, 24, 39, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .login-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 8px;
+            width: 320px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        input {
+            width: 90%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Navbar */
+        nav {
+            background: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Dashboard Layout */
+        .container {
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--primary);
+        }
+
+        .stat-card.success { border-left-color: #22c55e; }
+        .stat-card h3 { margin: 0.5rem 0; font-size: 1.5rem; }
+        .stat-card p { color: #666; font-size: 0.9rem; margin: 0; }
+
+        /* Table Styles */
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8fafc;
+            text-align: left;
+            padding: 1rem;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: #64748b;
+            border-bottom: 1px solid #eee;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .badge-present { background: #dcfce7; color: #166534; }
+        .badge-waiting { background: #fef9c3; color: #854d0e; }
+
+        /* Helpers */
+        .hidden { display: none !important; }
+        #error-msg { color: #dc2626; font-size: 0.8rem; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="login-overlay">
+        <div class="login-card">
+            <h2>Admin Login</h2>
+            <input type="text" id="username" placeholder="Enter Name">
+            <input type="password" id="passcode" placeholder="Passcode">
+            <button class="btn-login" onclick="validateUser()">Login</button>
+            <p id="error-msg" class="hidden">Invalid Name or Passcode</p>
+        </div>
+    </div>
+
+    <div id="dashboard-content" class="hidden">
+        <nav>
+            <strong>Attendance Portal</strong>
+            <div>
+                <span id="display-user"></span> | 
+                <a href="#" onclick="location.reload()" style="color:white; font-size: 0.8rem;">Logout</a>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <p>Current Subject</p>
+                    <h3 id="subject-name">Embedded Systems</h3>
+                </div>
+                <div class="stat-card success">
+                    <p>Attendance Percentage</p>
+                    <h3 id="calc-percent">0%</h3>
+                </div>
+                <div class="stat-card">
+                    <p>Class Size</p>
+                    <h3>45 Students</h3>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Entry Time</th>
+                            <th>Exit Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendance-rows">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Temporary data (Mock Database)
+        const students = [
+            { name: "Rahul Sharma", in: "09:02 AM", out: "10:05 AM", status: "Present" },
+            { name: "Priya Das", in: "09:15 AM", out: "--", status: "In Class" },
+            { name: "Amit Kumar", in: "09:00 AM", out: "10:10 AM", status: "Present" }
+        ];
+
+        function validateUser() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('passcode').value;
+
+            // Simple logic: If Name exists and Passcode is 1234
+            if(user.length > 2 && pass === "1234") {
+                document.getElementById('login-overlay').classList.add('hidden');
+                document.getElementById('dashboard-content').classList.remove('hidden');
+                document.getElementById('display-user').innerText = user;
+                renderTable();
+                calculateAttendance();
+            } else {
+                document.getElementById('error-msg').classList.remove('hidden');
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('attendance-rows');
+            tbody.innerHTML = ""; // Clear existing
+
+            students.forEach(s => {
+                const row = `
+                    <tr>
+                        <td><strong>${s.name}</strong></td>
+                        <td>${s.in}</td>
+                        <td>${s.out}</td>
+                        <td>
+                            <span class="badge ${s.status === 'Present' ? 'badge-present' : 'badge-waiting'}">
+                                ${s.status}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function calculateAttendance() {
+            // Simple math for the percentage display
+            const total = 45;
+            const present = students.length;
+            const percent = ((present / total) * 100).toFixed(1);
+            document.getElementById('calc-percent').innerText = percent + "%";
+        }
+    </script>
+</body>
+</html>
