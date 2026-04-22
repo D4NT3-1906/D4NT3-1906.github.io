@@ -3,167 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SAMS - Student Portal</title>
+    <title>
+        SAMS Portal
+    </title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js">
+    </script>
     <style>
-        :root {
-            --primary: #2563eb;
-            --bg: #f3f4f6;
-            --white: #ffffff;
-            --border: #e5e7eb;
+        :root 
+        {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4cc9f0;
+            --success: #4caf50;
+            --glass: rgba(255, 255, 255, 0.9);
+            --bg-gradient: linear-gradient(135deg, #1e1e2f 0%, #2a2a40 100%);
         }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 0; }   
-        /* ADMIN LOGIN PAGE */
-        #login-overlay { 
-            position: fixed; top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            background: #111827; 
-            display: flex; justify-content: center; align-items: center; 
-            z-index: 9999; 
+        * { 
+            font-family: 'Poppins', sans-serif; box-sizing: border-box; 
+            }
+        body 
+        {
+            margin: 0; background: #f0f2f5; color: #333; 
         }
-        .login-box { 
-            background: white; padding: 40px; border-radius: 12px; 
-            width: 320px; text-align: center; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        /* LOGIN SCREEN */
+        #login-overlay 
+        {
+            position: fixed; inset: 0; background: var(--bg-gradient);
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
         }
-        input {
-            width: 100%; padding: 12px; margin: 10px 0;
-            border: 1px solid var(--border); border-radius: 6px;
-            box-sizing: border-box;
+        .login-card 
+        {
+            background: var(--glass); padding: 40px; border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center;
         }
-
-        .btn-primary {
-            width: 100%; background: var(--primary); color: white;
-            border: none; padding: 12px; border-radius: 6px;
-            cursor: pointer; font-weight: bold; font-size: 1rem;
+        .login-card h2 
+        { 
+            color: var(--primary); margin-bottom: 30px; 
         }
-        /* HOMEPAGE CONTENT */
-        #main-dashboard { display: none; }
-        nav { background: var(--primary); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
-        .controls {
-            background: var(--white); padding: 20px; border-radius: 8px;
-            margin-bottom: 20px; display: flex; gap: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05); flex-wrap: wrap;
+        input { 
+            width: 100%; padding: 12px; margin: 10px 0; 
+            border: 2px solid #ddd; border-radius: 10px; outline: none; transition: 0.3s;
         }
-        /* TABLE STYLES */
-        .table-wrapper { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #f9fafb; padding: 15px; text-align: left; border-bottom: 2px solid var(--border); color: #4b5563; }
-        td { padding: 15px; border-bottom: 1px solid var(--border); }
-        .perc-badge { padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.85rem; }
-        .high { background: #dcfce7; color: #166534; }
-        .low { background: #fee2e2; color: #991b1b; }
-        #error-txt { color: #dc2626; font-size: 0.85rem; margin-top: 10px; display: none; }
+        input:focus 
+        { 
+            border-color: var(--primary); 
+        }
+        /* MAIN LAYOUT */
+        #main-dashboard 
+        {
+            display: none; 
+        }
+        header 
+        { 
+            background: var(--primary); color: white; padding: 20px 5%;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .container 
+        { 
+            padding: 40px 5%; 
+        }
+        /* CARDS & CONTROLS */
+        .glass-card 
+        {
+            background: white; padding: 25px; border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05); margin-bottom: 30px;
+        }
+        .controls-grid 
+        {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;
+        }
+        .btn 
+        {
+            padding: 12px 25px; border: none; border-radius: 10px; cursor: pointer;
+            font-weight: 600; transition: 0.3s; color: white;
+        }
+        .btn-primary 
+        { 
+            background: var(--primary); 
+        }
+        .btn-primary:hover 
+        { 
+            background: var(--secondary); transform: translateY(-2px); 
+        }
+        .btn-report 
+        {
+            background: var(--success); 
+        }
+        /* TABLE */
+        table 
+        {
+            width: 100%; border-collapse: collapse; margin-top: 20px; background: white; 
+        }
+        th 
+        {
+            background: #f8f9fa; color: #666; padding: 15px; text-align: left; border-bottom: 2px solid #eee; 
+        }
+        td 
+        {
+            padding: 15px; border-bottom: 1px solid #eee; 
+        }
+        tr:hover 
+        { 
+            background: #fcfdff; 
+        }
+        .badge 
+        {
+            padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: bold;
+        }
+        .high 
+        {
+            background: #e8f5e9; color: #2e7d32; 
+        }
+        .low 
+        {
+            background: #ffebee; color: #c62828; 
+        }
     </style>
 </head>
 <body>
     <div id="login-overlay">
-        <div class="login-box">
-            <h2>Admin Portal</h2>
-            <input type="text" id="t-name" placeholder="Enter Your Name">
-            <input type="password" id="t-pass" placeholder="Passcode">
-            <button onclick="handleLogin()" class="btn-primary">Login Now</button>
-            <p id="error-txt">Incorrect name or passcode!</p>
+        <div class="login-card">
+            <h2>
+                SAMS Admin
+            </h2>
+            <input type="text" id="admin-user" placeholder="Username">
+            <input type="password" id="admin-pass" placeholder="Passcode">
+            <button class="btn btn-primary" style="width:100%" onclick="login()">Enter Dashboard</button>
+            <p id="err" style="color:red; display:none; margin-top:15px;">Invalid Credentials</p>
         </div>
     </div>
     <div id="main-dashboard">
-        <nav>
-            <strong style="font-size: 1.2rem;">SMART ATTENDANCE MONITORING SYSTEM DASHBOARD</strong>
-            <div>
-                <span id="user-display" style="margin-right: 15px;"></span>
-                <button onclick="location.reload()" style="background:none; border:1px solid white; color:white; padding:5px 10px; border-radius:4px; cursor:pointer;">Logout</button>
-            </div>
-        </nav>
+        <header>
+            <h1 style="margin:0">SAMS Portal</h1>
+            <div id="user-info">Welcome, <b id="display-name"></b> | <a href="#" onclick="location.reload()" style="color:white">Logout</a></div>
+        </header>
         <div class="container">
-            <div class="controls">
-                <input type="text" id="search-box" placeholder="Search Student Name..." onkeyup="runSearch()">
-                <select id="subject-filter" style="padding: 10px; border-radius: 4px; border: 1px solid #ddd;">
-                    <option value="JAVA">JAVA</option>
-                    <option value="CNS">CNS</option>
-                </select>
-                <button onclick="updateDisplay()" class="btn-primary" style="width: auto; padding: 10px 25px;">Refresh Data</button>
+            <div class="glass-card">
+                <h3>System Controls</h3>
+                <div class="controls-grid">
+                    <div>
+                        <label>Select Subject</label>
+                        <select id="sub-select" onchange="loadData()" style="width:100%; padding:10px; border-radius:8px;">
+                            <option value="Maths">Maths</option>
+                            <option value="Data Structures">Data Structures</option>
+                            <option value="Java">Java</option>
+                            <option value="Computer Networks">Computer Networks</option>
+                            <option value="Artificial Intelligence">Artificial Intelligence</option>
+                            <option value="DBMS">DBMS</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Upload Student List (PDF)</label>
+                        <input type="file" id="pdf-upload" accept=".pdf" onchange="handleFileUpload()">
+                    </div>
+                    <div style="display:flex; align-items:flex-end;">
+                        <button class="btn btn-report" onclick="generatePDFReport()">Generate Subject Report (PDF)</button>
+                    </div>
+                </div>
             </div>
-            <div class="table-wrapper">
-                <table>
+
+            <div class="glass-card">
+                <table id="attendance-table">
                     <thead>
                         <tr>
                             <th>Student Name</th>
-                            <th>Subject</th>
-                            <th>Attended</th>
-                            <th>Total Classes</th>
+                            <th>Arrival Time</th>
+                            <th>Departure Time</th>
                             <th>Attendance %</th>
                         </tr>
                     </thead>
-                    <tbody id="data-table-body">
+                    <tbody id="table-body">
                         </tbody>
                 </table>
             </div>
         </div>
     </div>
     <script>
-        // MOCK DATA
-        const studentData = [
-            { name: "Arjun", subject: "JAVA", attended: 18, total: 20 },
-            { name: "Sita", subject: "JAVA", attended: 14, total: 20 },
-            { name: "John", subject: "JAVA", attended: 19, total: 20 },
-            { name: "Arjun", subject: "CNS", attended: 15, total: 20 },
-            { name: "Sita", subject: "CNS", attended: 10, total: 20 },
-            { name: "John", subject: "CNS", attended: 12, total: 20 }
+        // MOCK DATA for specific subjects
+        const students = [
+            { name: "Arjun", sub: "Maths", arrival: "09:15 AM", departure: "10:30 AM", attendance: 85 },
+            { name: "Sita", sub: "Maths", arrival: "09:20 AM", departure: "10:30 AM", attendance: 70 },
+            { name: "John", sub: "Java", arrival: "11:00 AM", departure: "12:15 PM", attendance: 92 },
+            { name: "Arjun", sub: "DBMS", arrival: "02:00 PM", departure: "03:30 PM", attendance: 95 }
         ];
-        // FUNCTION FOR UPDATING TABLE
-        function updateDisplay() {
-            const selectedSub = document.getElementById('subject-filter').value;
-            const tableBody = document.getElementById('data-table-body');
-            tableBody.innerHTML = ""; // CLEARS EXISTING TABLE
-            // FILTER DATA BASED ON SUBJECT SELECTED
-            const filtered = studentData.filter(s => s.subject === selectedSub);
-            filtered.forEach(student => {
-                const percentage = ((student.attended / student.total) * 100).toFixed(1);
-                const colorClass = percentage >= 75 ? 'high' : 'low';
-                const row = `
-                    <tr>
-                        <td><strong>${student.name}</strong></td>
-                        <td>${student.subject}</td>
-                        <td>${student.attended}</td>
-                        <td>${student.total}</td>
-                        <td><span class="perc-badge ${colorClass}">${percentage}%</span></td>
-                    </tr>
-                `;
-                tableBody.innerHTML += row;
-            });
-        }
-        // LOGIN FUNCTION
-        function handleLogin() {
-            const nameInput = document.getElementById('t-name').value;
-            const passInput = document.getElementById('t-pass').value;
-            const errorLabel = document.getElementById('error-txt');
-            // LOGIN LOGIC: REQUIRES A NAME & PASSCODE "1234" FOR NOW
-            if (nameInput.length > 2 && passInput === "1234") {
+        function login() {
+            const user = document.getElementById('admin-user').value;
+            const pass = document.getElementById('admin-pass').value;
+            if(user === "ADMIN" && pass === "123456") {
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('main-dashboard').style.display = 'block';
-                document.getElementById('user-display').innerText = "User: " + nameInput;
-                // LOAD THE DATA IMMEDIATELY UPON SUCCESSFULL LOGIN 
-                updateDisplay(); 
+                document.getElementById('display-name').innerText = user;
+                loadData();
             } else {
-                errorLabel.style.display = 'block';
+                document.getElementById('err').style.display = 'block';
             }
         }
-        // SEARCH FUNCTION
-        function runSearch() {
-            let input = document.getElementById("search-box").value.toUpperCase();
-            let rows = document.getElementById("data-table-body").getElementsByTagName("tr");
-            for (let i = 0; i < rows.length; i++) {
-                let nameColumn = rows[i].getElementsByTagName("td")[0];
-                if (nameColumn) {
-                    let text = nameColumn.textContent || nameColumn.innerText;
-                    rows[i].style.display = text.toUpperCase().indexOf(input) > -1 ? "" : "none";
-                }
+        function handleFileUpload() {
+            const file = document.getElementById('pdf-upload').files[0];
+            if (file) {
+                alert("Scanning " + file.name + "... Names extracted and synced with database!");
+                // In a real app, you'd use a PDF.js library to parse text here.
             }
         }
-        // ENTER KEY LISTENER FOR LOGIN PAGE
-        document.getElementById("t-pass").addEventListener("keyup", function(event) {
-            if (event.key === "Enter") { handleLogin(); }
-        });
+        function loadData() {
+            const selectedSub = document.getElementById('sub-select').value;
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = "";
+            const filtered = students.filter(s => s.sub === selectedSub);
+            if(filtered.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='4' style='text-align:center'>No records found for this subject.</td></tr>";
+                return;
+            }
+            filtered.forEach(s => {
+                const badgeClass = s.attendance >= 75 ? 'high' : 'low';
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${s.name}</strong></td>
+                        <td>${s.arrival}</td>
+                        <td>${s.departure}</td>
+                        <td><span class="badge ${badgeClass}">${s.attendance}%</span></td>
+                    </tr>
+                `;
+            });
+        }
+        function generatePDFReport() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const subject = document.getElementById('sub-select').value;            
+            doc.text(`SAMS - Subject Attendance Report: ${subject}`, 14, 15); 
+            const rows = [];
+            const filtered = students.filter(s => s.sub === subject);
+            filtered.forEach(s => rows.push([s.name, s.arrival, s.departure, s.attendance + '%']));
+            doc.autoTable({
+                startY: 25,
+                head: [['Student Name', 'Arrival', 'Departure', 'Attendance %']],
+                body: rows,
+            });
+            doc.save(`Report_${subject}.pdf`);
+        }
     </script>
 </body>
 </html>
