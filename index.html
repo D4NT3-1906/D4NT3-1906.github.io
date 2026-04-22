@@ -6,174 +6,167 @@
     <title>
         SAMS Portal
     </title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js">
+    </script>    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js">
-    </script>
+    </script>    
     <style>
         :root 
         {
-            --primary: #4361ee;
-            --secondary: #3f37c9;
-            --accent: #4cc9f0;
-            --success: #4caf50;
-            --glass: rgba(255, 255, 255, 0.9);
-            --bg-gradient: linear-gradient(135deg, #1e1e2f 0%, #2a2a40 100%);
+            --primary: #4361ee; --secondary: #3f37c9; --success: #4caf50; --bg: #1e1e2f;
         }
-        * { 
-            font-family: 'Poppins', sans-serif; box-sizing: border-box; 
-            }
-        body 
+        * 
         {
-            margin: 0; background: #f0f2f5; color: #333; 
+            font-family: 'Poppins', sans-serif; box-sizing: border-box;
         }
-        /* LOGIN SCREEN */
+        body
+        {
+            margin: 0; background: #f0f2f5;
+        }
+        /* Login UI */
         #login-overlay 
         {
-            position: fixed; inset: 0; background: var(--bg-gradient);
+            position: fixed; inset: 0; background: linear-gradient(135deg, #1e1e2f 0%, #2a2a40 100%);
             display: flex; justify-content: center; align-items: center; z-index: 1000;
         }
-        .login-card 
+        .login-card
         {
-            background: var(--glass); padding: 40px; border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center;
+            background: white; padding: 40px; border-radius: 20px; width: 350px; text-align: center;
         }
-        .login-card h2 
-        { 
-            color: var(--primary); margin-bottom: 30px; 
-        }
-        input { 
-            width: 100%; padding: 12px; margin: 10px 0; 
-            border: 2px solid #ddd; border-radius: 10px; outline: none; transition: 0.3s;
-        }
-        input:focus 
-        { 
-            border-color: var(--primary); 
-        }
-        /* MAIN LAYOUT */
-        #main-dashboard 
+        input
         {
-            display: none; 
-        }
-        header 
-        { 
-            background: var(--primary); color: white; padding: 20px 5%;
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .container 
-        { 
-            padding: 40px 5%; 
-        }
-        /* CARDS & CONTROLS */
-        .glass-card 
+            width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #ddd; border-radius: 10px;
+        }       
+        /* Dashboard UI */
+        #main-dashboard
         {
-            background: white; padding: 25px; border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.05); margin-bottom: 30px;
+            display: none;
         }
-        .controls-grid 
+        header
         {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;
+            background: var(--primary); color: white; padding: 20px 5%; display: flex; justify-content: space-between; align-items: center;
         }
-        .btn 
+        .container
         {
-            padding: 12px 25px; border: none; border-radius: 10px; cursor: pointer;
-            font-weight: 600; transition: 0.3s; color: white;
+            padding: 30px 5%;
         }
-        .btn-primary 
-        { 
-            background: var(--primary); 
-        }
-        .btn-primary:hover 
-        { 
-            background: var(--secondary); transform: translateY(-2px); 
-        }
-        .btn-report 
+        .card
         {
-            background: var(--success); 
-        }
-        /* TABLE */
-        table 
+            background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 20px;
+        }       
+        table
         {
-            width: 100%; border-collapse: collapse; margin-top: 20px; background: white; 
+            width: 100%; border-collapse: collapse; margin-top: 20px;
         }
-        th 
+        th
         {
-            background: #f8f9fa; color: #666; padding: 15px; text-align: left; border-bottom: 2px solid #eee; 
+            background: #f8f9fa; padding: 15px; text-align: left; border-bottom: 2px solid #eee;
         }
-        td 
+        td
         {
-            padding: 15px; border-bottom: 1px solid #eee; 
-        }
-        tr:hover 
-        { 
-            background: #fcfdff; 
-        }
-        .badge 
+            padding: 15px; border-bottom: 1px solid #eee;
+        }        
+        .btn
         {
-            padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: bold;
+            padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: white; transition: 0.3s;
         }
-        .high 
+        .btn-primary
         {
-            background: #e8f5e9; color: #2e7d32; 
+            background: var(--primary); width: 100%;
         }
-        .low 
+        .btn-success
         {
-            background: #ffebee; color: #c62828; 
+            background: var(--success);
+        }
+        .badge
+        {
+            padding: 5px 10px; border-radius: 5px; font-size: 0.8rem;
+        }
+        .high
+        {
+            background: #e8f5e9; color: #2e7d32;
+        }
+        .low
+        {
+            background: #ffebee; color: #c62828;
         }
     </style>
 </head>
 <body>
     <div id="login-overlay">
         <div class="login-card">
-            <h2>
-                SAMS Admin
+            <h2 style="color:var(--primary)">SAMS ADMIN
             </h2>
             <input type="text" id="admin-user" placeholder="Username">
             <input type="password" id="admin-pass" placeholder="Passcode">
-            <button class="btn btn-primary" style="width:100%" onclick="login()">Enter Dashboard</button>
-            <p id="err" style="color:red; display:none; margin-top:15px;">Invalid Credentials</p>
+            <button class="btn btn-primary" onclick="login()">Enter Dashboard
+            </button>
+            <p id="err" style="color:red; display:none; font-size:0.8rem; margin-top:10px;">Access Denied
+            </p>
         </div>
     </div>
     <div id="main-dashboard">
         <header>
-            <h1 style="margin:0">SAMS Portal</h1>
-            <div id="user-info">Welcome, <b id="display-name"></b> | <a href="#" onclick="location.reload()" style="color:white">Logout</a></div>
+            <h2 style="margin:0">SAMS Monitor
+            </h2>
+            <span>Welcome, <b id="user-tag"></b> | <a href="#" onclick="location.reload()" style="color:white">Logout
+            </a>
+            </span>
         </header>
         <div class="container">
-            <div class="glass-card">
-                <h3>System Controls</h3>
-                <div class="controls-grid">
-                    <div>
-                        <label>Select Subject</label>
-                        <select id="sub-select" onchange="loadData()" style="width:100%; padding:10px; border-radius:8px;">
-                            <option value="Maths">Maths</option>
-                            <option value="Data Structures">Data Structures</option>
-                            <option value="Java">Java</option>
-                            <option value="Computer Networks">Computer Networks</option>
-                            <option value="Artificial Intelligence">Artificial Intelligence</option>
-                            <option value="DBMS">DBMS</option>
+            <div class="card">
+                <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-end;">
+                    <div style="flex:1">
+                        <label>
+                            Select Subject
+                        </label>
+                        <br>
+                        <select id="sub-select" onchange="syncWithFirebase()" style="width:100%; padding:10px; margin-top:5px;">
+                            <option value="Maths">Maths
+                            </option>
+                            <option value="Data Structures">Data Structures
+                            </option>
+                            <option value="Java">Java
+                            </option>
+                            <option value="Computer Networks">Computer Networks
+                            </option>
+                            <option value="Artificial Intelligence">Artificial Intelligence
+                            </option>
+                            <option value="DBMS">DBMS
+                            </option>
                         </select>
                     </div>
-                    <div>
-                        <label>Upload Student List (PDF)</label>
-                        <input type="file" id="pdf-upload" accept=".pdf" onchange="handleFileUpload()">
+                    <div style="flex:1">
+                        <label>Upload Student List
+                        </label>
+                        <br>
+                        <input type="file" id="pdf-up" accept=".pdf" style="margin-top:5px;">
                     </div>
-                    <div style="display:flex; align-items:flex-end;">
-                        <button class="btn btn-report" onclick="generatePDFReport()">Generate Subject Report (PDF)</button>
-                    </div>
+                    <button class="btn btn-success" onclick="downloadPDF()">Generate Report (PDF)
+                    </button>
                 </div>
             </div>
-
-            <div class="glass-card">
+            <div class="card">
                 <table id="attendance-table">
                     <thead>
                         <tr>
-                            <th>Student Name</th>
-                            <th>Arrival Time</th>
-                            <th>Departure Time</th>
-                            <th>Attendance %</th>
+                            <th>
+                                Student Name
+                            </th>
+                            <th>
+                                Arrival Time
+                            </th>
+                            <th>
+                                Departure Time
+                            </th>
+                            <th>
+                                Attendance %
+                            </th>
                         </tr>
                     </thead>
                     <tbody id="table-body">
@@ -183,67 +176,92 @@
         </div>
     </div>
     <script>
-        // MOCK DATA for specific subjects
-        const students = [
-            { name: "Arjun", sub: "Maths", arrival: "09:15 AM", departure: "10:30 AM", attendance: 85 },
-            { name: "Sita", sub: "Maths", arrival: "09:20 AM", departure: "10:30 AM", attendance: 70 },
-            { name: "John", sub: "Java", arrival: "11:00 AM", departure: "12:15 PM", attendance: 92 },
-            { name: "Arjun", sub: "DBMS", arrival: "02:00 PM", departure: "03:30 PM", attendance: 95 }
-        ];
-        function login() {
-            const user = document.getElementById('admin-user').value;
-            const pass = document.getElementById('admin-pass').value;
-            if(user === "ADMIN" && pass === "123456") {
+        // 3. FIREBASE CONFIGURATION (PASTE YOUR KEYS HERE)
+        const firebaseConfig = 
+        {
+            apiKey: "AIzaSyC25jnEJ-6-t0hoE3m8xiPEHfWyC-ejMKE",
+            authDomain: "sams-190605.firebaseapp.com",
+            databaseURL: "PASTE_YOUR_DATABASE_URL",
+            projectId: "sams-190605",
+            storageBucket: "sams-190605.firebasestorage.app",
+            messagingSenderId: "157575474369",
+            appId: "1:157575474369:web:87cc48405cee803da83840"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        // 4. LOGIN LOGIC
+        function login() 
+        {
+            const u = document.getElementById('admin-user').value;
+            const p = document.getElementById('admin-pass').value;
+            if(u === "ADMIN" && p === "123456") 
+            {
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('main-dashboard').style.display = 'block';
-                document.getElementById('display-name').innerText = user;
-                loadData();
-            } else {
+                document.getElementById('user-tag').innerText = u;
+                syncWithFirebase(); // Start live sync
+            }
+            else 
+            {
                 document.getElementById('err').style.display = 'block';
             }
         }
-        function handleFileUpload() {
-            const file = document.getElementById('pdf-upload').files[0];
-            if (file) {
-                alert("Scanning " + file.name + "... Names extracted and synced with database!");
-                // In a real app, you'd use a PDF.js library to parse text here.
-            }
-        }
-        function loadData() {
-            const selectedSub = document.getElementById('sub-select').value;
-            const tbody = document.getElementById('table-body');
-            tbody.innerHTML = "";
-            const filtered = students.filter(s => s.sub === selectedSub);
-            if(filtered.length === 0) {
-                tbody.innerHTML = "<tr><td colspan='4' style='text-align:center'>No records found for this subject.</td></tr>";
-                return;
-            }
-            filtered.forEach(s => {
-                const badgeClass = s.attendance >= 75 ? 'high' : 'low';
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${s.name}</strong></td>
-                        <td>${s.arrival}</td>
-                        <td>${s.departure}</td>
-                        <td><span class="badge ${badgeClass}">${s.attendance}%</span></td>
-                    </tr>
-                `;
+        // 5. LIVE DATABASE SYNC
+        function syncWithFirebase() 
+        {
+            const subject = document.getElementById('sub-select').value;
+            const tbody = document.getElementById('table-body');            
+            // Listen to the specific subject node in Firebase
+            const ref = database.ref('attendance_logs/' + subject);
+            ref.on('value', (snapshot) => 
+                {
+                tbody.innerHTML = "";
+                const data = snapshot.val();
+                if (!data) {
+                    tbody.innerHTML = "<tr><td colspan='4' style='text-align:center'>No scans recorded for this subject today.</td></tr>";
+                    return;
+                }
+                Object.keys(data).forEach(key => 
+                    {
+                    const s = data[key];
+                    const statusClass = s.percentage >= 75 ? 'high' : 'low';
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>
+                            <b>
+                            ${s.studentName}
+                            </b>
+                            </td>
+                            <td>
+                            ${s.arrivalTime}
+                            </td>
+                            <td>
+                            ${s.departureTime || 'In Session'}
+                            </td>
+                            <td>
+                            <span class="badge ${statusClass}">${s.percentage}%
+                            </span>
+                            </td>
+                        </tr>
+                    `;
+                });
             });
         }
-        function generatePDFReport() {
+        // 6. PDF REPORT GENERATION
+        function downloadPDF() 
+        {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            const subject = document.getElementById('sub-select').value;            
-            doc.text(`SAMS - Subject Attendance Report: ${subject}`, 14, 15); 
-            const rows = [];
-            const filtered = students.filter(s => s.sub === subject);
-            filtered.forEach(s => rows.push([s.name, s.arrival, s.departure, s.attendance + '%']));
+            const sub = document.getElementById('sub-select').value;            
+            doc.setFontSize(18);
+            doc.text(`SAMS Report: ${sub}`, 14, 20);
             doc.autoTable({
-                startY: 25,
-                head: [['Student Name', 'Arrival', 'Departure', 'Attendance %']],
-                body: rows,
-            });
-            doc.save(`Report_${subject}.pdf`);
+                startY: 30,
+                html: '#attendance-table',
+                theme: 'striped'
+            });            
+            doc.save(`SAMS_${sub}_Report.pdf`);
         }
     </script>
 </body>
