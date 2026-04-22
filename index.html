@@ -28,7 +28,7 @@
         {
             margin: 0; background: #f0f2f5;
         }
-        /* Login UI */
+        /* LOGIN UI */
         #login-overlay 
         {
             position: fixed; inset: 0; background: linear-gradient(135deg, #1e1e2f 0%, #2a2a40 100%);
@@ -42,7 +42,7 @@
         {
             width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #ddd; border-radius: 10px;
         }       
-        /* Dashboard UI */
+        /* DASHBOARD UI */
         #main-dashboard
         {
             display: none;
@@ -176,18 +176,18 @@
         </div>
     </div>
     <script>
-        // 3. FIREBASE CONFIGURATION (PASTE YOUR KEYS HERE)
+        // 3. FIREBASE DB CONFIGURATION
         const firebaseConfig = 
         {
             apiKey: "AIzaSyC25jnEJ-6-t0hoE3m8xiPEHfWyC-ejMKE",
             authDomain: "sams-190605.firebaseapp.com",
-            databaseURL: "PASTE_YOUR_DATABASE_URL",
+            databaseURL: "https://sams-190605-default-rtdb.firebaseio.com/",
             projectId: "sams-190605",
             storageBucket: "sams-190605.firebasestorage.app",
             messagingSenderId: "157575474369",
             appId: "1:157575474369:web:87cc48405cee803da83840"
         };
-        // Initialize Firebase
+        // INITIALIZING FIREBASE DB
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         // 4. LOGIN LOGIC
@@ -200,7 +200,7 @@
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('main-dashboard').style.display = 'block';
                 document.getElementById('user-tag').innerText = u;
-                syncWithFirebase(); // Start live sync
+                syncWithFirebase(); // START THE LIVE SYNC
             }
             else 
             {
@@ -212,13 +212,14 @@
         {
             const subject = document.getElementById('sub-select').value;
             const tbody = document.getElementById('table-body');            
-            // Listen to the specific subject node in Firebase
+            // LISTENING TO THE SPECIFIC SUBJECT NODE IN FIREBASE DB
             const ref = database.ref('attendance_logs/' + subject);
             ref.on('value', (snapshot) => 
                 {
                 tbody.innerHTML = "";
                 const data = snapshot.val();
-                if (!data) {
+                if (!data) 
+                {
                     tbody.innerHTML = "<tr><td colspan='4' style='text-align:center'>No scans recorded for this subject today.</td></tr>";
                     return;
                 }
