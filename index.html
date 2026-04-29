@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SAMS | Pro Management Dashboard</title>
+    <title>SAMS Dashboard</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -17,17 +17,18 @@
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
         
         .grid-3 { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 20px; }
-        .controls { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 15px; align-items: end; }
+        .controls { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; gap: 15px; align-items: end; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { background: #f8fafc; color: var(--gray); padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-size: 12px; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
         
-        .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: white; transition: 0.2s; font-size: 13px; }
+        .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: white; transition: 0.2s; font-size: 13px; text-align: center;}
         .btn-p { background: var(--primary); }
         .btn-s { background: var(--success); }
         .btn-d { background: var(--danger); }
         .btn-ghost { background: #e2e8f0; color: var(--gray); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         
         select, input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; outline: none; }
         label { font-weight: 600; display: block; margin-bottom: 5px; font-size: 12px; color: var(--gray); }
@@ -40,6 +41,8 @@
         .badge { display: inline-block; padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; }
         .badge-in { background: #dbeafe; color: #1d4ed8; }
         .badge-out { background: #dcfce7; color: #15803d; }
+        .pct-green { background: #dcfce7; color: #15803d; }
+        .pct-red { background: #fee2e2; color: #b91c1c; }
         
         #login-screen { position: fixed; inset: 0; background: #0f172a; z-index: 999; display: flex; justify-content: center; align-items: center; }
         .login-box { background: white; padding: 40px; border-radius: 14px; width: 350px; text-align: center; }
@@ -47,6 +50,8 @@
         .status-bar { display: none; margin-top: 15px; padding: 10px; background: #f0fdf4; border-left: 4px solid var(--success); border-radius: 4px; }
         .pulse { animation: blink 2s infinite; color: var(--danger); font-weight: bold; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
+        #studentMgmtSection { display: none; margin-bottom: 20px; border: 2px dashed #cbd5e1; }
     </style>
 </head>
 <body>
@@ -63,7 +68,7 @@
 
 <div id="dashboard" style="display:none">
     <div class="header">
-        <h2 style="margin:0; font-size:20px">SAMS Dashboard | Admin: Nilutpal</h2>
+        <h2 style="margin:0; font-size:20px">SAMS Dashboard | Admin: AEI_Comp</h2>
         <div id="live-time"></div>
     </div>
 
@@ -88,12 +93,10 @@
             </div>
 
             <div class="card">
-                <label>Upload Student List (CSV)</label>
+                <label>Student Database</label>
                 <div style="margin-top:10px">
-                    <input type="file" id="csvFile" accept=".csv" style="font-size:11px; border:none; padding:0">
-                    <button class="btn btn-p" onclick="uploadCSV()" style="width:100%; margin-top:8px">Sync Students</button>
+                    <button class="btn btn-p" onclick="toggleMgmt()" style="width:100%">Manage Student List</button>
                 </div>
-                <p style="font-size:10px; color:var(--gray); margin:5px 0 0">Format: UID, Name (No Header)</p>
             </div>
 
             <div class="card">
@@ -105,22 +108,47 @@
             </div>
         </div>
 
+        <div id="studentMgmtSection" class="card">
+            <h3 style="margin-top:0">Upload Student List (CSV File)</h3>
+            <div style="display:flex; gap:20px; align-items:center">
+                <input type="file" id="csvFile" accept=".csv">
+                <button class="btn btn-s" onclick="uploadCSV()">Sync to Database</button>
+            </div>
+            <p style="font-size:12px; color:var(--gray); margin-top:10px">
+                <b>CSV Format:</b> RFID_UID, Student_Name (e.g., 622FA904, Rahul Sharma). Do not include headers.
+            </p>
+        </div>
+
         <div class="stat-grid">
-            <div class="stat-card"><div class="slabel">Total Students</div><div class="svalue" id="stat-total">0</div></div>
-            <div class="stat-card"><div class="slabel">Present (Filtered)</div><div class="svalue" id="stat-present">0</div></div>
-            <div class="stat-card"><div class="slabel">Left Class</div><div class="svalue" id="stat-done">0</div></div>
-            <div class="stat-card"><div class="slabel">Attendance %</div><div class="svalue" id="stat-pct">0%</div></div>
+            <div class="stat-card"><div class="slabel">Total Registered</div><div class="svalue" id="stat-total">0</div></div>
+            <div class="stat-card"><div class="slabel">Present (Current)</div><div class="svalue" id="stat-present">0</div></div>
+            <div class="stat-card"><div class="slabel">Left Session</div><div class="svalue" id="stat-done">0</div></div>
+            <div class="stat-card"><div class="slabel">Class Attendance %</div><div class="svalue" id="stat-pct">0%</div></div>
         </div>
 
         <div class="card">
             <div class="controls">
-                <div><label>Subject</label><select id="subjSelect" onchange="loadData()"><option>Java</option><option>Maths</option><option>DSA</option><option>Networks</option></select></div>
-                <div><label>Range</label><select id="dayRange" onchange="loadData()"><option value="1">Today</option><option value="7" selected>7 Days</option><option value="30">30 Days</option><option value="0">All</option></select></div>
-                <div><button class="btn btn-s" onclick="genReport()" style="width:100%">Download PDF</button></div>
-                <div><button class="btn btn-p" onclick="loadData()" style="width:100%">Sync Now</button></div>
+                <div>
+                    <label>View Subject</label>
+                    <select id="subjSelect" onchange="loadData()">
+                        <option>Java</option><option>Maths</option><option>DSA</option><option>Networks</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Time Range Filter</label>
+                    <select id="dayRange" onchange="loadData()">
+                        <option value="1">Today Only</option>
+                        <option value="7">Last 7 Days</option>
+                        <option value="14" selected>Last 14 Days</option>
+                        <option value="30">Last 30 Days</option>
+                        <option value="0">Show All Time</option>
+                    </select>
+                </div>
+                <div><button class="btn btn-s" onclick="genReport()" style="width:100%">Download PDF Report</button></div>
+                <div><button class="btn btn-p" onclick="loadData()" style="width:100%">Refresh Logs</button></div>
             </div>
             <table id="attendanceTable">
-                <thead><tr><th>#</th><th>Name</th><th>RFID UID</th><th>Date</th><th>Arrival</th><th>Departure</th><th>Total %</th></tr></thead>
+                <thead><tr><th>#</th><th>Name</th><th>UID</th><th>Date</th><th>Arrival</th><th>Departure</th><th>Overall %</th></tr></thead>
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
@@ -128,7 +156,6 @@
 </div>
 
 <script>
-// CONFIG
 const firebaseConfig = {
     apiKey: "AIzaSyC25jnEJ-6-t0hoE3m8xiPEHfWyC-ejMKE",
     authDomain: "sams-190605.firebaseapp.com",
@@ -140,49 +167,50 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let STUDENT_MAP = {}; // Will be loaded from Firebase
+let STUDENT_MAP = {}; 
 
 function login() {
-    if(document.getElementById('u').value==="ADMIN" && document.getElementById('p').value==="123456") {
+    if(document.getElementById('u').value==="ADMIN" && document.getElementById('p').value==="190605") {
         document.getElementById('login-screen').style.display='none';
         document.getElementById('dashboard').style.display='block';
         fetchStudents();
         listenToSession();
+    } else {
+        document.getElementById('login-error').textContent = "Invalid Credentials";
     }
 }
 
-// FETCH STUDENTS FROM FIREBASE
+function toggleMgmt() {
+    const sect = document.getElementById('studentMgmtSection');
+    sect.style.display = sect.style.display === 'block' ? 'none' : 'block';
+}
+
 function fetchStudents() {
     db.ref('students').on('value', snap => {
         STUDENT_MAP = snap.val() || {};
-        loadData(); // Reload table with names
+        loadData();
     });
 }
 
-// CSV UPLOAD LOGIC
 function uploadCSV() {
     const file = document.getElementById('csvFile').files[0];
-    if(!file) return alert("Select a CSV file first.");
-    
+    if(!file) return alert("Please select a .csv file");
     const reader = new FileReader();
     reader.onload = function(e) {
         const rows = e.target.result.split("\n");
         let updates = {};
         rows.forEach(row => {
             const cols = row.split(",");
-            if(cols.length >= 2) {
-                const uid = cols[0].trim().toUpperCase();
-                const name = cols[1].trim();
-                updates[uid] = name;
-            }
+            if(cols.length >= 2) updates[cols[0].trim().toUpperCase()] = cols[1].trim();
         });
-        db.ref('students').update(updates)
-            .then(() => alert("Student list synchronized successfully!"));
+        db.ref('students').update(updates).then(() => {
+            alert("Database Updated!");
+            document.getElementById('studentMgmtSection').style.display = 'none';
+        });
     };
     reader.readAsText(file);
 }
 
-// SESSION CONTROL
 function startClass() {
     db.ref('current_session').set({
         active: true,
@@ -208,7 +236,6 @@ function listenToSession() {
     });
 }
 
-// LOAD & FILTER LOGS
 function loadData() {
     const sub = document.getElementById('subjSelect').value;
     const days = parseInt(document.getElementById('dayRange').value);
@@ -216,14 +243,15 @@ function loadData() {
     db.ref('attendance_logs/' + sub).on('value', async snap => {
         const logs = snap.val();
         const tbody = document.getElementById('tableBody');
-        if(!logs) { tbody.innerHTML = "<tr><td colspan='7' style='text-align:center'>No Data</td></tr>"; return; }
+        if(!logs) { tbody.innerHTML = "<tr><td colspan='7' style='text-align:center;padding:20px'>No data available</td></tr>"; return; }
 
         const histSnap = await db.ref('student_history/' + sub).once('value');
         const hist = histSnap.val() || {};
 
         let rows = "", pres = 0, done = 0, i = 1;
+        const now = new Date();
         const cutoff = new Date();
-        cutoff.setDate(cutoff.getDate() - days);
+        cutoff.setDate(now.getDate() - days);
 
         Object.keys(logs).forEach(uid => {
             const v = logs[uid];
@@ -240,25 +268,28 @@ function loadData() {
 
             rows += `<tr>
                 <td>${i++}</td>
-                <td><b>${STUDENT_MAP[uid] || "Unknown Student"}</b></td>
-                <td style="font-family:monospace; font-size:12px">${uid}</td>
+                <td><b>${STUDENT_MAP[uid] || uid}</b></td>
+                <td style="font-family:monospace;font-size:12px">${uid}</td>
                 <td>${v.date}</td>
                 <td>${v.arrivalTime}</td>
                 <td><span class="badge ${v.departureTime==='--'?'badge-in':'badge-out'}">${v.departureTime}</span></td>
                 <td><span class="badge ${pct>=75?'pct-green':'pct-red'}">${pct}%</span></td>
             </tr>`;
         });
-        tbody.innerHTML = rows;
+        tbody.innerHTML = rows || "<tr><td colspan='7' style='text-align:center;padding:20px'>No records in this range</td></tr>";
+        
         document.getElementById('stat-total').textContent = Object.keys(STUDENT_MAP).length;
         document.getElementById('stat-present').textContent = pres;
         document.getElementById('stat-done').textContent = done;
-        document.getElementById('stat-pct').textContent = Math.round((pres/Object.keys(STUDENT_MAP).length)*100 || 0) + "%";
+        const totalReg = Object.keys(STUDENT_MAP).length;
+        document.getElementById('stat-pct').textContent = totalReg > 0 ? Math.round((pres/totalReg)*100) + "%" : "0%";
     });
 }
 
 function clearLogs() {
-    const sub = document.getElementById('subjSelect').value;
-    if(confirm(`Wipe ALL logs for ${sub}?`)) db.ref('attendance_logs/'+sub).remove();
+    if(confirm("Permanently wipe logs for " + document.getElementById('subjSelect').value + "?")) {
+        db.ref('attendance_logs/' + document.getElementById('subjSelect').value).remove();
+    }
 }
 
 setInterval(() => { document.getElementById("live-time").textContent = new Date().toLocaleTimeString('en-IN'); }, 1000);
@@ -266,9 +297,10 @@ setInterval(() => { document.getElementById("live-time").textContent = new Date(
 function genReport() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('l', 'mm', 'a4');
-    doc.text(`Report: ${document.getElementById('subjSelect').value}`, 14, 15);
+    const rangeText = document.getElementById('dayRange').options[document.getElementById('dayRange').selectedIndex].text;
+    doc.text(`SAMS Report: ${document.getElementById('subjSelect').value} (${rangeText})`, 14, 15);
     doc.autoTable({ html: '#attendanceTable', startY: 25, theme: 'grid', headStyles: {fillColor:[79,70,229]} });
-    doc.save("Attendance_Report.pdf");
+    doc.save(`SAMS_Report_${document.getElementById('subjSelect').value}.pdf`);
 }
 </script>
 </body>
