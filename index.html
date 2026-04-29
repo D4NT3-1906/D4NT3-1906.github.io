@@ -2,147 +2,125 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>
-        SAMS | Management Dashboard
-    </title>
+    <title>SAMS | Pro Management Dashboard</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
     <style>
-        :root { --primary: #4f46e5; --bg: #f1f5f9; --success: #10b981; --danger: #ef4444; }
+        :root { --primary: #4f46e5; --bg: #f1f5f9; --success: #10b981; --danger: #ef4444; --gray: #64748b; }
         * { box-sizing: border-box; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; }
-        .header { background: var(--primary); color: white; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; }
-        .container { padding: 30px 40px; max-width: 1300px; margin: auto; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 25px; }
+        .header { background: var(--primary); color: white; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; }
+        .container { padding: 20px 40px; max-width: 1400px; margin: auto; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
         
-        /* Session Controller Grid */
-        .session-grid { display: grid; grid-template-columns: 2fr 1fr 1.2fr; gap: 20px; align-items: end; }
-        .status-indicator { margin-top: 15px; padding: 12px; border-radius: 8px; display: none; background: #f8fafc; border-left: 4px solid var(--success); }
-        .pulse { animation: pulse-red 2s infinite; color: var(--danger); font-weight: bold; }
-        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-
-        .controls { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 20px; align-items: end; }
+        .grid-3 { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 20px; }
+        .controls { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 15px; align-items: end; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { background: #f8fafc; color: #64748b; padding: 13px 15px; text-align: left; border-bottom: 2px solid #e2e8f0; font-size: 13px; text-transform: uppercase; }
-        td { padding: 13px 15px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
-        tr:hover td { background: #f8fafc; }
+        th { background: #f8fafc; color: var(--gray); padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-size: 12px; text-transform: uppercase; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
         
-        .btn { padding: 11px 22px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: white; transition: 0.2s; font-size: 14px; }
+        .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: white; transition: 0.2s; font-size: 13px; }
         .btn-p { background: var(--primary); }
         .btn-s { background: var(--success); }
         .btn-d { background: var(--danger); }
-        .btn:hover { opacity: 0.85; }
+        .btn-ghost { background: #e2e8f0; color: var(--gray); }
         
-        select, input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; outline: none; }
-        label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 13px; color: #475569; }
+        select, input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; outline: none; }
+        label { font-weight: 600; display: block; margin-bottom: 5px; font-size: 12px; color: var(--gray); }
 
-        #login-screen { position: fixed; inset: 0; background: #0f172a; z-index: 999; display: flex; justify-content: center; align-items: center; }
-        .login-box { background: white; padding: 40px; border-radius: 14px; width: 360px; text-align: center; }
+        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .stat-card .slabel { font-size: 11px; color: var(--gray); text-transform: uppercase; }
+        .stat-card .svalue { font-size: 24px; font-weight: 700; color: #1e293b; margin-top: 5px; }
 
-        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: white; border-radius: 10px; padding: 18px 22px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-        .stat-card .slabel { font-size: 11px; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; }
-        .stat-card .svalue { font-size: 26px; font-weight: 700; color: #1e293b; }
-
-        .badge { display: inline-block; padding: 4px 12px; border-radius: 99px; font-size: 12px; font-weight: 700; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; }
         .badge-in { background: #dbeafe; color: #1d4ed8; }
         .badge-out { background: #dcfce7; color: #15803d; }
-        .pct-green { background: #dcfce7; color: #15803d; }
-        .pct-red { background: #fee2e2; color: #b91c1c; }
+        
+        #login-screen { position: fixed; inset: 0; background: #0f172a; z-index: 999; display: flex; justify-content: center; align-items: center; }
+        .login-box { background: white; padding: 40px; border-radius: 14px; width: 350px; text-align: center; }
+        
+        .status-bar { display: none; margin-top: 15px; padding: 10px; background: #f0fdf4; border-left: 4px solid var(--success); border-radius: 4px; }
+        .pulse { animation: blink 2s infinite; color: var(--danger); font-weight: bold; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
 
 <div id="login-screen">
     <div class="login-box">
-        <h2>SAMS LOGIN</h2>
-        <p>Smart Attendance Management System</p>
-        <input type="text" id="u" placeholder="Admin Username">
-        <input type="password" id="p" placeholder="Passcode">
-        <button class="btn btn-p" onclick="login()" style="width:100%">Enter Dashboard</button>
-        <div id="login-error" style="color:var(--danger); margin-top:10px; font-size: 13px;"></div>
+        <h2 style="color:var(--primary)">SAMS LOGIN</h2>
+        <input type="text" id="u" placeholder="Admin User" style="margin-bottom:10px">
+        <input type="password" id="p" placeholder="Passcode" style="margin-bottom:20px">
+        <button class="btn btn-p" onclick="login()" style="width:100%">Access Dashboard</button>
+        <div id="login-error" style="color:red; margin-top:10px; font-size:12px"></div>
     </div>
 </div>
 
 <div id="dashboard" style="display:none">
     <div class="header">
-        <h1 style="margin:0; font-size:22px;">Live SAMS Monitor Station</h1>
-        <span>Admin: <b>AEI_Comp</b> &nbsp;|&nbsp; <span id="live-time"></span></span>
+        <h2 style="margin:0; font-size:20px">SAMS Dashboard | Admin: Nilutpal</h2>
+        <div id="live-time"></div>
     </div>
 
     <div class="container">
-
-        <div class="card">
-            <h3 style="margin:0 0 16px; color:#1e293b">Class Session Control</h3>
-            <div class="session-grid">
-                <div>
-                    <label>Assign Subject</label>
+        
+        <div class="grid-3">
+            <div class="card">
+                <label>Active Class Control</label>
+                <div style="display:flex; gap:10px; margin-top:10px">
                     <select id="sessionSubj">
-                        <option>Java</option><option>Maths</option><option>Data Structures</option>
-                        <option>Computer Networks</option><option>Artificial Intelligence</option><option>DBMS</option>
+                        <option>Java</option><option>Maths</option><option>DSA</option><option>Networks</option>
                     </select>
+                    <input type="number" id="sessionDur" value="60" style="width:80px">
+                    <button class="btn btn-s" id="startBtn" onclick="startClass()">Start</button>
                 </div>
-                <div>
-                    <label>Minutes</label>
-                    <input type="number" id="sessionDur" value="60" min="1">
-                </div>
-                <div>
-                    <button class="btn btn-s" id="startBtn" onclick="startClass()" style="width:100%">Start Session</button>
+                <div id="sessionStatus" class="status-bar">
+                    <div style="display:flex; justify-content:space-between; align-items:center">
+                        <span class="pulse">LIVE: <span id="activeSubjName"></span></span>
+                        <button class="btn btn-d" onclick="stopClass()" style="padding:4px 10px; font-size:11px">End</button>
+                    </div>
                 </div>
             </div>
-            <div id="sessionStatus" class="status-indicator">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span>Currently Hosting: <b id="activeSubjName">--</b></span>
-                    <span class="pulse">LIVE SESSION ACTIVE!</span>
-                    <button class="btn btn-d" onclick="stopClass()" style="padding: 6px 15px;">Force End Class</button>
+
+            <div class="card">
+                <label>Upload Student List (CSV)</label>
+                <div style="margin-top:10px">
+                    <input type="file" id="csvFile" accept=".csv" style="font-size:11px; border:none; padding:0">
+                    <button class="btn btn-p" onclick="uploadCSV()" style="width:100%; margin-top:8px">Sync Students</button>
+                </div>
+                <p style="font-size:10px; color:var(--gray); margin:5px 0 0">Format: UID, Name (No Header)</p>
+            </div>
+
+            <div class="card">
+                <label>System Maintenance</label>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px">
+                    <button class="btn btn-ghost" onclick="clearLogs()">Clear Logs</button>
+                    <button class="btn btn-d" onclick="location.reload()">Logout</button>
                 </div>
             </div>
         </div>
 
         <div class="stat-grid">
-            <div class="stat-card"><div class="slabel">Total Enrolled</div><div class="svalue" id="stat-total">-</div></div>
-            <div class="stat-card"><div class="slabel">Present (Filtered)</div><div class="svalue" id="stat-present">-</div></div>
-            <div class="stat-card"><div class="slabel">Completed Scan-Out</div><div class="svalue" id="stat-done">-</div></div>
-            <div class="stat-card"><div class="slabel">Avg. Attendance %</div><div class="svalue" id="stat-pct">-</div></div>
+            <div class="stat-card"><div class="slabel">Total Students</div><div class="svalue" id="stat-total">0</div></div>
+            <div class="stat-card"><div class="slabel">Present (Filtered)</div><div class="svalue" id="stat-present">0</div></div>
+            <div class="stat-card"><div class="slabel">Left Class</div><div class="svalue" id="stat-done">0</div></div>
+            <div class="stat-card"><div class="slabel">Attendance %</div><div class="svalue" id="stat-pct">0%</div></div>
         </div>
 
         <div class="card">
             <div class="controls">
-                <div>
-                    <label>Subject</label>
-                    <select id="subjSelect" onchange="loadData()">
-                        <option>Java</option><option>Maths</option><option>Data Structures</option>
-                        <option>Computer Networks</option><option>Artificial Intelligence</option><option>DBMS</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Time Period</label>
-                    <select id="dayRange" onchange="loadData()">
-                        <option value="1">Today Only</option>
-                        <option value="7" selected>Last 7 Days</option>
-                        <option value="14">Last 14 Days</option>
-                        <option value="30">Last 30 Days</option>
-                        <option value="0">All Time</option>
-                    </select>
-                </div>
-                <div><label>&nbsp;</label><button class="btn btn-s" onclick="genReport()" style="width:100%">Export PDF</button></div>
-                <div><label>&nbsp;</label><button class="btn btn-p" onclick="loadData()" style="width:100%">Refresh Logs</button></div>
+                <div><label>Subject</label><select id="subjSelect" onchange="loadData()"><option>Java</option><option>Maths</option><option>DSA</option><option>Networks</option></select></div>
+                <div><label>Range</label><select id="dayRange" onchange="loadData()"><option value="1">Today</option><option value="7" selected>7 Days</option><option value="30">30 Days</option><option value="0">All</option></select></div>
+                <div><button class="btn btn-s" onclick="genReport()" style="width:100%">Download PDF</button></div>
+                <div><button class="btn btn-p" onclick="loadData()" style="width:100%">Sync Now</button></div>
             </div>
             <table id="attendanceTable">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Student Name</th>
-                        <th>UID</th>
-                        <th>Date</th>
-                        <th>Arrival</th>
-                        <th>Departure</th>
-                        <th>Overall %</th>
-                    </tr>
-                </thead>
+                <thead><tr><th>#</th><th>Name</th><th>RFID UID</th><th>Date</th><th>Arrival</th><th>Departure</th><th>Total %</th></tr></thead>
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
@@ -150,7 +128,7 @@
 </div>
 
 <script>
-// --- FIREBASE CONFIG ---
+// CONFIG
 const firebaseConfig = {
     apiKey: "AIzaSyC25jnEJ-6-t0hoE3m8xiPEHfWyC-ejMKE",
     authDomain: "sams-190605.firebaseapp.com",
@@ -162,48 +140,60 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// --- REGISTERED STUDENTS ---
-const STUDENT_NAMES = { 
-    "622FA904": "Rohan Das", 
-    "14067105": "Wasim Gupta", 
-    "AC5C6A05": "Dimitri Tro", 
-    "292E8A04": "Henry McLaren", 
-    "8BD16905": "Jungle Naidu" 
-};
+let STUDENT_MAP = {}; // Will be loaded from Firebase
 
-// --- AUTH ---
 function login() {
-    const user = document.getElementById('u').value;
-    const pass = document.getElementById('p').value;
-    if (user === "ADMIN" && pass === "123456") {
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
-        loadData();
+    if(document.getElementById('u').value==="ADMIN" && document.getElementById('p').value==="123456") {
+        document.getElementById('login-screen').style.display='none';
+        document.getElementById('dashboard').style.display='block';
+        fetchStudents();
         listenToSession();
-    } else {
-        document.getElementById('login-error').textContent = "Incorrect credentials.";
     }
 }
 
-// --- SESSION CONTROL (TRIGGER ESP32) ---
+// FETCH STUDENTS FROM FIREBASE
+function fetchStudents() {
+    db.ref('students').on('value', snap => {
+        STUDENT_MAP = snap.val() || {};
+        loadData(); // Reload table with names
+    });
+}
+
+// CSV UPLOAD LOGIC
+function uploadCSV() {
+    const file = document.getElementById('csvFile').files[0];
+    if(!file) return alert("Select a CSV file first.");
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const rows = e.target.result.split("\n");
+        let updates = {};
+        rows.forEach(row => {
+            const cols = row.split(",");
+            if(cols.length >= 2) {
+                const uid = cols[0].trim().toUpperCase();
+                const name = cols[1].trim();
+                updates[uid] = name;
+            }
+        });
+        db.ref('students').update(updates)
+            .then(() => alert("Student list synchronized successfully!"));
+    };
+    reader.readAsText(file);
+}
+
+// SESSION CONTROL
 function startClass() {
-    const sub = document.getElementById('sessionSubj').value;
-    const dur = document.getElementById('sessionDur').value;
     db.ref('current_session').set({
         active: true,
-        subject: sub,
-        duration: parseInt(dur),
+        subject: document.getElementById('sessionSubj').value,
+        duration: parseInt(document.getElementById('sessionDur').value),
         startTime: Date.now()
     });
 }
 
-function stopClass() {
-    if(confirm("Are you sure you want to end this session?")) {
-        db.ref('current_session/active').set(false);
-    }
-}
+function stopClass() { db.ref('current_session/active').set(false); }
 
-// Watch for ESP32/Admin updates to session state
 function listenToSession() {
     db.ref('current_session').on('value', snap => {
         const data = snap.val();
@@ -211,8 +201,6 @@ function listenToSession() {
             document.getElementById('sessionStatus').style.display = 'block';
             document.getElementById('activeSubjName').textContent = data.subject;
             document.getElementById('startBtn').disabled = true;
-            document.getElementById('subjSelect').value = data.subject;
-            loadData(); // Update table view automatically
         } else {
             document.getElementById('sessionStatus').style.display = 'none';
             document.getElementById('startBtn').disabled = false;
@@ -220,88 +208,67 @@ function listenToSession() {
     });
 }
 
-// --- DATA LOADING & FILTERING ---
+// LOAD & FILTER LOGS
 function loadData() {
-    const subject = document.getElementById('subjSelect').value;
-    const daysLimit = parseInt(document.getElementById('dayRange').value);
+    const sub = document.getElementById('subjSelect').value;
+    const days = parseInt(document.getElementById('dayRange').value);
     
-    db.ref('attendance_logs/' + subject).on('value', async (snap) => {
-        const logData = snap.val();
+    db.ref('attendance_logs/' + sub).on('value', async snap => {
+        const logs = snap.val();
         const tbody = document.getElementById('tableBody');
-        
-        if (!logData) {
-            tbody.innerHTML = "<tr><td colspan='7' style='text-align:center;padding:30px'>No records for this subject.</td></tr>";
-            return;
-        }
+        if(!logs) { tbody.innerHTML = "<tr><td colspan='7' style='text-align:center'>No Data</td></tr>"; return; }
 
-        const histSnap = await db.ref('student_history/' + subject).once('value');
-        const histData = histSnap.val() || {};
+        const histSnap = await db.ref('student_history/' + sub).once('value');
+        const hist = histSnap.val() || {};
 
-        let rows = "", presentCount = 0, completedCount = 0, i = 1;
-
-        // Cutoff calculation
-        const now = new Date();
+        let rows = "", pres = 0, done = 0, i = 1;
         const cutoff = new Date();
-        cutoff.setDate(now.getDate() - daysLimit);
+        cutoff.setDate(cutoff.getDate() - days);
 
-        Object.keys(logData).forEach(uid => {
-            const v = logData[uid];
-            
-            // Date Check: ESP32 stores as dd-mm-yyyy
+        Object.keys(logs).forEach(uid => {
+            const v = logs[uid];
             const d = v.date.split("-");
-            const recordDate = new Date(d[2], d[1] - 1, d[0]);
+            const rDate = new Date(d[2], d[1]-1, d[0]);
 
-            if (daysLimit !== 0 && recordDate < cutoff) return; // Skip if too old
+            if (days !== 0 && rDate < cutoff) return;
 
-            presentCount++;
-            if(v.departureTime !== "--") completedCount++;
+            pres++;
+            if(v.departureTime !== "--") done++;
             
-            const stats = histData[uid] || { attended: 0, totalClasses: 1 };
+            const stats = hist[uid] || { attended: 0, totalClasses: 1 };
             const pct = Math.round((stats.attended / stats.totalClasses) * 100);
 
             rows += `<tr>
                 <td>${i++}</td>
-                <td><b>${STUDENT_NAMES[uid] || uid}</b></td>
-                <td style="font-family:monospace">${uid}</td>
+                <td><b>${STUDENT_MAP[uid] || "Unknown Student"}</b></td>
+                <td style="font-family:monospace; font-size:12px">${uid}</td>
                 <td>${v.date}</td>
                 <td>${v.arrivalTime}</td>
-                <td><span class="badge ${v.departureTime === '--' ? 'badge-in' : 'badge-out'}">${v.departureTime}</span></td>
-                <td><span class="badge ${pct >= 75 ? 'pct-green' : 'pct-red'}">${pct}%</span></td>
+                <td><span class="badge ${v.departureTime==='--'?'badge-in':'badge-out'}">${v.departureTime}</span></td>
+                <td><span class="badge ${pct>=75?'pct-green':'pct-red'}">${pct}%</span></td>
             </tr>`;
         });
-
-        tbody.innerHTML = rows || "<tr><td colspan='7' style='text-align:center;padding:30px'>No records in this time range.</td></tr>";
-        
-        // Update Dashboard Stats
-        document.getElementById('stat-total').textContent = Object.keys(STUDENT_NAMES).length;
-        document.getElementById('stat-present').textContent = presentCount;
-        document.getElementById('stat-done').textContent = completedCount;
-        const avg = (presentCount / Object.keys(STUDENT_NAMES).length) * 100;
-        document.getElementById('stat-pct').textContent = Math.round(avg || 0) + "%";
+        tbody.innerHTML = rows;
+        document.getElementById('stat-total').textContent = Object.keys(STUDENT_MAP).length;
+        document.getElementById('stat-present').textContent = pres;
+        document.getElementById('stat-done').textContent = done;
+        document.getElementById('stat-pct').textContent = Math.round((pres/Object.keys(STUDENT_MAP).length)*100 || 0) + "%";
     });
 }
 
-// --- CLOCK ---
-function updateClock() { 
-    document.getElementById("live-time").textContent = new Date().toLocaleTimeString('en-IN'); 
+function clearLogs() {
+    const sub = document.getElementById('subjSelect').value;
+    if(confirm(`Wipe ALL logs for ${sub}?`)) db.ref('attendance_logs/'+sub).remove();
 }
-setInterval(updateClock, 1000); 
-updateClock();
 
-// --- PDF EXPORT ---
+setInterval(() => { document.getElementById("live-time").textContent = new Date().toLocaleTimeString('en-IN'); }, 1000);
+
 function genReport() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('l', 'mm', 'a4');
-    const sub = document.getElementById('subjSelect').value;
-    doc.setFontSize(18);
-    doc.text(`SAMS ATTENDANCE: ${sub}`, 14, 20);
-    doc.autoTable({ 
-        html: '#attendanceTable', 
-        startY: 30, 
-        theme: 'grid', 
-        headStyles: {fillColor:[79, 70, 229]} 
-    });
-    doc.save(`SAMS_${sub}_Report.pdf`);
+    doc.text(`Report: ${document.getElementById('subjSelect').value}`, 14, 15);
+    doc.autoTable({ html: '#attendanceTable', startY: 25, theme: 'grid', headStyles: {fillColor:[79,70,229]} });
+    doc.save("Attendance_Report.pdf");
 }
 </script>
 </body>
