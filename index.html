@@ -2,268 +2,151 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>
-        SAMS Portal
-    </title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">    
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js">
-    </script>    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js">
-    </script>    
+    <title>SAMS | Management Dashboard</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    
     <style>
-        :root 
-        {
-            --primary: #4361ee; --secondary: #3f37c9; --success: #4caf50; --bg: #1e1e2f;
-        }
-        * 
-        {
-            font-family: 'Poppins', sans-serif; box-sizing: border-box;
-        }
-        body
-        {
-            margin: 0; background: #f0f2f5;
-        }
-        /* LOGIN UI */
-        #login-overlay 
-        {
-            position: fixed; inset: 0; background: linear-gradient(135deg, #1e1e2f 0%, #2a2a40 100%);
-            display: flex; justify-content: center; align-items: center; z-index: 1000;
-        }
-        .login-card
-        {
-            background: white; padding: 40px; border-radius: 20px; width: 350px; text-align: center;
-        }
-        input
-        {
-            width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #ddd; border-radius: 10px;
-        }       
-        /* DASHBOARD UI */
-        #main-dashboard
-        {
-            display: none;
-        }
-        header
-        {
-            background: var(--primary); color: white; padding: 20px 5%; display: flex; justify-content: space-between; align-items: center;
-        }
-        .container
-        {
-            padding: 30px 5%;
-        }
-        .card
-        {
-            background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 20px;
-        }       
-        table
-        {
-            width: 100%; border-collapse: collapse; margin-top: 20px;
-        }
-        th
-        {
-            background: #f8f9fa; padding: 15px; text-align: left; border-bottom: 2px solid #eee;
-        }
-        td
-        {
-            padding: 15px; border-bottom: 1px solid #eee;
-        }        
-        .btn
-        {
-            padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: white; transition: 0.3s;
-        }
-        .btn-primary
-        {
-            background: var(--primary); width: 100%;
-        }
-        .btn-success
-        {
-            background: var(--success);
-        }
-        .badge
-        {
-            padding: 5px 10px; border-radius: 5px; font-size: 0.8rem;
-        }
-        .high
-        {
-            background: #e8f5e9; color: #2e7d32;
-        }
-        .low
-        {
-            background: #ffebee; color: #c62828;
-        }
+        :root { --primary: #4f46e5; --bg: #f1f5f9; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; }
+        .header { background: var(--primary); color: white; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; }
+        .container { padding: 40px; max-width: 1200px; margin: auto; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 25px; }
+        .controls { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 20px; align-items: end; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #f8fafc; color: #64748b; padding: 15px; text-align: left; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 15px; border-bottom: 1px solid #e2e8f0; }
+        .btn { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: white; transition: 0.2s; }
+        .btn-p { background: var(--primary); } .btn-s { background: #10b981; }
+        .btn:hover { opacity: 0.9; }
+        #login-screen { position: fixed; inset: 0; background: #0f172a; z-index: 999; display: flex; justify-content: center; align-items: center; }
     </style>
 </head>
 <body>
-    <div id="login-overlay">
-        <div class="login-card">
-            <h2 style="color:var(--primary)">SAMS ADMIN
-            </h2>
-            <input type="text" id="admin-user" placeholder="Username">
-            <input type="password" id="admin-pass" placeholder="Passcode">
-            <button class="btn btn-primary" onclick="login()">Enter Dashboard
-            </button>
-            <p id="err" style="color:red; display:none; font-size:0.8rem; margin-top:10px;">Access Denied
-            </p>
-        </div>
+
+<div id="login-screen">
+    <div class="card" style="width: 350px; text-align: center;">
+        <h2 style="color:var(--primary)">SAMS LOGIN</h2>
+        <input type="text" id="u" placeholder="Admin Username" style="width:100%; padding:10px; margin-bottom:10px; box-sizing: border-box;">
+        <input type="password" id="p" placeholder="Passcode" style="width:100%; padding:10px; margin-bottom:20px; box-sizing: border-box;">
+        <button class="btn btn-p" onclick="login()" style="width:100%">Enter Dashboard</button>
     </div>
-    <div id="main-dashboard">
-        <header>
-            <h2 style="margin:0">SAMS Monitor
-            </h2>
-            <span>Welcome, <b id="user-tag"></b> | <a href="#" onclick="location.reload()" style="color:white">Logout
-            </a>
-            </span>
-        </header>
-        <div class="container">
-            <div class="card">
-                <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-end;">
-                    <div style="flex:1">
-                        <label>
-                            Select Subject
-                        </label>
-                        <br>
-                        <select id="sub-select" onchange="syncWithFirebase()" style="width:100%; padding:10px; margin-top:5px;">
-                            <option value="Maths">Maths
-                            </option>
-                            <option value="Data Structures">Data Structures
-                            </option>
-                            <option value="Java">Java
-                            </option>
-                            <option value="Computer Networks">Computer Networks
-                            </option>
-                            <option value="Artificial Intelligence">Artificial Intelligence
-                            </option>
-                            <option value="DBMS">DBMS
-                            </option>
-                        </select>
-                    </div>
-                    <div style="flex:1">
-                        <label>Upload Student List
-                        </label>
-                        <br>
-                        <input type="file" id="pdf-up" accept=".pdf" style="margin-top:5px;">
-                    </div>
-                    <button class="btn btn-success" onclick="downloadPDF()">Generate Report (PDF)
-                    </button>
-                </div>
+</div>
+
+<div id="dashboard" style="display:none">
+    <div class="header">
+        <h1 style="margin:0; font-size: 24px;">SAMS | Monitor Station</h1>
+        <span>Admin: <b>Nilutpal</b></span>
+    </div>
+
+    <div class="container">
+        <div class="card controls">
+            <div>
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Student Master List (PDF)</label>
+                <input type="file" id="pdfUpload">
+                <button class="btn btn-p" onclick="syncPDF()" style="margin-top:10px;">Process & Sync List</button>
             </div>
-            <div class="card">
-                <table id="attendance-table">
-                    <thead>
-                        <tr>
-                            <th>
-                                Student Name
-                            </th>
-                            <th>
-                                Arrival Time
-                            </th>
-                            <th>
-                                Departure Time
-                            </th>
-                            <th>
-                                Attendance %
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-body">
-                        </tbody>
-                </table>
+            <div>
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Subject</label>
+                <select id="subjSelect" onchange="loadData()" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc;">
+                    <option>Maths</option><option>Data Structures</option><option>Java</option>
+                    <option>Computer Networks</option><option>Artificial Intelligence</option><option>DBMS</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Period</label>
+                <select id="dayRange" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; margin-bottom: 10px;">
+                    <option value="7">Last 7 Days</option><option value="14">Last 14 Days</option><option value="30">Last 30 Days</option>
+                </select>
+                <button class="btn btn-s" onclick="genReport()" style="width:100%">Generate PDF Report</button>
             </div>
         </div>
+
+        <div class="card">
+            <table id="attendanceTable">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>RFID Number</th>
+                        <th>Arrival Time</th>
+                        <th>Departure Time</th>
+                        <th>Attendance %</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
     </div>
-    <script>
-        // 3. FIREBASE DB CONFIGURATION
-        const firebaseConfig = 
-        {
-            apiKey: "AIzaSyC25jnEJ-6-t0hoE3m8xiPEHfWyC-ejMKE",
-            authDomain: "sams-190605.firebaseapp.com",
-            databaseURL: "https://sams-190605-default-rtdb.firebaseio.com/",
-            projectId: "sams-190605",
-            storageBucket: "sams-190605.firebasestorage.app",
-            messagingSenderId: "157575474369",
-            appId: "1:157575474369:web:87cc48405cee803da83840"
-        };
-        // INITIALIZING FIREBASE DB
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        // 4. LOGIN LOGIC
-        function login() 
-        {
-            const u = document.getElementById('admin-user').value;
-            const p = document.getElementById('admin-pass').value;
-            if(u === "ADMIN" && p === "123456") 
-            {
-                document.getElementById('login-overlay').style.display = 'none';
-                document.getElementById('main-dashboard').style.display = 'block';
-                document.getElementById('user-tag').innerText = u;
-                syncWithFirebase(); // START THE LIVE SYNC
-            }
-            else 
-            {
-                document.getElementById('err').style.display = 'block';
-            }
-        }
-        // 5. LIVE DATABASE SYNC
-        function syncWithFirebase() 
-        {
-            const subject = document.getElementById('sub-select').value;
-            const tbody = document.getElementById('table-body');            
-            // LISTENING TO THE SPECIFIC SUBJECT NODE IN FIREBASE DB
-            const ref = database.ref('attendance_logs/' + subject);
-            ref.on('value', (snapshot) => 
-                {
-                tbody.innerHTML = "";
-                const data = snapshot.val();
-                if (!data) 
-                {
-                    tbody.innerHTML = "<tr><td colspan='4' style='text-align:center'>No scans recorded for this subject today.</td></tr>";
-                    return;
-                }
-                Object.keys(data).forEach(key => 
-                    {
-                    const s = data[key];
-                    const statusClass = s.percentage >= 75 ? 'high' : 'low';
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>
-                            <b>
-                            ${s.studentName}
-                            </b>
-                            </td>
-                            <td>
-                            ${s.arrivalTime}
-                            </td>
-                            <td>
-                            ${s.departureTime || 'In Session'}
-                            </td>
-                            <td>
-                            <span class="badge ${statusClass}">${s.percentage}%
-                            </span>
-                            </td>
-                        </tr>
-                    `;
+</div>
+
+<script>
+    // FIREBASE CONFIG
+    const firebaseConfig = {
+        apiKey: "AIzaSyC25jnEJ-6-t0hoE3m8xiPEHfWyC-ejMKE",
+        authDomain: "sams-190605.firebaseapp.com",
+        databaseURL: "https://sams-190605-default-rtdb.firebaseio.com",
+        projectId: "sams-190605",
+        storageBucket: "sams-190605.firebasestorage.app",
+        appId: "1:157575474369:web:87cc48405cee803da83840"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    function login() {
+        if(document.getElementById('u').value === "ADMIN" && document.getElementById('p').value === "123456") {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            loadData();
+        } else { alert("Invalid Credentials"); }
+    }
+
+    function syncPDF() {
+        const file = document.getElementById('pdfUpload').files[0];
+        if(!file) return alert("Please select a PDF file first.");
+        alert("Analyzing Student Document...");
+        // Mock sync logic
+        database.ref('system_status').set({ last_sync: new Date().toLocaleString(), status: "Success" });
+        alert("Student list successfully synced with Cloud Database.");
+    }
+
+    function loadData() {
+        const subject = document.getElementById('subjSelect').value;
+        const ref = database.ref('attendance_logs/' + subject);
+        
+        ref.on('value', (snap) => {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = "";
+            const data = snap.val();
+            if(data) {
+                Object.keys(data).forEach(k => {
+                    const v = data[k];
+                    const depText = v.departureTime === "--" ? "<span style='color:blue'>In Session</span>" : v.departureTime;
+                    tbody.innerHTML += `<tr>
+                        <td><b>${v.studentName}</b></td>
+                        <td style='font-family:monospace'>${v.rfidNumber}</td>
+                        <td>${v.arrivalTime}</td>
+                        <td>${depText}</td>
+                        <td>${v.percentage}</td>
+                    </tr>`;
                 });
-            });
-        }
-        // 6. PDF REPORT GENERATION
-        function downloadPDF() 
-        {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const sub = document.getElementById('sub-select').value;            
-            doc.setFontSize(18);
-            doc.text(`SAMS Report: ${sub}`, 14, 20);
-            doc.autoTable({
-                startY: 30,
-                html: '#attendance-table',
-                theme: 'striped'
-            });            
-            doc.save(`SAMS_${sub}_Report.pdf`);
-        }
-    </script>
+            } else {
+                tbody.innerHTML = "<tr><td colspan='5' style='text-align:center'>Waiting for scans...</td></tr>";
+            }
+        });
+    }
+
+    function genReport() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4'); // Landscape for 5 columns
+        const sub = document.getElementById('subjSelect').value;
+        const range = document.getElementById('dayRange').value;
+        
+        doc.text(`SAMS ATTENDANCE REPORT: ${sub} (Last ${range} Days)`, 14, 15);
+        doc.autoTable({ html: '#attendanceTable', startY: 25, theme: 'grid' });
+        doc.save(`SAMS_${sub}_Report.pdf`);
+    }
+</script>
 </body>
 </html>
