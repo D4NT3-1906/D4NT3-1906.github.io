@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SAMS | Management Dashboard</title>
+    <title>
+        SAMS | Management Dashboard
+    </title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -22,7 +24,7 @@
         .pulse { animation: pulse-red 2s infinite; color: var(--danger); font-weight: bold; }
         @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
-        .controls { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; align-items: end; }
+        .controls { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 20px; align-items: end; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { background: #f8fafc; color: #64748b; padding: 13px 15px; text-align: left; border-bottom: 2px solid #e2e8f0; font-size: 13px; text-transform: uppercase; }
         td { padding: 13px 15px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
@@ -42,8 +44,8 @@
 
         .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
         .stat-card { background: white; border-radius: 10px; padding: 18px 22px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-        .stat-card .slabel { font-size: 12px; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; }
-        .stat-card .svalue { font-size: 28px; font-weight: 700; color: #1e293b; }
+        .stat-card .slabel { font-size: 11px; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; }
+        .stat-card .svalue { font-size: 26px; font-weight: 700; color: #1e293b; }
 
         .badge { display: inline-block; padding: 4px 12px; border-radius: 99px; font-size: 12px; font-weight: 700; }
         .badge-in { background: #dbeafe; color: #1d4ed8; }
@@ -61,14 +63,14 @@
         <input type="text" id="u" placeholder="Admin Username">
         <input type="password" id="p" placeholder="Passcode">
         <button class="btn btn-p" onclick="login()" style="width:100%">Enter Dashboard</button>
-        <div id="login-error" style="color:red; margin-top:10px;"></div>
+        <div id="login-error" style="color:var(--danger); margin-top:10px; font-size: 13px;"></div>
     </div>
 </div>
 
 <div id="dashboard" style="display:none">
     <div class="header">
-        <h1 style="margin:0; font-size:22px;">SAMS | Monitor Station</h1>
-        <span>Admin: <b>Nilutpal</b> &nbsp;|&nbsp; <span id="live-time"></span></span>
+        <h1 style="margin:0; font-size:22px;">Live SAMS Monitor Station</h1>
+        <span>Admin: <b>AEI_Comp</b> &nbsp;|&nbsp; <span id="live-time"></span></span>
     </div>
 
     <div class="container">
@@ -94,34 +96,53 @@
             <div id="sessionStatus" class="status-indicator">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span>Currently Hosting: <b id="activeSubjName">--</b></span>
-                    <span class="pulse">LIVE SESSION ACTIVE</span>
-                    <button class="btn btn-d" onclick="stopClass()" style="padding: 6px 15px;">Force Stop</button>
+                    <span class="pulse">LIVE SESSION ACTIVE!</span>
+                    <button class="btn btn-d" onclick="stopClass()" style="padding: 6px 15px;">Force End Class</button>
                 </div>
             </div>
         </div>
 
         <div class="stat-grid">
-            <div class="stat-card"><div class="slabel">Enrolled</div><div class="svalue" id="stat-total">-</div></div>
-            <div class="stat-card"><div class="slabel">Present</div><div class="svalue" id="stat-present">-</div></div>
-            <div class="stat-card"><div class="slabel">Left</div><div class="svalue" id="stat-done">-</div></div>
-            <div class="stat-card"><div class="slabel">Attendance %</div><div class="svalue" id="stat-pct">-</div></div>
+            <div class="stat-card"><div class="slabel">Total Enrolled</div><div class="svalue" id="stat-total">-</div></div>
+            <div class="stat-card"><div class="slabel">Present (Filtered)</div><div class="svalue" id="stat-present">-</div></div>
+            <div class="stat-card"><div class="slabel">Completed Scan-Out</div><div class="svalue" id="stat-done">-</div></div>
+            <div class="stat-card"><div class="slabel">Avg. Attendance %</div><div class="svalue" id="stat-pct">-</div></div>
         </div>
 
         <div class="card">
             <div class="controls">
                 <div>
-                    <label>View History</label>
+                    <label>Subject</label>
                     <select id="subjSelect" onchange="loadData()">
                         <option>Java</option><option>Maths</option><option>Data Structures</option>
                         <option>Computer Networks</option><option>Artificial Intelligence</option><option>DBMS</option>
                     </select>
                 </div>
-                <div><label>Range</label><select id="dayRange"><option value="7">7 Days</option></select></div>
-                <div><button class="btn btn-s" onclick="genReport()" style="width:100%">Export PDF</button></div>
-                <div><button class="btn btn-p" onclick="loadData()" style="width:100%">Sync Now</button></div>
+                <div>
+                    <label>Time Period</label>
+                    <select id="dayRange" onchange="loadData()">
+                        <option value="1">Today Only</option>
+                        <option value="7" selected>Last 7 Days</option>
+                        <option value="14">Last 14 Days</option>
+                        <option value="30">Last 30 Days</option>
+                        <option value="0">All Time</option>
+                    </select>
+                </div>
+                <div><label>&nbsp;</label><button class="btn btn-s" onclick="genReport()" style="width:100%">Export PDF</button></div>
+                <div><label>&nbsp;</label><button class="btn btn-p" onclick="loadData()" style="width:100%">Refresh Logs</button></div>
             </div>
             <table id="attendanceTable">
-                <thead><tr><th>#</th><th>Name</th><th>UID</th><th>Date</th><th>Arrival</th><th>Departure</th><th>Total %</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Student Name</th>
+                        <th>UID</th>
+                        <th>Date</th>
+                        <th>Arrival</th>
+                        <th>Departure</th>
+                        <th>Overall %</th>
+                    </tr>
+                </thead>
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
@@ -129,6 +150,7 @@
 </div>
 
 <script>
+// --- FIREBASE CONFIG ---
 const firebaseConfig = {
     apiKey: "AIzaSyC25jnEJ-6-t0hoE3m8xiPEHfWyC-ejMKE",
     authDomain: "sams-190605.firebaseapp.com",
@@ -140,18 +162,30 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-const STUDENT_NAMES = { "622FA904": "Rohan Das", "14067105": "Wasim Gupta", "AC5C6A05": "Dimitri Tro", "292E8A04": "Henry McLaren", "8BD16905": "Jungle Naidu" };
+// --- REGISTERED STUDENTS ---
+const STUDENT_NAMES = { 
+    "622FA904": "Rohan Das", 
+    "14067105": "Wasim Gupta", 
+    "AC5C6A05": "Dimitri Tro", 
+    "292E8A04": "Henry McLaren", 
+    "8BD16905": "Jungle Naidu" 
+};
 
+// --- AUTH ---
 function login() {
-    if (document.getElementById('u').value === "ADMIN" && document.getElementById('p').value === "123456") {
+    const user = document.getElementById('u').value;
+    const pass = document.getElementById('p').value;
+    if (user === "ADMIN" && pass === "123456") {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
         loadData();
         listenToSession();
-    } else { document.getElementById('login-error').textContent = "Access Denied."; }
+    } else {
+        document.getElementById('login-error').textContent = "Incorrect credentials.";
+    }
 }
 
-// REMOTE SESSION COMMANDS
+// --- SESSION CONTROL (TRIGGER ESP32) ---
 function startClass() {
     const sub = document.getElementById('sessionSubj').value;
     const dur = document.getElementById('sessionDur').value;
@@ -164,9 +198,12 @@ function startClass() {
 }
 
 function stopClass() {
-    db.ref('current_session/active').set(false);
+    if(confirm("Are you sure you want to end this session?")) {
+        db.ref('current_session/active').set(false);
+    }
 }
 
+// Watch for ESP32/Admin updates to session state
 function listenToSession() {
     db.ref('current_session').on('value', snap => {
         const data = snap.val();
@@ -174,8 +211,8 @@ function listenToSession() {
             document.getElementById('sessionStatus').style.display = 'block';
             document.getElementById('activeSubjName').textContent = data.subject;
             document.getElementById('startBtn').disabled = true;
-            document.getElementById('subjSelect').value = data.subject; // Auto-switch table view
-            loadData();
+            document.getElementById('subjSelect').value = data.subject;
+            loadData(); // Update table view automatically
         } else {
             document.getElementById('sessionStatus').style.display = 'none';
             document.getElementById('startBtn').disabled = false;
@@ -183,24 +220,41 @@ function listenToSession() {
     });
 }
 
+// --- DATA LOADING & FILTERING ---
 function loadData() {
     const subject = document.getElementById('subjSelect').value;
+    const daysLimit = parseInt(document.getElementById('dayRange').value);
+    
     db.ref('attendance_logs/' + subject).on('value', async (snap) => {
         const logData = snap.val();
         const tbody = document.getElementById('tableBody');
+        
         if (!logData) {
-            tbody.innerHTML = "<tr><td colspan='7' style='text-align:center;padding:20px'>No records found.</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='7' style='text-align:center;padding:30px'>No records for this subject.</td></tr>";
             return;
         }
 
         const histSnap = await db.ref('student_history/' + subject).once('value');
         const histData = histSnap.val() || {};
 
-        let rows = "", present = 0, completed = 0, i = 1;
+        let rows = "", presentCount = 0, completedCount = 0, i = 1;
+
+        // Cutoff calculation
+        const now = new Date();
+        const cutoff = new Date();
+        cutoff.setDate(now.getDate() - daysLimit);
+
         Object.keys(logData).forEach(uid => {
             const v = logData[uid];
-            present++;
-            if(v.departureTime !== "--") completed++;
+            
+            // Date Check: ESP32 stores as dd-mm-yyyy
+            const d = v.date.split("-");
+            const recordDate = new Date(d[2], d[1] - 1, d[0]);
+
+            if (daysLimit !== 0 && recordDate < cutoff) return; // Skip if too old
+
+            presentCount++;
+            if(v.departureTime !== "--") completedCount++;
             
             const stats = histData[uid] || { attended: 0, totalClasses: 1 };
             const pct = Math.round((stats.attended / stats.totalClasses) * 100);
@@ -208,30 +262,46 @@ function loadData() {
             rows += `<tr>
                 <td>${i++}</td>
                 <td><b>${STUDENT_NAMES[uid] || uid}</b></td>
-                <td>${uid}</td>
-                <td>${v.date || "-"}</td>
+                <td style="font-family:monospace">${uid}</td>
+                <td>${v.date}</td>
                 <td>${v.arrivalTime}</td>
                 <td><span class="badge ${v.departureTime === '--' ? 'badge-in' : 'badge-out'}">${v.departureTime}</span></td>
                 <td><span class="badge ${pct >= 75 ? 'pct-green' : 'pct-red'}">${pct}%</span></td>
             </tr>`;
         });
-        tbody.innerHTML = rows;
+
+        tbody.innerHTML = rows || "<tr><td colspan='7' style='text-align:center;padding:30px'>No records in this time range.</td></tr>";
+        
+        // Update Dashboard Stats
         document.getElementById('stat-total').textContent = Object.keys(STUDENT_NAMES).length;
-        document.getElementById('stat-present').textContent = present;
-        document.getElementById('stat-done').textContent = completed;
-        document.getElementById('stat-pct').textContent = Math.round((present / Object.keys(STUDENT_NAMES).length) * 100) + "%";
+        document.getElementById('stat-present').textContent = presentCount;
+        document.getElementById('stat-done').textContent = completedCount;
+        const avg = (presentCount / Object.keys(STUDENT_NAMES).length) * 100;
+        document.getElementById('stat-pct').textContent = Math.round(avg || 0) + "%";
     });
 }
 
-function updateClock() { document.getElementById("live-time").textContent = new Date().toLocaleTimeString('en-IN'); }
-setInterval(updateClock, 1000); updateClock();
+// --- CLOCK ---
+function updateClock() { 
+    document.getElementById("live-time").textContent = new Date().toLocaleTimeString('en-IN'); 
+}
+setInterval(updateClock, 1000); 
+updateClock();
 
+// --- PDF EXPORT ---
 function genReport() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('l', 'mm', 'a4');
-    doc.text(`Attendance Report - ${document.getElementById('subjSelect').value}`, 14, 15);
-    doc.autoTable({ html: '#attendanceTable', startY: 25, theme: 'grid', headStyles: {fillColor:[79,70,229]} });
-    doc.save("Report.pdf");
+    const sub = document.getElementById('subjSelect').value;
+    doc.setFontSize(18);
+    doc.text(`SAMS ATTENDANCE: ${sub}`, 14, 20);
+    doc.autoTable({ 
+        html: '#attendanceTable', 
+        startY: 30, 
+        theme: 'grid', 
+        headStyles: {fillColor:[79, 70, 229]} 
+    });
+    doc.save(`SAMS_${sub}_Report.pdf`);
 }
 </script>
 </body>
