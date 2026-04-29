@@ -9,73 +9,62 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
     <style>
-        :root { --primary: #4f46e5; --bg: #f1f5f9; }
+        :root { --primary: #4f46e5; --bg: #f1f5f9; --success: #10b981; --danger: #ef4444; }
         * { box-sizing: border-box; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; }
         .header { background: var(--primary); color: white; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; }
         .container { padding: 30px 40px; max-width: 1300px; margin: auto; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 25px; }
+        
+        /* Session Controller Grid */
+        .session-grid { display: grid; grid-template-columns: 2fr 1fr 1.2fr; gap: 20px; align-items: end; }
+        .status-indicator { margin-top: 15px; padding: 12px; border-radius: 8px; display: none; background: #f8fafc; border-left: 4px solid var(--success); }
+        .pulse { animation: pulse-red 2s infinite; color: var(--danger); font-weight: bold; }
+        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
         .controls { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; align-items: end; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { background: #f8fafc; color: #64748b; padding: 13px 15px; text-align: left; border-bottom: 2px solid #e2e8f0; font-size: 13px; text-transform: uppercase; }
         td { padding: 13px 15px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
         tr:hover td { background: #f8fafc; }
+        
         .btn { padding: 11px 22px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: white; transition: 0.2s; font-size: 14px; }
         .btn-p { background: var(--primary); }
-        .btn-s { background: #10b981; }
+        .btn-s { background: var(--success); }
+        .btn-d { background: var(--danger); }
         .btn:hover { opacity: 0.85; }
-        select, input[type="text"], input[type="password"] {
-            width: 100%; padding: 10px 12px; border-radius: 8px;
-            border: 1px solid #cbd5e1; font-size: 14px; outline: none;
-        }
-        select:focus, input:focus { border-color: var(--primary); }
+        
+        select, input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; outline: none; }
         label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 13px; color: #475569; }
 
-        /* Login */
         #login-screen { position: fixed; inset: 0; background: #0f172a; z-index: 999; display: flex; justify-content: center; align-items: center; }
         .login-box { background: white; padding: 40px; border-radius: 14px; width: 360px; text-align: center; }
-        .login-box h2 { color: var(--primary); margin-bottom: 6px; }
-        .login-box p { color: #94a3b8; font-size: 13px; margin-bottom: 24px; }
-        .login-box input { margin-bottom: 14px; }
-        #login-error { color: #ef4444; font-size: 13px; margin-top: 10px; }
 
-        /* Stat cards */
         .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
         .stat-card { background: white; border-radius: 10px; padding: 18px 22px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
         .stat-card .slabel { font-size: 12px; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; }
         .stat-card .svalue { font-size: 28px; font-weight: 700; color: #1e293b; }
-        .stat-card.hi .svalue { color: var(--primary); }
 
-        /* Badges */
-        .badge { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; }
-        .badge-in  { background: #dbeafe; color: #1d4ed8; }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 99px; font-size: 12px; font-weight: 700; }
+        .badge-in { background: #dbeafe; color: #1d4ed8; }
         .badge-out { background: #dcfce7; color: #15803d; }
-        .badge-pct-high { background: #dcfce7; color: #15803d; }
-        .badge-pct-mid  { background: #fef9c3; color: #854d0e; }
-        .badge-pct-low  { background: #fee2e2; color: #b91c1c; }
-
-        /* Student name map display */
-        .uid-map { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
-        .uid-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; text-align: center; }
-        .uid-card .uname { font-weight: 700; font-size: 15px; color: #1e293b; }
-        .uid-card .uuid  { font-family: monospace; font-size: 11px; color: #94a3b8; margin-top: 4px; }
+        .pct-green { background: #dcfce7; color: #15803d; }
+        .pct-red { background: #fee2e2; color: #b91c1c; }
     </style>
 </head>
 <body>
 
-<!-- ==================== LOGIN ==================== -->
 <div id="login-screen">
     <div class="login-box">
         <h2>SAMS LOGIN</h2>
         <p>Smart Attendance Management System</p>
-        <input type="text"     id="u" placeholder="Admin Username">
+        <input type="text" id="u" placeholder="Admin Username">
         <input type="password" id="p" placeholder="Passcode">
         <button class="btn btn-p" onclick="login()" style="width:100%">Enter Dashboard</button>
-        <div id="login-error"></div>
+        <div id="login-error" style="color:red; margin-top:10px;"></div>
     </div>
 </div>
 
-<!-- ==================== DASHBOARD ==================== -->
 <div id="dashboard" style="display:none">
     <div class="header">
         <h1 style="margin:0; font-size:22px;">SAMS | Monitor Station</h1>
@@ -84,261 +73,165 @@
 
     <div class="container">
 
-        <!-- CONTROLS -->
-        <div class="card controls">
-            <div>
-                <label>Subject</label>
-                <select id="subjSelect" onchange="loadData()">
-                    <option>Java</option>
-                    <option>Maths</option>
-                    <option>Data Structures</option>
-                    <option>Computer Networks</option>
-                    <option>Artificial Intelligence</option>
-                    <option>DBMS</option>
-                </select>
+        <div class="card">
+            <h3 style="margin:0 0 16px; color:#1e293b">Class Session Control</h3>
+            <div class="session-grid">
+                <div>
+                    <label>Assign Subject</label>
+                    <select id="sessionSubj">
+                        <option>Java</option><option>Maths</option><option>Data Structures</option>
+                        <option>Computer Networks</option><option>Artificial Intelligence</option><option>DBMS</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Minutes</label>
+                    <input type="number" id="sessionDur" value="60" min="1">
+                </div>
+                <div>
+                    <button class="btn btn-s" id="startBtn" onclick="startClass()" style="width:100%">Start Session</button>
+                </div>
             </div>
-            <div>
-                <label>Period</label>
-                <select id="dayRange">
-                    <option value="7">Last 7 Days</option>
-                    <option value="14">Last 14 Days</option>
-                    <option value="30">Last 30 Days</option>
-                </select>
-            </div>
-            <div>
-                <label>&nbsp;</label>
-                <button class="btn btn-s" onclick="genReport()" style="width:100%">Generate PDF Report</button>
-            </div>
-            <div>
-                <label>&nbsp;</label>
-                <button class="btn btn-p" onclick="loadData()" style="width:100%">Refresh Data</button>
+            <div id="sessionStatus" class="status-indicator">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>Currently Hosting: <b id="activeSubjName">--</b></span>
+                    <span class="pulse">LIVE SESSION ACTIVE</span>
+                    <button class="btn btn-d" onclick="stopClass()" style="padding: 6px 15px;">Force Stop</button>
+                </div>
             </div>
         </div>
 
-        <!-- STAT CARDS -->
         <div class="stat-grid">
-            <div class="stat-card">
-                <div class="slabel">Total Students</div>
-                <div class="svalue" id="stat-total">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="slabel">Present Now</div>
-                <div class="svalue" id="stat-present">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="slabel">Completed Session</div>
-                <div class="svalue" id="stat-done">-</div>
-            </div>
-            <div class="stat-card hi">
-                <div class="slabel">Attendance %</div>
-                <div class="svalue" id="stat-pct">-</div>
-            </div>
+            <div class="stat-card"><div class="slabel">Enrolled</div><div class="svalue" id="stat-total">-</div></div>
+            <div class="stat-card"><div class="slabel">Present</div><div class="svalue" id="stat-present">-</div></div>
+            <div class="stat-card"><div class="slabel">Left</div><div class="svalue" id="stat-done">-</div></div>
+            <div class="stat-card"><div class="slabel">Attendance %</div><div class="svalue" id="stat-pct">-</div></div>
         </div>
 
-        <!-- REGISTERED STUDENTS -->
         <div class="card">
-            <h3 style="margin:0 0 16px; color:#1e293b">Registered Cards</h3>
-            <div class="uid-map">
-                <div class="uid-card">
-                    <div class="uname">Nilutpal Sarkar</div>
-                    <div class="uuid">622FA904</div>
+            <div class="controls">
+                <div>
+                    <label>View History</label>
+                    <select id="subjSelect" onchange="loadData()">
+                        <option>Java</option><option>Maths</option><option>Data Structures</option>
+                        <option>Computer Networks</option><option>Artificial Intelligence</option><option>DBMS</option>
+                    </select>
                 </div>
-                <div class="uid-card">
-                    <div class="uname">Hari Prasad</div>
-                    <div class="uuid">14067105</div>
-                </div>
-                <div class="uid-card">
-                    <div class="uname">Joy Aditya</div>
-                    <div class="uuid">AC5C6A05</div>
-                </div>
-                <div class="uid-card">
-                    <div class="uname">Priyangshi Goswami</div>
-                    <div class="uuid">292E8A04</div>
-                </div>
-                <div class="uid-card">
-                    <div class="uname">Aman Saha</div>
-                    <div class="uuid">8BD16905</div>
-                </div>
+                <div><label>Range</label><select id="dayRange"><option value="7">7 Days</option></select></div>
+                <div><button class="btn btn-s" onclick="genReport()" style="width:100%">Export PDF</button></div>
+                <div><button class="btn btn-p" onclick="loadData()" style="width:100%">Sync Now</button></div>
             </div>
-        </div>
-
-        <!-- ATTENDANCE TABLE -->
-        <div class="card">
-            <h3 style="margin:0 0 16px; color:#1e293b">
-                Attendance Log —
-                <span id="table-subject" style="color:var(--primary)">Java</span>
-            </h3>
             <table id="attendanceTable">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Student Name</th>
-                        <th>RFID Number</th>
-                        <th>Date</th>
-                        <th>Arrival Time</th>
-                        <th>Departure Time</th>
-                        <th>Attendance %</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:30px">Loading...</td></tr>
-                </tbody>
+                <thead><tr><th>#</th><th>Name</th><th>UID</th><th>Date</th><th>Arrival</th><th>Departure</th><th>Total %</th></tr></thead>
+                <tbody id="tableBody"></tbody>
             </table>
         </div>
-
     </div>
 </div>
 
 <script>
-// ==================== FIREBASE CONFIG ====================
 const firebaseConfig = {
-    apiKey:            "AIzaSyC25jnEJ-6-t0hoE3m8xiPEHfWyC-ejMKE",
-    authDomain:        "sams-190605.firebaseapp.com",
-    databaseURL:       "https://sams-190605-default-rtdb.firebaseio.com",
-    projectId:         "sams-190605",
-    storageBucket:     "sams-190605.firebasestorage.app",
-    appId:             "1:157575474369:web:87cc48405cee803da83840"
+    apiKey: "AIzaSyC25jnEJ-6-t0hoE3m8xiPEHfWyC-ejMKE",
+    authDomain: "sams-190605.firebaseapp.com",
+    databaseURL: "https://sams-190605-default-rtdb.firebaseio.com",
+    projectId: "sams-190605",
+    storageBucket: "sams-190605.firebasestorage.app",
+    appId: "1:157575474369:web:87cc48405cee803da83840"
 };
 firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
+const db = firebase.database();
 
-// ==================== STUDENT NAME MAP ====================
-// Change the names here to match your real students
-const STUDENT_NAMES = {
-    "622FA904": "Nilutpal Sarkar",
-    "14067105": "Hari Prasad",
-    "AC5C6A05": "Joy Aditya",
-    "292E8A04": "Priyangshi Goswami",
-    "8BD16905": "Aman Saha"
-};
+const STUDENT_NAMES = { "622FA904": "Student 1", "14067105": "Student 2", "AC5C6A05": "Student 3", "292E8A04": "Student 4", "8BD16905": "Student 5" };
 
-function getStudentName(uid) {
-    return STUDENT_NAMES[uid] || uid;
-}
-
-// ==================== LIVE CLOCK ====================
-function updateClock() {
-    const now = new Date();
-    document.getElementById("live-time").textContent =
-        now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
-setInterval(updateClock, 1000);
-updateClock();
-
-// ==================== LOGIN ====================
 function login() {
-    const u = document.getElementById('u').value.trim();
-    const p = document.getElementById('p').value.trim();
-    if (u === "ADMIN" && p === "123456") {
+    if (document.getElementById('u').value === "ADMIN" && document.getElementById('p').value === "123456") {
         document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('dashboard').style.display    = 'block';
+        document.getElementById('dashboard').style.display = 'block';
         loadData();
-    } else {
-        document.getElementById('login-error').textContent = "Invalid username or passcode.";
-    }
+        listenToSession();
+    } else { document.getElementById('login-error').textContent = "Access Denied."; }
 }
 
-// Enter key on login
-document.addEventListener('keydown', e => {
-    if (e.key === 'Enter') login();
-});
+// REMOTE SESSION COMMANDS
+function startClass() {
+    const sub = document.getElementById('sessionSubj').value;
+    const dur = document.getElementById('sessionDur').value;
+    db.ref('current_session').set({
+        active: true,
+        subject: sub,
+        duration: parseInt(dur),
+        startTime: Date.now()
+    });
+}
 
-// ==================== LOAD ATTENDANCE DATA ====================
+function stopClass() {
+    db.ref('current_session/active').set(false);
+}
+
+function listenToSession() {
+    db.ref('current_session').on('value', snap => {
+        const data = snap.val();
+        if (data && data.active) {
+            document.getElementById('sessionStatus').style.display = 'block';
+            document.getElementById('activeSubjName').textContent = data.subject;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('subjSelect').value = data.subject; // Auto-switch table view
+            loadData();
+        } else {
+            document.getElementById('sessionStatus').style.display = 'none';
+            document.getElementById('startBtn').disabled = false;
+        }
+    });
+}
+
 function loadData() {
     const subject = document.getElementById('subjSelect').value;
-    document.getElementById('table-subject').textContent = subject;
-
-    const ref = database.ref('attendance_logs/' + subject);
-
-    ref.on('value', (snap) => {
-        const tbody   = document.getElementById('tableBody');
-        const data    = snap.val();
-        const total   = Object.keys(STUDENT_NAMES).length;
-        let present   = 0;
-        let completed = 0;
-        let rows      = "";
-        let rowIndex  = 1;
-
-        if (data) {
-            Object.keys(data).forEach(uid => {
-                const v           = data[uid];
-                const name        = getStudentName(uid);
-                const isInSession = v.departureTime === "--";
-                const date        = v.date || "-";
-
-                // count stats
-                present++;
-                if (!isInSession) completed++;
-
-                // attendance percentage badge
-                const pct     = parseInt(v.percentage) || 0;
-                const pctClass = pct >= 75 ? "badge-pct-high" : pct >= 50 ? "badge-pct-mid" : "badge-pct-low";
-
-                // departure display
-                const depHtml = isInSession
-                    ? "<span class='badge badge-in'>In Session</span>"
-                    : `<span class='badge badge-out'>${v.departureTime}</span>`;
-
-                rows += `<tr>
-                    <td>${rowIndex++}</td>
-                    <td><b>${name}</b></td>
-                    <td style='font-family:monospace;font-size:13px'>${uid}</td>
-                    <td>${date}</td>
-                    <td>${v.arrivalTime}</td>
-                    <td>${depHtml}</td>
-                    <td><span class='badge ${pctClass}'>${v.percentage || "N/A"}</span></td>
-                </tr>`;
-            });
-
-            tbody.innerHTML = rows;
-        } else {
-            tbody.innerHTML = "<tr><td colspan='7' style='text-align:center;color:#94a3b8;padding:30px'>No attendance data yet for this subject.</td></tr>";
+    db.ref('attendance_logs/' + subject).on('value', async (snap) => {
+        const logData = snap.val();
+        const tbody = document.getElementById('tableBody');
+        if (!logData) {
+            tbody.innerHTML = "<tr><td colspan='7' style='text-align:center;padding:20px'>No records found.</td></tr>";
+            return;
         }
 
-        // update stat cards
-        const attendancePct = total > 0 ? ((present / total) * 100).toFixed(1) : 0;
-        document.getElementById('stat-total').textContent   = total;
+        const histSnap = await db.ref('student_history/' + subject).once('value');
+        const histData = histSnap.val() || {};
+
+        let rows = "", present = 0, completed = 0, i = 1;
+        Object.keys(logData).forEach(uid => {
+            const v = logData[uid];
+            present++;
+            if(v.departureTime !== "--") completed++;
+            
+            const stats = histData[uid] || { attended: 0, totalClasses: 1 };
+            const pct = Math.round((stats.attended / stats.totalClasses) * 100);
+
+            rows += `<tr>
+                <td>${i++}</td>
+                <td><b>${STUDENT_NAMES[uid] || uid}</b></td>
+                <td>${uid}</td>
+                <td>${v.date || "-"}</td>
+                <td>${v.arrivalTime}</td>
+                <td><span class="badge ${v.departureTime === '--' ? 'badge-in' : 'badge-out'}">${v.departureTime}</span></td>
+                <td><span class="badge ${pct >= 75 ? 'pct-green' : 'pct-red'}">${pct}%</span></td>
+            </tr>`;
+        });
+        tbody.innerHTML = rows;
+        document.getElementById('stat-total').textContent = Object.keys(STUDENT_NAMES).length;
         document.getElementById('stat-present').textContent = present;
-        document.getElementById('stat-done').textContent    = completed;
-        document.getElementById('stat-pct').textContent     = attendancePct + "%";
+        document.getElementById('stat-done').textContent = completed;
+        document.getElementById('stat-pct').textContent = Math.round((present / Object.keys(STUDENT_NAMES).length) * 100) + "%";
     });
 }
 
-// ==================== REGISTERED CARDS UI UPDATE ====================
-// This auto-updates the registered cards section with real names
-function updateRegisteredCards() {
-    const container = document.querySelector('.uid-map');
-    container.innerHTML = Object.entries(STUDENT_NAMES).map(([uid, name]) => `
-        <div class="uid-card">
-            <div class="uname">${name}</div>
-            <div class="uuid">${uid}</div>
-        </div>
-    `).join('');
-}
-updateRegisteredCards();
+function updateClock() { document.getElementById("live-time").textContent = new Date().toLocaleTimeString('en-IN'); }
+setInterval(updateClock, 1000); updateClock();
 
-// ==================== GENERATE PDF REPORT ====================
 function genReport() {
     const { jsPDF } = window.jspdf;
-    const doc     = new jsPDF('l', 'mm', 'a4');
-    const subject = document.getElementById('subjSelect').value;
-    const range   = document.getElementById('dayRange').value;
-    const now     = new Date().toLocaleDateString('en-IN');
-
-    doc.setFontSize(16);
-    doc.text(`SAMS ATTENDANCE REPORT`, 14, 15);
-    doc.setFontSize(12);
-    doc.text(`Subject: ${subject}   |   Period: Last ${range} Days   |   Generated: ${now}`, 14, 24);
-
-    doc.autoTable({
-        html: '#attendanceTable',
-        startY: 32,
-        theme: 'grid',
-        headStyles: { fillColor: [79, 70, 229] },
-        styles: { fontSize: 11 }
-    });
-
-    doc.save(`SAMS_${subject}_Report.pdf`);
+    const doc = new jsPDF('l', 'mm', 'a4');
+    doc.text(`Attendance Report - ${document.getElementById('subjSelect').value}`, 14, 15);
+    doc.autoTable({ html: '#attendanceTable', startY: 25, theme: 'grid', headStyles: {fillColor:[79,70,229]} });
+    doc.save("Report.pdf");
 }
 </script>
 </body>
