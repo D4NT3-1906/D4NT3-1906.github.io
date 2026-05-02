@@ -2,125 +2,197 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SAMS | Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAMS | Advanced Management Portal</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 4px; background: #2c3e50; color: white; }
-        .status-on { color: #27ae60; font-weight: bold; }
-        .status-off { color: #c0392b; font-weight: bold; }
+        :root { --primary: #2c3e50; --success: #27ae60; --danger: #e74c3c; --bg: #f0f2f5; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; display: flex; }
+        .sidebar { width: 250px; background: var(--primary); color: white; height: 100vh; padding: 20px; position: fixed; }
+        .main-content { margin-left: 280px; padding: 30px; width: calc(100% - 310px); }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .stat-card { padding: 15px; border-radius: 8px; text-align: center; color: white; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        .btn { padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-export { background: #8e44ad; color: white; }
+        .status-pill { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 5px; }
     </style>
 </head>
 <body>
 
-    <h2>SAMS Administrator Portal</h2>
-
-    <div class="card">
-        <h3>Class Session Controller</h3>
-        <select id="subjectSelect">
-            <option value="Java">Java</option>
-            <option value="DBMS">DBMS</option>
-            <option value="Maths">Maths</option>
-        </select>
-        <input type="number" id="durationInput" placeholder="Mins" value="60" style="width: 60px;">
-        <button onclick="toggleSession()" id="sessionBtn">Start Class</button>
-        <p>System Status: <span id="currentStatus" class="status-off">Offline</span></p>
+    <div class="sidebar">
+        <h2>SAMS Admin</h2>
+        <hr style="opacity: 0.2">
+        <p>Dashboard</p>
+        <p>Student Records</p>
+        <p>Subject Analytics</p>
+        <p>System Settings</p>
     </div>
 
-    <div class="card">
-        <h3>Student Registry (CSV Upload)</h3>
-        <input type="file" id="csvFile" accept=".csv">
-        <button onclick="handleCSV()">Sync Student List</button>
-        <p id="uploadMsg"></p>
+    <div class="main-content">
+        <div class="grid">
+            <div class="stat-card" style="background: #3498db;">
+                <small>Current Subject</small>
+                <h3 id="statSubject">None</h3>
+            </div>
+            <div class="stat-card" style="background: var(--success);">
+                <small>System Status</small>
+                <h3 id="statStatus">Standby</h3>
+            </div>
+            <div class="stat-card" style="background: #f39c12;">
+                <small>Students Present</small>
+                <h3 id="statPresent">0</h3>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Live Session Controller</h3>
+            <select id="subjectSelect" class="btn">
+                <option value="Java">Java</option>
+                <option value="Maths">Maths</option>
+                <option value="Data Structures">Data Structures</option>
+                <option value="Computer Networks">Computer Networks</option>
+                <option value="Artificial Intelligence">Artificial Intelligence</option>
+                <option value="DBMS">DBMS</option>
+            </select>
+            <input type="number" id="durationInput" class="btn" style="width: 80px; background: white; color: black; border: 1px solid #ccc" value="60">
+            <button onclick="toggleSession()" id="sessionBtn" class="btn btn-primary">Start Class</button>
+            <button onclick="exportPDF()" class="btn btn-export" style="float: right;">Export PDF Report</button>
+        </div>
+
+        <div class="card">
+            <h3>Live Attendance Feed</h3>
+            <select id="dateFilter" onchange="loadAttendance()" class="btn" style="background: white; color: black; border: 1px solid #ccc">
+                <option value="1">Last 24 Hours</option>
+                <option value="7">Last 7 Days</option>
+                <option value="30">Last 30 Days</option>
+                <option value="all">All Time</option>
+            </select>
+            <table id="attendanceTable">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>UID</th>
+                        <th>Arrival</th>
+                        <th>Departure</th>
+                        <th>Subject</th>
+                        <th>Attendance %</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceBody">
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h3>Bulk Student Registry</h3>
+            <input type="file" id="csvFile" accept=".csv">
+            <button onclick="handleCSV()" class="btn btn-primary">Sync CSV to Cloud</button>
+            <span id="uploadMsg" style="margin-left: 15px;"></span>
+        </div>
     </div>
 
     <script>
-        // --- FIREBASE CONFIGURATION ---
-        const firebaseConfig = {
-            databaseURL: "https://sams-190605-default-rtdb.firebaseio.com/"
-        };
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = { databaseURL: "https://sams-190605-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         let isSessionActive = false;
 
-        // --- SESSION LOGIC (Triggers ESP32 Callback) ---
+        // --- TOGGLE SESSION ---
         function toggleSession() {
-            const btn = document.getElementById('sessionBtn');
             const sub = document.getElementById('subjectSelect').value;
             const dur = document.getElementById('durationInput').value;
-
+            
             if (!isSessionActive) {
-                // START CLASS
                 db.ref('current_session').set({
                     status: true,
                     subject: sub,
                     duration: parseInt(dur),
-                    startTime: firebase.database.ServerValue.TIMESTAMP
-                }).then(() => {
-                    isSessionActive = true;
-                    btn.innerText = "Stop Class";
-                    btn.style.background = "#c0392b";
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
                 });
             } else {
-                // STOP CLASS
                 db.ref('current_session/status').set(false);
-                isSessionActive = false;
-                btn.innerText = "Start Class";
-                btn.style.background = "#2c3e50";
             }
         }
 
-        // --- ATOMIC CSV UPLOAD (Fixes Latency/Permissions) ---
+        // --- SESSION LISTENER ---
+        db.ref('current_session').on('value', (snap) => {
+            const data = snap.val();
+            isSessionActive = data.status;
+            document.getElementById('statSubject').innerText = data.status ? data.subject : "None";
+            document.getElementById('statStatus').innerText = data.status ? "LIVE" : "Standby";
+            const btn = document.getElementById('sessionBtn');
+            btn.innerText = data.status ? "Stop Class" : "Start Class";
+            btn.style.background = data.status ? "#e74c3c" : "#2c3e50";
+        });
+
+        // --- LOAD & CALCULATE ATTENDANCE ---
+        function loadAttendance() {
+            const filterDays = document.getElementById('dateFilter').value;
+            const tableBody = document.getElementById('attendanceBody');
+            
+            db.ref('attendance_logs').on('value', (snapshot) => {
+                tableBody.innerHTML = "";
+                let presentCount = 0;
+                
+                snapshot.forEach((subjectNode) => {
+                    subjectNode.forEach((log) => {
+                        const data = log.val();
+                        // Logic for filtering by date would go here based on data.date
+                        
+                        let row = `<tr>
+                            <td>${data.studentName}</td>
+                            <td>${data.rfidNumber}</td>
+                            <td>${data.arrivalTime}</td>
+                            <td>${data.departureTime}</td>
+                            <td>${data.subject}</td>
+                            <td><b style="color:${parseInt(data.percentage) < 75 ? 'red' : 'green'}">${data.percentage}</b></td>
+                        </tr>`;
+                        tableBody.innerHTML += row;
+                        presentCount++;
+                    });
+                });
+                document.getElementById('statPresent').innerText = presentCount;
+            });
+        }
+
+        // --- ATOMIC CSV UPLOAD ---
         function handleCSV() {
             const file = document.getElementById('csvFile').files[0];
-            const msg = document.getElementById('uploadMsg');
-            
-            if (!file) return alert("Select a CSV file first!");
-
             Papa.parse(file, {
                 header: true,
                 complete: function(results) {
                     let bulkData = {};
-                    
                     results.data.forEach(row => {
-                        if (row.UID && row.Name) {
-                            const cleanUID = row.UID.trim().toUpperCase();
-                            bulkData[cleanUID] = {
-                                name: row.Name.trim()
-                            };
-                        }
+                        if (row.UID) bulkData[row.UID.trim().toUpperCase()] = { name: row.Name };
                     });
-
-                    // ATOMIC UPDATE: Sends everything in 1 request
-                    db.ref('students').update(bulkData)
-                        .then(() => {
-                            msg.innerText = "Successfully synced " + Object.keys(bulkData).length + " students!";
-                            msg.style.color = "green";
-                        })
-                        .catch(err => {
-                            msg.innerText = "Error: " + err.message;
-                            msg.style.color = "red";
-                        });
+                    db.ref('students').update(bulkData).then(() => {
+                        document.getElementById('uploadMsg').innerText = "Sync Complete!";
+                    });
                 }
             });
         }
 
-        // --- REAL-TIME STATUS LISTENER ---
-        db.ref('current_session/status').on('value', (snapshot) => {
-            const status = snapshot.val();
-            const indicator = document.getElementById('currentStatus');
-            if (status) {
-                indicator.innerText = "LIVE SESSION ACTIVE";
-                indicator.className = "status-on";
-            } else {
-                indicator.innerText = "STANDBY";
-                indicator.className = "status-off";
-            }
-        });
+        // --- PDF EXPORT ---
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text("SAMS Attendance Report", 14, 15);
+            doc.autoTable({ html: '#attendanceTable', margin: { top: 25 } });
+            doc.save(`SAMS_Report_${new Date().toLocaleDateString()}.pdf`);
+        }
+
+        loadAttendance(); // Initial load
     </script>
 </body>
 </html>
