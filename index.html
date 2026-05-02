@@ -3,196 +3,433 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SAMS | Advanced Management Portal</title>
+    <title>SAMS | Management Portal</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <style>
         :root { --primary: #2c3e50; --success: #27ae60; --danger: #e74c3c; --bg: #f0f2f5; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; display: flex; }
-        .sidebar { width: 250px; background: var(--primary); color: white; height: 100vh; padding: 20px; position: fixed; }
-        .main-content { margin-left: 280px; padding: 30px; width: calc(100% - 310px); }
-        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
-        .stat-card { padding: 15px; border-radius: 8px; text-align: center; color: white; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
-        .btn { padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.3s; }
-        .btn-primary { background: var(--primary); color: white; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; }
+
+        /* ---- SIDEBAR ---- */
+        .sidebar { width: 240px; background: var(--primary); color: white; height: 100vh; padding: 24px 20px; position: fixed; top: 0; left: 0; }
+        .sidebar h2 { font-size: 20px; margin-bottom: 6px; }
+        .sidebar p { font-size: 12px; opacity: 0.6; margin-bottom: 24px; }
+        .sidebar hr { opacity: 0.15; margin-bottom: 20px; }
+        .sidebar-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; margin-bottom: 6px; opacity: 0.75; }
+        .sidebar-item:hover { background: rgba(255,255,255,0.1); opacity: 1; }
+        .live-dot { width: 10px; height: 10px; border-radius: 50%; background: #2ecc71; display: inline-block; margin-right: 6px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+        /* ---- MAIN ---- */
+        .main { margin-left: 240px; padding: 28px 32px; width: calc(100% - 240px); }
+
+        /* ---- STAT CARDS ---- */
+        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: white; border-radius: 12px; padding: 18px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid #ccc; }
+        .stat-card .slabel { font-size: 11px; text-transform: uppercase; color: #999; margin-bottom: 6px; letter-spacing: .5px; }
+        .stat-card .svalue { font-size: 26px; font-weight: 700; color: #2c3e50; }
+        .stat-card .ssub { font-size: 12px; color: #aaa; margin-top: 3px; }
+        .stat-card.blue   { border-color: #3498db; }
+        .stat-card.green  { border-color: #27ae60; }
+        .stat-card.orange { border-color: #f39c12; }
+        .stat-card.purple { border-color: #8e44ad; }
+
+        /* ---- CARDS ---- */
+        .card { background: white; border-radius: 12px; padding: 22px 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 22px; }
+        .card h3 { font-size: 15px; color: #2c3e50; margin-bottom: 16px; }
+
+        /* ---- CONTROLS ---- */
+        .controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        select, input[type="number"], input[type="text"] {
+            padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px;
+            font-size: 13px; outline: none; background: white;
+        }
+        select:focus, input:focus { border-color: var(--primary); }
+
+        /* ---- BUTTONS ---- */
+        .btn { padding: 9px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.2s; }
+        .btn:hover { opacity: 0.85; }
+        .btn-start  { background: #27ae60; color: white; }
+        .btn-stop   { background: #e74c3c; color: white; }
         .btn-export { background: #8e44ad; color: white; }
-        .status-pill { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .btn-dark   { background: var(--primary); color: white; }
+
+        /* ---- TABLE ---- */
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #f8f9fa; color: #888; font-size: 11px; text-transform: uppercase; padding: 11px 14px; text-align: left; border-bottom: 2px solid #eee; letter-spacing: .4px; }
+        td { padding: 12px 14px; border-bottom: 1px solid #f3f4f6; color: #333; }
+        tr:hover td { background: #fafafa; }
+
+        /* ---- BADGES ---- */
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 700; }
+        .badge-in   { background: #dbeafe; color: #1d4ed8; }
+        .badge-out  { background: #dcfce7; color: #15803d; }
+        .pct-green  { background: #dcfce7; color: #15803d; }
+        .pct-red    { background: #fee2e2; color: #b91c1c; }
+
+        /* ---- SESSION STATUS ---- */
+        .session-status { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 16px; }
+        .session-status.live     { background: #dcfce7; color: #15803d; }
+        .session-status.standby  { background: #f1f5f9; color: #64748b; }
+
+        /* ---- STUDENT CARDS ---- */
+        .student-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+        .student-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; text-align: center; }
+        .student-card .sname { font-weight: 700; font-size: 13px; color: #1e293b; }
+        .student-card .suid  { font-family: monospace; font-size: 11px; color: #94a3b8; margin-top: 3px; }
+
+        /* ---- LIVE CLOCK ---- */
+        #liveClock { font-size: 13px; opacity: 0.7; }
+
+        .empty { text-align: center; padding: 30px; color: #aaa; font-size: 13px; }
     </style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <h2>SAMS Admin</h2>
-        <hr style="opacity: 0.2">
-        <p>Dashboard</p>
-        <p>Student Records</p>
-        <p>Subject Analytics</p>
-        <p>System Settings</p>
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <h2>SAMS Portal</h2>
+    <p id="liveClock"></p>
+    <hr>
+    <div class="sidebar-item">Dashboard</div>
+    <div class="sidebar-item">Attendance Logs</div>
+    <div class="sidebar-item">Student Registry</div>
+    <div class="sidebar-item">Reports</div>
+    <br><br>
+    <div style="font-size:12px;opacity:0.5">
+        Admin: Nilutpal<br>
+        Firebase: Connected
     </div>
+</div>
 
-    <div class="main-content">
-        <div class="grid">
-            <div class="stat-card" style="background: #3498db;">
-                <small>Current Subject</small>
-                <h3 id="statSubject">None</h3>
-            </div>
-            <div class="stat-card" style="background: var(--success);">
-                <small>System Status</small>
-                <h3 id="statStatus">Standby</h3>
-            </div>
-            <div class="stat-card" style="background: #f39c12;">
-                <small>Students Present</small>
-                <h3 id="statPresent">0</h3>
-            </div>
+<!-- MAIN -->
+<div class="main">
+
+    <!-- STAT CARDS -->
+    <div class="stat-grid">
+        <div class="stat-card blue">
+            <div class="slabel">Current Subject</div>
+            <div class="svalue" id="statSubject">None</div>
+            <div class="ssub">active class</div>
         </div>
-
-        <div class="card">
-            <h3>Live Session Controller</h3>
-            <select id="subjectSelect" class="btn">
-                <option value="Java">Java</option>
-                <option value="Maths">Maths</option>
-                <option value="Data Structures">Data Structures</option>
-                <option value="Computer Networks">Computer Networks</option>
-                <option value="Artificial Intelligence">Artificial Intelligence</option>
-                <option value="DBMS">DBMS</option>
-            </select>
-            <input type="number" id="durationInput" class="btn" style="width: 80px; background: white; color: black; border: 1px solid #ccc" value="60">
-            <button onclick="toggleSession()" id="sessionBtn" class="btn btn-primary">Start Class</button>
-            <button onclick="exportPDF()" class="btn btn-export" style="float: right;">Export PDF Report</button>
+        <div class="stat-card green">
+            <div class="slabel">System Status</div>
+            <div class="svalue" id="statStatus">Standby</div>
+            <div class="ssub" id="statTime">--</div>
         </div>
-
-        <div class="card">
-            <h3>Live Attendance Feed</h3>
-            <select id="dateFilter" onchange="loadAttendance()" class="btn" style="background: white; color: black; border: 1px solid #ccc">
-                <option value="1">Last 24 Hours</option>
-                <option value="7">Last 7 Days</option>
-                <option value="30">Last 30 Days</option>
-                <option value="all">All Time</option>
-            </select>
-            <table id="attendanceTable">
-                <thead>
-                    <tr>
-                        <th>Student Name</th>
-                        <th>UID</th>
-                        <th>Arrival</th>
-                        <th>Departure</th>
-                        <th>Subject</th>
-                        <th>Attendance %</th>
-                    </tr>
-                </thead>
-                <tbody id="attendanceBody">
-                    </tbody>
-            </table>
+        <div class="stat-card orange">
+            <div class="slabel">Students Present</div>
+            <div class="svalue" id="statPresent">0</div>
+            <div class="ssub">in selected view</div>
         </div>
-
-        <div class="card">
-            <h3>Bulk Student Registry</h3>
-            <input type="file" id="csvFile" accept=".csv">
-            <button onclick="handleCSV()" class="btn btn-primary">Sync CSV to Cloud</button>
-            <span id="uploadMsg" style="margin-left: 15px;"></span>
+        <div class="stat-card purple">
+            <div class="slabel">Class Duration</div>
+            <div class="svalue" id="statDuration">--</div>
+            <div class="ssub">minutes set</div>
         </div>
     </div>
 
-    <script>
-        // --- FIREBASE CONFIG ---
-        const firebaseConfig = { databaseURL: "https://sams-190605-default-rtdb.firebaseio.com/" };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+    <!-- SESSION CONTROLLER -->
+    <div class="card">
+        <h3>Session Controller</h3>
 
-        let isSessionActive = false;
+        <div id="sessionStatusBar" class="session-status standby">
+            System is on standby. Select a subject and start the class.
+        </div>
 
-        // --- TOGGLE SESSION ---
-        function toggleSession() {
-            const sub = document.getElementById('subjectSelect').value;
-            const dur = document.getElementById('durationInput').value;
-            
-            if (!isSessionActive) {
-                db.ref('current_session').set({
-                    status: true,
-                    subject: sub,
-                    duration: parseInt(dur),
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                });
-            } else {
-                db.ref('current_session/status').set(false);
-            }
+        <div class="controls">
+            <div>
+                <label style="font-size:12px;color:#888;display:block;margin-bottom:4px">Subject</label>
+                <select id="subjectSelect">
+                    <option>Java</option>
+                    <option>Maths</option>
+                    <option>Data Structures</option>
+                    <option>Computer Networks</option>
+                    <option>Artificial Intelligence</option>
+                    <option>DBMS</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size:12px;color:#888;display:block;margin-bottom:4px">Duration (min)</label>
+                <input type="number" id="durationInput" value="60" min="1" max="300" style="width:90px">
+            </div>
+            <div style="margin-top:18px">
+                <button onclick="startSession()" id="btnStart" class="btn btn-start">Start Class</button>
+            </div>
+            <div style="margin-top:18px">
+                <button onclick="stopSession()" id="btnStop" class="btn btn-stop" disabled>Stop Class</button>
+            </div>
+            <div style="margin-top:18px;margin-left:auto">
+                <button onclick="exportPDF()" class="btn btn-export">Export PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REGISTERED STUDENTS -->
+    <div class="card">
+        <h3>Registered Student Cards</h3>
+        <div class="student-grid" id="studentGrid"></div>
+    </div>
+
+    <!-- ATTENDANCE TABLE -->
+    <div class="card">
+        <h3>
+            Attendance Log —
+            <span id="tableSubjectLabel" style="color:#8e44ad">Select a subject</span>
+        </h3>
+        <div class="controls" style="margin-bottom:14px">
+            <div>
+                <label style="font-size:12px;color:#888;display:block;margin-bottom:4px">View Subject</label>
+                <select id="viewSubject" onchange="loadAttendance()">
+                    <option>Java</option>
+                    <option>Maths</option>
+                    <option>Data Structures</option>
+                    <option>Computer Networks</option>
+                    <option>Artificial Intelligence</option>
+                    <option>DBMS</option>
+                </select>
+            </div>
+            <div style="margin-top:18px">
+                <button onclick="loadAttendance()" class="btn btn-dark">Refresh</button>
+            </div>
+        </div>
+
+        <table id="attendanceTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Student Name</th>
+                    <th>UID</th>
+                    <th>Date</th>
+                    <th>Arrival</th>
+                    <th>Departure</th>
+                    <th>Subject</th>
+                    <th>Attendance %</th>
+                </tr>
+            </thead>
+            <tbody id="attendanceBody">
+                <tr><td colspan="8" class="empty">Select a subject to load data</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+// ==================== FIREBASE ====================
+const firebaseConfig = {
+    apiKey:        "AIzaSyC25jnEJ-6-t0hoE3m8xiPEHfWyC-ejMKE",
+    authDomain:    "sams-190605.firebaseapp.com",
+    databaseURL:   "https://sams-190605-default-rtdb.firebaseio.com",
+    projectId:     "sams-190605",
+    storageBucket: "sams-190605.firebasestorage.app",
+    appId:         "1:157575474369:web:87cc48405cee803da83840"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ==================== STUDENT MAP ====================
+// Must match exactly what is in the ESP32 code
+const STUDENT_NAMES = {
+    "622FA904": "Student 1",
+    "14067105": "Student 2",
+    "AC5C6A05": "Student 3",
+    "292E8A04": "Student 4",
+    "8BD16905": "Student 5"
+};
+
+// ==================== LIVE CLOCK ====================
+function updateClock() {
+    document.getElementById("liveClock").textContent =
+        new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ==================== BUILD STUDENT CARDS ====================
+function buildStudentCards() {
+    document.getElementById("studentGrid").innerHTML =
+        Object.entries(STUDENT_NAMES).map(([uid, name]) => `
+            <div class="student-card">
+                <div class="sname">${name}</div>
+                <div class="suid">${uid}</div>
+            </div>`).join('');
+}
+buildStudentCards();
+
+// ==================== SESSION CONTROLLER ====================
+// The ESP32 reads Firebase path: /current_session
+// Structure written here must match what ESP32 expects
+
+function startSession() {
+    const subject  = document.getElementById('subjectSelect').value;
+    const duration = parseInt(document.getElementById('durationInput').value) || 60;
+
+    // Write session info to Firebase — ESP32 listens to this
+    db.ref('current_session').set({
+        status:    true,
+        subject:   subject,
+        duration:  duration,
+        startedAt: new Date().toLocaleTimeString('en-IN'),
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    });
+
+    document.getElementById('btnStart').disabled = true;
+    document.getElementById('btnStop').disabled  = false;
+}
+
+function stopSession() {
+    db.ref('current_session').update({
+        status:  false,
+        endedAt: new Date().toLocaleTimeString('en-IN')
+    });
+
+    document.getElementById('btnStart').disabled = false;
+    document.getElementById('btnStop').disabled  = true;
+}
+
+// ==================== LISTEN TO SESSION STATE ====================
+// Keeps dashboard in sync with ESP32 state in real time
+db.ref('current_session').on('value', (snap) => {
+    const data = snap.val();
+    if (!data) return;
+
+    const isLive  = data.status === true;
+    const subject = data.subject || "None";
+    const dur     = data.duration || "--";
+
+    document.getElementById('statSubject').textContent  = isLive ? subject : "None";
+    document.getElementById('statStatus').textContent   = isLive ? "LIVE" : "Standby";
+    document.getElementById('statDuration').textContent = isLive ? dur : "--";
+    document.getElementById('statTime').textContent     = isLive
+        ? "Started: " + (data.startedAt || "--")
+        : "Last ended: " + (data.endedAt || "--");
+
+    const bar = document.getElementById('sessionStatusBar');
+    if (isLive) {
+        bar.className = "session-status live";
+        bar.innerHTML = `<span class="live-dot"></span> LIVE — ${subject} | ${dur} min session`;
+    } else {
+        bar.className = "session-status standby";
+        bar.innerHTML = "System is on standby. Select a subject and start the class.";
+    }
+
+    document.getElementById('btnStart').disabled = isLive;
+    document.getElementById('btnStop').disabled  = !isLive;
+});
+
+// ==================== LOAD ATTENDANCE ====================
+// Reads from /attendance_logs/SUBJECT/UID
+// Reads percentage from /student_history/SUBJECT/UID
+function loadAttendance() {
+    const subject = document.getElementById('viewSubject').value;
+    document.getElementById('tableSubjectLabel').textContent = subject;
+
+    db.ref('attendance_logs/' + subject).on('value', async (snap) => {
+        const logData = snap.val();
+        const tbody   = document.getElementById('attendanceBody');
+
+        if (!logData) {
+            tbody.innerHTML = `<tr><td colspan="8" class="empty">No attendance data for ${subject} yet.</td></tr>`;
+            document.getElementById('statPresent').textContent = 0;
+            return;
         }
 
-        // --- SESSION LISTENER ---
-        db.ref('current_session').on('value', (snap) => {
-            const data = snap.val();
-            isSessionActive = data.status;
-            document.getElementById('statSubject').innerText = data.status ? data.subject : "None";
-            document.getElementById('statStatus').innerText = data.status ? "LIVE" : "Standby";
-            const btn = document.getElementById('sessionBtn');
-            btn.innerText = data.status ? "Stop Class" : "Start Class";
-            btn.style.background = data.status ? "#e74c3c" : "#2c3e50";
+        // Also fetch student_history for real percentage
+        const histSnap = await db.ref('student_history/' + subject).once('value');
+        const histData = histSnap.val() || {};
+
+        let rows    = "";
+        let present = 0;
+        let index   = 1;
+
+        Object.keys(logData).forEach(uid => {
+            const v           = logData[uid];
+            const name        = STUDENT_NAMES[uid] || v.studentName || uid;
+            const isInSession = v.departureTime === "--";
+            const date        = v.date || "-";
+            present++;
+
+            // Get real percentage from student_history
+            let pctDisplay = "N/A";
+            let pctClass   = "";
+
+            if (histData[uid]) {
+                const total    = histData[uid].totalClasses || 1;
+                const attended = histData[uid].attended     || 0;
+                const pctNum   = Math.round((attended / total) * 100);
+                pctDisplay     = pctNum + "%";
+                pctClass       = pctNum >= 75 ? "pct-green" : "pct-red";
+            } else if (v.percentage) {
+                const pctNum = parseInt(v.percentage) || 0;
+                pctDisplay   = v.percentage;
+                pctClass     = pctNum >= 75 ? "pct-green" : "pct-red";
+            }
+
+            const depHtml = isInSession
+                ? "<span class='badge badge-in'>In Session</span>"
+                : `<span class='badge badge-out'>${v.departureTime}</span>`;
+
+            rows += `<tr>
+                <td>${index++}</td>
+                <td><b>${name}</b></td>
+                <td style="font-family:monospace;font-size:12px">${uid}</td>
+                <td>${date}</td>
+                <td>${v.arrivalTime || "--"}</td>
+                <td>${depHtml}</td>
+                <td>${v.subject || subject}</td>
+                <td><span class="badge ${pctClass}">${pctDisplay}</span></td>
+            </tr>`;
         });
 
-        // --- LOAD & CALCULATE ATTENDANCE ---
-        function loadAttendance() {
-            const filterDays = document.getElementById('dateFilter').value;
-            const tableBody = document.getElementById('attendanceBody');
-            
-            db.ref('attendance_logs').on('value', (snapshot) => {
-                tableBody.innerHTML = "";
-                let presentCount = 0;
-                
-                snapshot.forEach((subjectNode) => {
-                    subjectNode.forEach((log) => {
-                        const data = log.val();
-                        // Logic for filtering by date would go here based on data.date
-                        
-                        let row = `<tr>
-                            <td>${data.studentName}</td>
-                            <td>${data.rfidNumber}</td>
-                            <td>${data.arrivalTime}</td>
-                            <td>${data.departureTime}</td>
-                            <td>${data.subject}</td>
-                            <td><b style="color:${parseInt(data.percentage) < 75 ? 'red' : 'green'}">${data.percentage}</b></td>
-                        </tr>`;
-                        tableBody.innerHTML += row;
-                        presentCount++;
-                    });
-                });
-                document.getElementById('statPresent').innerText = presentCount;
-            });
-        }
+        tbody.innerHTML = rows;
+        document.getElementById('statPresent').textContent = present;
+    });
+}
 
-        // --- ATOMIC CSV UPLOAD ---
-        function handleCSV() {
-            const file = document.getElementById('csvFile').files[0];
-            Papa.parse(file, {
-                header: true,
-                complete: function(results) {
-                    let bulkData = {};
-                    results.data.forEach(row => {
-                        if (row.UID) bulkData[row.UID.trim().toUpperCase()] = { name: row.Name };
-                    });
-                    db.ref('students').update(bulkData).then(() => {
-                        document.getElementById('uploadMsg').innerText = "Sync Complete!";
-                    });
+// ==================== PDF EXPORT ====================
+function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc     = new jsPDF('l', 'mm', 'a4');
+    const subject = document.getElementById('viewSubject').value;
+    const now     = new Date().toLocaleDateString('en-IN');
+
+    doc.setFontSize(16);
+    doc.text("SAMS Attendance Report", 14, 15);
+    doc.setFontSize(11);
+    doc.text(`Subject: ${subject}   |   Generated: ${now}`, 14, 23);
+
+    doc.autoTable({
+        html: '#attendanceTable',
+        startY: 30,
+        theme: 'grid',
+        headStyles: { fillColor: [44, 62, 80] },
+        styles: { fontSize: 10 },
+        didParseCell: function(data) {
+            if (data.column.index === 7 && data.section === 'body') {
+                const text = data.cell.raw.innerText || data.cell.raw.textContent || "";
+                const num  = parseInt(text);
+                if (!isNaN(num)) {
+                    if (num >= 75) {
+                        data.cell.styles.textColor = [21, 128, 61];
+                        data.cell.styles.fillColor = [220, 252, 231];
+                    } else {
+                        data.cell.styles.textColor = [185, 28, 28];
+                        data.cell.styles.fillColor = [254, 226, 226];
+                    }
                 }
-            });
+            }
         }
+    });
 
-        // --- PDF EXPORT ---
-        function exportPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.text("SAMS Attendance Report", 14, 15);
-            doc.autoTable({ html: '#attendanceTable', margin: { top: 25 } });
-            doc.save(`SAMS_Report_${new Date().toLocaleDateString()}.pdf`);
-        }
+    doc.save(`SAMS_${subject}_${now}.pdf`);
+}
 
-        loadAttendance(); // Initial load
-    </script>
+// Initial load
+loadAttendance();
+</script>
 </body>
 </html>
