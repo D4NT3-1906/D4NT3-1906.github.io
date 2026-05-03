@@ -1,1007 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SAMS Dashboard</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-
-<!-- Firebase SDKs -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithCustomToken, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getDatabase, ref, onValue, get, set, update, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
-
-// ─── FIREBASE CONFIG — REPLACE WITH YOUR PROJECT ─────────────────────────
-const firebaseConfig = {
-  apiKey: "AIzaSyC25jnEJ-6-t0hoE3m8xiPEHfWyC-ejMKE",
-  authDomain: "sams-190605.firebaseapp.com",
-  databaseURL: "https://sams-190605-default-rtdb.firebaseio.com",
-  projectId: "sams-190605",
-  storageBucket: "sams-190605.firebasestorage.app",
-  messagingSenderId: "157575474369",
-  appId: "1:157575474369:web:87cc48405cee803da83840"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const database = getDatabase(app);
-const functions = getFunctions(app, "asia-south1");
-
-// Cloud Functions
-const loginUserFn       = httpsCallable(functions, "loginUser");
-const uploadStudentsFn  = httpsCallable(functions, "uploadStudents");
-const calculateFn       = httpsCallable(functions, "calculateAttendance");
-const getLiveFn         = httpsCallable(functions, "getLiveAttendance");
-
-// ─── APP STATE ────────────────────────────────────────────────────────────
-let currentUser = null;
-let currentPage = "login";
-let selectedSubject = null;
-let selectedRange = "7d";
-let subjects = {};
-let liveUnsubscribe = null;
-let reportData = null;
-
-// ─── ROUTER ───────────────────────────────────────────────────────────────
-function showPage(page) {
-  currentPage = page;
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-  const el = document.getElementById("page-" + page);
-  if (el) el.classList.add("active");
-  updateNav();
-}
-
-function updateNav() {
-  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
-  const active = document.querySelector(`.nav-item[data-page="${currentPage}"]`);
-  if (active) active.classList.add("active");
-
-  const nav = document.getElementById("main-nav");
-  const header = document.getElementById("app-header");
-  if (currentPage === "login") {
-    nav.style.display = "none";
-    header.style.display = "none";
-  } else {
-    nav.style.display = "flex";
-    header.style.display = "flex";
-    document.getElementById("header-user").textContent = currentUser?.name || "";
-    document.getElementById("header-role").textContent = (currentUser?.role || "").toUpperCase();
-  }
-}
-
-// ─── AUTH ─────────────────────────────────────────────────────────────────
-async function handleLogin() {
-  const name = document.getElementById("login-name").value.trim();
-  const passcode = document.getElementById("login-passcode").value.trim();
-  const role = document.getElementById("login-role").value;
-  const errEl = document.getElementById("login-error");
-  const btn = document.getElementById("login-btn");
-
-  if (!name || !passcode || !role) {
-    errEl.textContent = "All fields are required.";
-    errEl.style.display = "block";
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = "Authenticating...";
-  errEl.style.display = "none";
-
-  try {
-    const result = await loginUserFn({ name, passcode, role });
-    const { token, user } = result.data;
-    await signInWithCustomToken(auth, token);
-    currentUser = user;
-
-    // Load subjects
-    await loadSubjects();
-    showPage("live");
-    initLiveView();
-  } catch (e) {
-    errEl.textContent = e.message || "Login failed. Check your credentials.";
-    errEl.style.display = "block";
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Sign In";
-  }
-}
-
-async function handleLogout() {
-  if (liveUnsubscribe) liveUnsubscribe();
-  await signOut(auth);
-  currentUser = null;
-  showPage("login");
-}
-
-// ─── SUBJECTS ─────────────────────────────────────────────────────────────
-async function loadSubjects() {
-  const snap = await get(ref(database, "subjects"));
-  subjects = snap.val() || {};
-
-  // Filter by teacher's subjects if role is teacher
-  if (currentUser?.role === "teacher" && currentUser?.subjectIds?.length > 0) {
-    const allowed = new Set(currentUser.subjectIds);
-    for (const id of Object.keys(subjects)) {
-      if (!allowed.has(id)) delete subjects[id];
-    }
-  }
-
-  // Populate all subject selectors
-  populateSubjectSelects();
-}
-
-function populateSubjectSelects() {
-  const selects = document.querySelectorAll(".subject-select");
-  selects.forEach(sel => {
-    const current = sel.value;
-    sel.innerHTML = '<option value="">Select subject…</option>';
-    for (const [id, sub] of Object.entries(subjects)) {
-      const opt = document.createElement("option");
-      opt.value = id;
-      opt.textContent = sub.name;
-      sel.appendChild(opt);
-    }
-    if (current) sel.value = current;
-  });
-}
-
-// ─── LIVE VIEW ─────────────────────────────────────────────────────────────
-function initLiveView() {
-  const subjectSel = document.getElementById("live-subject");
-  if (subjectSel.value) {
-    startLiveListener(subjectSel.value);
-  }
-}
-
-function startLiveListener(subjectId) {
-  if (liveUnsubscribe) liveUnsubscribe();
-  selectedSubject = subjectId;
-
-  const today = new Date().toISOString().split("T")[0];
-  const sessionRef = ref(database, `sessions/${subjectId}/${today}`);
-  const studentsRef = ref(database, "students");
-
-  let studentsData = {};
-  let sessionData = {};
-
-  get(studentsRef).then(snap => {
-    studentsData = snap.val() || {};
-    updateLiveCards(studentsData, sessionData);
-  });
-
-  liveUnsubscribe = onValue(sessionRef, (snap) => {
-    sessionData = snap.val() || {};
-    updateLiveCards(studentsData, sessionData);
-  });
-}
-
-function updateLiveCards(students, sessions) {
-  const total = Object.keys(students).length;
-  let present = 0, left = 0;
-
-  const rows = [];
-  for (const [uid, student] of Object.entries(students)) {
-    const session = sessions[uid];
-    let status = "absent", entry = "—", exit = "—";
-    if (session) {
-      entry = session.entry || "—";
-      if (session.exit && session.exit !== "null") {
-        exit = session.exit;
-        status = "left";
-        left++;
-      } else {
-        status = "present";
-        present++;
-      }
-    }
-    rows.push({ uid, name: student.name, rollNo: student.rollNo || "—", status, entry, exit });
-  }
-
-  const absent = total - present - left;
-
-  document.getElementById("live-count-present").textContent = present;
-  document.getElementById("live-count-absent").textContent = absent;
-  document.getElementById("live-count-left").textContent = left;
-  document.getElementById("live-count-total").textContent = total;
-
-  // Update progress bar
-  const pct = total > 0 ? Math.round((present / total) * 100) : 0;
-  document.getElementById("live-progress-bar").style.width = pct + "%";
-  document.getElementById("live-progress-pct").textContent = pct + "%";
-
-  // Sort by rollNo
-  rows.sort((a, b) => a.rollNo.localeCompare(b.rollNo));
-
-  const tbody = document.getElementById("live-table-body");
-  tbody.innerHTML = rows.map(r => `
-    <tr class="row-${r.status}">
-      <td class="mono">${r.rollNo}</td>
-      <td>${r.name}</td>
-      <td><span class="badge badge-${r.status}">${r.status === "left" ? "Left Early" : r.status.charAt(0).toUpperCase() + r.status.slice(1)}</span></td>
-      <td class="mono">${r.entry}</td>
-      <td class="mono">${r.exit}</td>
-    </tr>
-  `).join("");
-
-  document.getElementById("live-updated").textContent = "Updated: " + new Date().toLocaleTimeString("en-IN");
-}
-
-// ─── REPORT VIEW ───────────────────────────────────────────────────────────
-async function loadReport() {
-  const subjectId = document.getElementById("report-subject").value;
-  const range = document.getElementById("report-range").value;
-  const btn = document.getElementById("report-calc-btn");
-  const errEl = document.getElementById("report-error");
-
-  if (!subjectId) {
-    errEl.textContent = "Please select a subject.";
-    errEl.style.display = "block";
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = "Calculating…";
-  errEl.style.display = "none";
-
-  try {
-    const result = await calculateFn({ subjectId, range });
-    reportData = result.data;
-    selectedRange = range;
-
-    // Render report
-    const { summary, totalClasses, start, end } = reportData;
-    const subjectName = subjects[subjectId]?.name || subjectId;
-
-    document.getElementById("report-title").textContent = subjectName;
-    document.getElementById("report-meta").textContent =
-      `${start} → ${end}  ·  ${totalClasses} class${totalClasses !== 1 ? "es" : ""} held`;
-
-    const rows = Object.values(summary).sort((a, b) => a.rollNo.localeCompare(b.rollNo));
-
-    // Summary bar
-    const below75 = rows.filter(r => r.percentage < 75).length;
-    const above75 = rows.length - below75;
-    document.getElementById("report-summary-total").textContent = rows.length;
-    document.getElementById("report-summary-above").textContent = above75;
-    document.getElementById("report-summary-below").textContent = below75;
-
-    const tbody = document.getElementById("report-table-body");
-    tbody.innerHTML = rows.map((r, i) => `
-      <tr class="${r.percentage < 75 ? "row-danger" : ""}">
-        <td>${i + 1}</td>
-        <td class="mono">${r.rollNo || "—"}</td>
-        <td>${r.name}</td>
-        <td>${r.attended}</td>
-        <td>${r.totalClasses}</td>
-        <td>
-          <div class="pct-cell">
-            <div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${r.percentage}%;background:${r.percentage >= 75 ? "var(--green)" : "var(--red)"}"></div></div>
-            <span class="mono">${r.percentage}%</span>
-          </div>
-        </td>
-      </tr>
-    `).join("");
-
-    document.getElementById("report-results").style.display = "block";
-    document.getElementById("export-pdf-btn").disabled = false;
-  } catch (e) {
-    errEl.textContent = e.message || "Calculation failed.";
-    errEl.style.display = "block";
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Calculate Attendance";
-  }
-}
-
-// ─── CSV UPLOAD ────────────────────────────────────────────────────────────
-function handleCSVFile(file) {
-  if (!file) return;
-  const previewEl = document.getElementById("csv-preview");
-  const statusEl = document.getElementById("csv-status");
-  statusEl.textContent = "";
-  statusEl.className = "status-msg";
-
-  Papa.parse(file, {
-    header: true,
-    skipEmptyLines: true,
-    complete: async (results) => {
-      const students = results.data.map(row => ({
-        uid: (row.uid || row.UID || row.RFID || "").trim().toUpperCase(),
-        name: (row.name || row.Name || row.NAME || "").trim(),
-        rollNo: (row.rollNo || row.roll_no || row.Roll || "").trim(),
-        branch: (row.branch || row.Branch || "").trim(),
-        semester: parseInt(row.semester || row.Semester || 0),
-      })).filter(s => s.uid && s.name);
-
-      if (students.length === 0) {
-        statusEl.textContent = "⚠ No valid rows found. Check column names: uid, name, rollNo, branch, semester";
-        statusEl.className = "status-msg error";
-        return;
-      }
-
-      previewEl.innerHTML = `
-        <p style="color:var(--text-muted);margin:0 0 8px">Preview — ${students.length} students found</p>
-        <table class="data-table">
-          <thead><tr><th>UID</th><th>Name</th><th>Roll No</th><th>Branch</th><th>Sem</th></tr></thead>
-          <tbody>${students.slice(0, 10).map(s => `
-            <tr><td class="mono">${s.uid}</td><td>${s.name}</td><td>${s.rollNo}</td><td>${s.branch}</td><td>${s.semester}</td></tr>
-          `).join("")}</tbody>
-        </table>
-        ${students.length > 10 ? `<p style="color:var(--text-muted);margin:8px 0 0">… and ${students.length - 10} more</p>` : ""}
-        <button class="btn btn-primary" style="margin-top:16px" onclick="confirmUpload(${JSON.stringify(students).replace(/"/g, "&quot;")})">
-          Upload ${students.length} Students
-        </button>
-      `;
-    },
-    error: (err) => {
-      statusEl.textContent = "Parse error: " + err.message;
-      statusEl.className = "status-msg error";
-    }
-  });
-}
-
-window.confirmUpload = async function(students) {
-  const statusEl = document.getElementById("csv-status");
-  statusEl.textContent = "Uploading…";
-  statusEl.className = "status-msg";
-
-  try {
-    const result = await uploadStudentsFn({ students });
-    statusEl.textContent = `✓ Uploaded ${result.data.uploaded} students successfully!`;
-    statusEl.className = "status-msg success";
-    document.getElementById("csv-preview").innerHTML = "";
-    document.getElementById("csv-file").value = "";
-  } catch (e) {
-    statusEl.textContent = "Upload failed: " + e.message;
-    statusEl.className = "status-msg error";
-  }
-};
-
-// ─── PDF EXPORT ────────────────────────────────────────────────────────────
-function exportPDF() {
-  if (!reportData) return;
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-
-  const subjectId = document.getElementById("report-subject").value;
-  const subjectName = subjects[subjectId]?.name || subjectId;
-  const { summary, totalClasses, start, end } = reportData;
-  const rows = Object.values(summary).sort((a, b) => a.rollNo.localeCompare(b.rollNo));
-
-  // Header
-  doc.setFillColor(15, 23, 42);
-  doc.rect(0, 0, 210, 30, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.text("ATTENDANCE REPORT", 105, 12, { align: "center" });
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text(subjectName.toUpperCase(), 105, 20, { align: "center" });
-  doc.text(`Period: ${start}  →  ${end}  ·  ${totalClasses} classes held`, 105, 27, { align: "center" });
-
-  // Meta
-  doc.setTextColor(30, 30, 30);
-  doc.setFontSize(9);
-  doc.text(`Generated: ${new Date().toLocaleString("en-IN")}`, 14, 38);
-  doc.text(`Prepared by: ${currentUser?.name || "—"}  (${currentUser?.role || ""})`, 14, 44);
-
-  // Summary boxes
-  const above75 = rows.filter(r => r.percentage >= 75).length;
-  const below75 = rows.length - above75;
-  doc.setFillColor(240, 248, 240);
-  doc.roundedRect(14, 50, 55, 18, 2, 2, "F");
-  doc.setTextColor(15, 100, 15);
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.text(String(above75), 41, 61, { align: "center" });
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  doc.text("≥ 75% attendance", 41, 67, { align: "center" });
-
-  doc.setFillColor(255, 240, 240);
-  doc.roundedRect(76, 50, 55, 18, 2, 2, "F");
-  doc.setTextColor(150, 20, 20);
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.text(String(below75), 103, 61, { align: "center" });
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  doc.text("< 75% attendance", 103, 67, { align: "center" });
-
-  doc.setFillColor(240, 240, 255);
-  doc.roundedRect(138, 50, 58, 18, 2, 2, "F");
-  doc.setTextColor(20, 20, 150);
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.text(String(rows.length), 167, 61, { align: "center" });
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  doc.text("Total students", 167, 67, { align: "center" });
-
-  // Table
-  doc.autoTable({
-    startY: 74,
-    head: [["#", "Roll No", "Student Name", "Attended", "Total", "Percentage"]],
-    body: rows.map((r, i) => [
-      i + 1,
-      r.rollNo || "—",
-      r.name,
-      r.attended,
-      r.totalClasses,
-      r.percentage + "%",
-    ]),
-    headStyles: { fillColor: [15, 23, 42], textColor: 255, fontSize: 9, fontStyle: "bold" },
-    bodyStyles: { fontSize: 9 },
-    alternateRowStyles: { fillColor: [248, 248, 252] },
-    didParseCell: (data) => {
-      if (data.section === "body" && data.column.index === 5) {
-        const pct = parseFloat(data.cell.text[0]);
-        if (pct < 75) {
-          data.cell.styles.textColor = [180, 20, 20];
-          data.cell.styles.fontStyle = "bold";
-        } else {
-          data.cell.styles.textColor = [20, 120, 20];
-        }
-      }
-    },
-    columnStyles: {
-      0: { cellWidth: 10, halign: "center" },
-      1: { cellWidth: 30 },
-      2: { cellWidth: 65 },
-      3: { cellWidth: 23, halign: "center" },
-      4: { cellWidth: 20, halign: "center" },
-      5: { cellWidth: 27, halign: "center" },
-    },
-    margin: { left: 14, right: 14 },
-  });
-
-  // Footer
-  const pageCount = doc.internal.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(150);
-    doc.text(`Page ${i} of ${pageCount}  ·  AttendIQ Attendance System`, 105, 290, { align: "center" });
-  }
-
-  const filename = `Attendance_${subjectName.replace(/\s+/g, "_")}_${start}_${end}.pdf`;
-  doc.save(filename);
-}
-
-// ─── ADMIN: Add Subject ────────────────────────────────────────────────────
-async function addSubject() {
-  const name = document.getElementById("new-subject-name").value.trim();
-  const id = document.getElementById("new-subject-id").value.trim().toLowerCase().replace(/\s+/g, "_");
-  const statusEl = document.getElementById("admin-status");
-
-  if (!name || !id) {
-    statusEl.textContent = "Subject name and ID are required.";
-    statusEl.className = "status-msg error";
-    statusEl.style.display = "block";
-    return;
-  }
-
-  try {
-    await set(ref(database, `subjects/${id}`), { name, createdAt: Date.now() });
-    statusEl.textContent = `✓ Subject "${name}" added.`;
-    statusEl.className = "status-msg success";
-    statusEl.style.display = "block";
-    document.getElementById("new-subject-name").value = "";
-    document.getElementById("new-subject-id").value = "";
-    await loadSubjects();
-  } catch(e) {
-    statusEl.textContent = "Error: " + e.message;
-    statusEl.className = "status-msg error";
-    statusEl.style.display = "block";
-  }
-}
-
-// ─── INIT ─────────────────────────────────────────────────────────────────
-window.addEventListener("DOMContentLoaded", () => {
-  showPage("login");
-
-  // Login
-  document.getElementById("login-btn").addEventListener("click", handleLogin);
-  document.getElementById("login-passcode").addEventListener("keydown", e => {
-    if (e.key === "Enter") handleLogin();
-  });
-
-  // Logout
-  document.getElementById("logout-btn").addEventListener("click", handleLogout);
-
-  // Nav
-  document.querySelectorAll(".nav-item").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const page = btn.dataset.page;
-      showPage(page);
-      if (page === "live") initLiveView();
-    });
-  });
-
-  // Live subject change
-  document.getElementById("live-subject").addEventListener("change", e => {
-    if (e.target.value) startLiveListener(e.target.value);
-  });
-
-  // Report
-  document.getElementById("report-calc-btn").addEventListener("click", loadReport);
-  document.getElementById("export-pdf-btn").addEventListener("click", exportPDF);
-
-  // CSV
-  document.getElementById("csv-file").addEventListener("change", e => {
-    handleCSVFile(e.target.files[0]);
-  });
-
-  const dropzone = document.getElementById("csv-dropzone");
-  dropzone.addEventListener("dragover", e => { e.preventDefault(); dropzone.classList.add("drag-over"); });
-  dropzone.addEventListener("dragleave", () => dropzone.classList.remove("drag-over"));
-  dropzone.addEventListener("drop", e => {
-    e.preventDefault();
-    dropzone.classList.remove("drag-over");
-    handleCSVFile(e.dataTransfer.files[0]);
-  });
-
-  // Admin subject
-  document.getElementById("add-subject-btn")?.addEventListener("click", addSubject);
-});
-
-</script>
-
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --bg: #0a0e1a;
-  --surface: #111827;
-  --surface2: #1a2235;
-  --border: #1f2d45;
-  --accent: #3b82f6;
-  --accent-dim: #1d4ed8;
-  --green: #22c55e;
-  --red: #ef4444;
-  --amber: #f59e0b;
-  --text: #e2e8f0;
-  --text-muted: #64748b;
-  --text-dim: #94a3b8;
-  --mono: "Space Mono", monospace;
-  --sans: "DM Sans", sans-serif;
-  --radius: 10px;
-  --shadow: 0 4px 24px rgba(0,0,0,0.4);
-}
-
-body {
-  font-family: var(--sans);
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ─── LAYOUT ─────────────────────────────────────────────────────────────── */
-#app-header {
-  display: none;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-  height: 56px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; z-index: 100;
-}
-.header-logo { font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: -1px; }
-.header-logo span { color: var(--text-muted); }
-.header-user { display: flex; align-items: center; gap: 10px; }
-.header-user-name { font-size: 14px; color: var(--text-dim); }
-.header-role-badge {
-  font-family: var(--mono); font-size: 10px; font-weight: 700;
-  background: var(--border); color: var(--accent); padding: 2px 8px; border-radius: 4px;
-}
-
-#main-nav {
-  display: none;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 0 24px;
-  gap: 4px;
-  overflow-x: auto;
-}
-.nav-item {
-  font-family: var(--sans); font-size: 13px; font-weight: 500;
-  padding: 12px 16px; border: none; background: none; color: var(--text-muted);
-  cursor: pointer; border-bottom: 2px solid transparent;
-  white-space: nowrap; transition: all 0.15s;
-}
-.nav-item:hover { color: var(--text); }
-.nav-item.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-#app-content { flex: 1; padding: 28px 28px; max-width: 1100px; width: 100%; margin: 0 auto; }
-
-/* ─── PAGES ──────────────────────────────────────────────────────────────── */
-.page { display: none; }
-.page.active { display: block; }
-
-/* ─── LOGIN ──────────────────────────────────────────────────────────────── */
-#page-login {
-  display: none;
-  min-height: 100vh;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg);
-}
-#page-login.active { display: flex; }
-
-.login-card {
-  width: 100%; max-width: 400px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 40px;
-  box-shadow: var(--shadow);
-}
-.login-logo {
-  font-family: var(--mono); font-size: 28px; font-weight: 700;
-  color: var(--accent); text-align: center; margin-bottom: 4px;
-  letter-spacing: -2px;
-}
-.login-logo span { color: var(--text-muted); }
-.login-sub { text-align: center; color: var(--text-muted); font-size: 13px; margin-bottom: 32px; }
-.form-group { margin-bottom: 18px; }
-.form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); margin-bottom: 6px; letter-spacing: 0.5px; text-transform: uppercase; }
-.form-control {
-  width: 100%; padding: 11px 14px; background: var(--surface2);
-  border: 1px solid var(--border); border-radius: var(--radius);
-  color: var(--text); font-family: var(--sans); font-size: 14px;
-  transition: border-color 0.15s;
-}
-.form-control:focus { outline: none; border-color: var(--accent); }
-select.form-control { cursor: pointer; }
-option { background: var(--surface2); }
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 20px; border: none; border-radius: var(--radius); font-family: var(--sans); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
-.btn-primary { background: var(--accent); color: #fff; width: 100%; }
-.btn-primary:hover { background: var(--accent-dim); }
-.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn-secondary { background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border); }
-.btn-secondary:hover { border-color: var(--text-muted); color: var(--text); }
-.btn-danger { background: var(--red); color: #fff; }
-.btn-sm { padding: 7px 14px; font-size: 13px; }
-
-.status-msg { font-size: 13px; padding: 10px 14px; border-radius: var(--radius); margin-top: 12px; }
-.status-msg.error { background: rgba(239,68,68,0.1); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
-.status-msg.success { background: rgba(34,197,94,0.1); color: #86efac; border: 1px solid rgba(34,197,94,0.3); }
-#login-error { display: none; margin-top: 12px; }
-
-/* ─── PAGE HEADER ─────────────────────────────────────────────────────────── */
-.page-title { font-family: var(--mono); font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 4px; letter-spacing: -1px; }
-.page-sub { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; }
-
-/* ─── CARDS ──────────────────────────────────────────────────────────────── */
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
-.card + .card { margin-top: 16px; }
-.card-title { font-size: 13px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
-
-/* ─── STAT CARDS ─────────────────────────────────────────────────────────── */
-.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
-.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; }
-.stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-.stat-value { font-family: var(--mono); font-size: 32px; font-weight: 700; line-height: 1; }
-.stat-card.green .stat-value { color: var(--green); }
-.stat-card.red .stat-value { color: var(--red); }
-.stat-card.amber .stat-value { color: var(--amber); }
-.stat-card.blue .stat-value { color: var(--accent); }
-
-/* ─── PROGRESS ────────────────────────────────────────────────────────────── */
-.progress-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 16px; }
-.progress-bar-bg { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
-.progress-bar-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.5s ease; }
-.progress-pct { font-family: var(--mono); font-size: 13px; color: var(--accent); min-width: 44px; text-align: right; }
-.progress-label { font-size: 12px; color: var(--text-muted); min-width: 100px; }
-
-/* ─── TABLE ──────────────────────────────────────────────────────────────── */
-.table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
-.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.data-table thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; background: var(--surface2); border-bottom: 1px solid var(--border); white-space: nowrap; }
-.data-table tbody td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-dim); }
-.data-table tbody tr:last-child td { border-bottom: none; }
-.data-table tbody tr:hover td { background: var(--surface2); }
-.data-table tbody tr.row-present td { background: rgba(34,197,94,0.03); }
-.data-table tbody tr.row-absent td { opacity: 0.65; }
-.data-table tbody tr.row-left td { background: rgba(245,158,11,0.05); }
-.data-table tbody tr.row-danger td { background: rgba(239,68,68,0.05); }
-.mono { font-family: var(--mono); font-size: 12px; }
-
-/* ─── BADGES ─────────────────────────────────────────────────────────────── */
-.badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.3px; }
-.badge-present { background: rgba(34,197,94,0.15); color: var(--green); }
-.badge-absent { background: rgba(100,116,139,0.15); color: var(--text-muted); }
-.badge-left { background: rgba(245,158,11,0.15); color: var(--amber); }
-
-/* ─── CONTROLS ────────────────────────────────────────────────────────────── */
-.controls-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-.controls-row .form-control { max-width: 260px; }
-.updated-tag { font-size: 11px; color: var(--text-muted); font-family: var(--mono); margin-left: auto; }
-
-/* ─── PERCENTAGE BAR ─────────────────────────────────────────────────────── */
-.pct-cell { display: flex; align-items: center; gap: 8px; }
-.pct-bar-bg { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; min-width: 60px; }
-.pct-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
-
-/* ─── DROPZONE ────────────────────────────────────────────────────────────── */
-.dropzone {
-  border: 2px dashed var(--border); border-radius: var(--radius);
-  padding: 40px; text-align: center; cursor: pointer;
-  transition: all 0.2s; margin-bottom: 20px;
-}
-.dropzone:hover, .dropzone.drag-over { border-color: var(--accent); background: rgba(59,130,246,0.05); }
-.dropzone-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.5; }
-.dropzone-text { color: var(--text-muted); font-size: 14px; margin-bottom: 8px; }
-.dropzone-hint { color: var(--text-muted); font-size: 12px; font-family: var(--mono); }
-#csv-file { display: none; }
-
-/* ─── REPORT SUMMARY ─────────────────────────────────────────────────────── */
-.report-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
-
-/* ─── SCROLLBAR ──────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-/* ─── RESPONSIVE ─────────────────────────────────────────────────────────── */
-@media (max-width: 640px) {
-  .stat-grid { grid-template-columns: repeat(2, 1fr); }
-  #app-content { padding: 16px; }
-  .report-stats { grid-template-columns: 1fr; }
-}
-
-/* ─── LOGOUT ─────────────────────────────────────────────────────────────── */
-#logout-btn {
-  font-family: var(--sans); font-size: 12px; font-weight: 600;
-  padding: 6px 14px; border: 1px solid var(--border); border-radius: 6px;
-  background: none; color: var(--text-muted); cursor: pointer;
-  transition: all 0.15s;
-}
-#logout-btn:hover { border-color: var(--red); color: var(--red); }
-</style>
+    <meta charset="UTF-8">
+    <title>SAMS Attendance Portal</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    
+    <style>
+        :root { --primary: #1e293b; --accent: #3b82f6; --bg: #f8fafc; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; }
+        .login-container { display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .dashboard { display: none; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+        .stat { text-align: center; padding: 15px; border-radius: 8px; color: white; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+        .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+    </style>
 </head>
 <body>
 
-<!-- ─── HEADER ─────────────────────────────────────────────────────────────── -->
-<header id="app-header">
-  <div class="header-logo">Attend<span>IQ</span></div>
-  <div class="header-user">
-    <span class="header-user-name" id="header-user"></span>
-    <span class="header-role-badge" id="header-role"></span>
-    <button id="logout-btn">Sign out</button>
-  </div>
-</header>
-
-<!-- ─── NAV ───────────────────────────────────────────────────────────────── -->
-<nav id="main-nav">
-  <button class="nav-item" data-page="live">Live Attendance</button>
-  <button class="nav-item" data-page="report">Attendance Report</button>
-  <button class="nav-item" data-page="upload">Upload Students</button>
-  <button class="nav-item" data-page="admin">Admin</button>
-</nav>
-
-<!-- ─── MAIN CONTENT ──────────────────────────────────────────────────────── -->
-<main id="app-content">
-
-  <!-- LOGIN -->
-  <div class="page" id="page-login">
-    <div class="login-card">
-      <div class="login-logo">SAMS</div>
-      <p class="login-sub">Smart Attendance Management System</p>
-
-      <div class="form-group">
-        <label>Your Name</label>
-        <input id="login-name" type="text" class="form-control" placeholder="e.g. Dr. Meghna Bora"/>
-      </div>
-      <div class="form-group">
-        <label>Passcode</label>
-        <input id="login-passcode" type="password" class="form-control" placeholder="Enter your passcode"/>
-      </div>
-      <div class="form-group">
-        <label>Role</label>
-        <select id="login-role" class="form-control">
-          <option value="">Select your role…</option>
-          <option value="teacher">Teacher</option>
-          <option value="hod">Head of Department</option>
-          <option value="principal">Principal</option>
-          <option value="admin">Admin</option>
-        </select>
-      </div>
-
-      <button id="login-btn" class="btn btn-primary">Sign In</button>
-      <div id="login-error" class="status-msg error"></div>
-    </div>
-  </div>
-
-  <!-- LIVE ATTENDANCE -->
-  <div class="page" id="page-live">
-    <div class="page-title">Live Attendance</div>
-    <p class="page-sub" id="live-updated">Real-time student tracking for today's session</p>
-
-    <div class="controls-row">
-      <select id="live-subject" class="form-control subject-select">
-        <option value="">Select subject…</option>
-      </select>
-    </div>
-
-    <div class="stat-grid">
-      <div class="stat-card green">
-        <div class="stat-label">Present</div>
-        <div class="stat-value" id="live-count-present">—</div>
-      </div>
-      <div class="stat-card red">
-        <div class="stat-label">Absent</div>
-        <div class="stat-value" id="live-count-absent">—</div>
-      </div>
-      <div class="stat-card amber">
-        <div class="stat-label">Left Early</div>
-        <div class="stat-value" id="live-count-left">—</div>
-      </div>
-      <div class="stat-card blue">
-        <div class="stat-label">Total</div>
-        <div class="stat-value" id="live-count-total">—</div>
-      </div>
-    </div>
-
-    <div class="progress-wrap">
-      <span class="progress-label">Attendance rate</span>
-      <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="live-progress-bar" style="width:0%"></div>
-      </div>
-      <span class="progress-pct" id="live-progress-pct">0%</span>
-    </div>
-
-    <div class="table-wrap">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Roll No</th>
-            <th>Student Name</th>
-            <th>Status</th>
-            <th>Entry Time</th>
-            <th>Exit Time</th>
-          </tr>
-        </thead>
-        <tbody id="live-table-body">
-          <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:32px">Select a subject to view attendance</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- REPORT -->
-  <div class="page" id="page-report">
-    <div class="page-title">Attendance Report</div>
-    <p class="page-sub">Calculate and export attendance summaries by subject and time range</p>
-
-    <div class="card" style="margin-bottom:20px">
-      <div class="controls-row" style="margin-bottom:0">
-        <select id="report-subject" class="form-control subject-select" style="max-width:300px">
-          <option value="">Select subject…</option>
-        </select>
-        <select id="report-range" class="form-control" style="max-width:180px">
-          <option value="1d">Last 1 day</option>
-          <option value="7d" selected>Last 7 days</option>
-          <option value="14d">Last 14 days</option>
-          <option value="30d">Last 30 days</option>
-        </select>
-        <button id="report-calc-btn" class="btn btn-primary btn-sm">Calculate Attendance</button>
-        <button id="export-pdf-btn" class="btn btn-secondary btn-sm" disabled>Export PDF</button>
-      </div>
-    </div>
-
-    <div id="report-error" class="status-msg error" style="display:none;margin-bottom:16px"></div>
-
-    <div id="report-results" style="display:none">
-      <div style="margin-bottom:16px">
-        <div class="page-title" id="report-title"></div>
-        <p class="page-sub" id="report-meta"></p>
-      </div>
-
-      <div class="report-stats">
-        <div class="stat-card blue">
-          <div class="stat-label">Total students</div>
-          <div class="stat-value" id="report-summary-total">0</div>
+    <div id="loginSection" class="login-container">
+        <div class="card" style="width: 350px; text-align: center;">
+            <h2>SAMS Portal</h2>
+            <input type="password" id="adminPass" placeholder="Admin Password" style="width: 90%; padding: 10px; margin-bottom: 15px;">
+            <button class="btn btn-primary" onclick="attemptLogin()">Enter Dashboard</button>
         </div>
-        <div class="stat-card green">
-          <div class="stat-label">≥ 75% attendance</div>
-          <div class="stat-value" id="report-summary-above">0</div>
+    </div>
+
+    <div id="dashSection" class="dashboard">
+        <div class="grid">
+            <div class="stat" style="background: #3b82f6;"><h3>Present</h3><h2 id="countPresent">0</h2></div>
+            <div class="stat" style="background: #10b981;"><h3>Left Midway</h3><h2 id="countLeft">0</h2></div>
+            <div class="stat" style="background: #6366f1;"><h3>Total Class</h3><h2 id="countTotal">0</h2></div>
         </div>
-        <div class="stat-card red">
-          <div class="stat-label">Below 75%</div>
-          <div class="stat-value" id="report-summary-below">0</div>
+
+        <div class="card">
+            <h3>Class Control Center</h3>
+            <select id="subjectSel" class="btn" style="background: white; border: 1px solid #ccc;">
+                <option value="Java">Java</option>
+                <option value="DBMS">DBMS</option>
+                <option value="Maths">Maths</option>
+                <option value="Computer Networks">Computer Networks</option>
+                <option value="Artificial Intelligence">Artificial Intelligence</option>
+                <option value="Data Structures">Data Structures</option>
+            </select>
+            <button class="btn btn-primary" onclick="controlSession(true)">Start Session</button>
+            <button class="btn btn-danger" onclick="controlSession(false)">End Session</button>
+            <button class="btn" onclick="downloadReport()" style="float: right; background: #8b5cf6; color: white;">Download PDF Report</button>
         </div>
-      </div>
 
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Roll No</th>
-              <th>Student Name</th>
-              <th>Attended</th>
-              <th>Total Classes</th>
-              <th>Percentage</th>
-            </tr>
-          </thead>
-          <tbody id="report-table-body"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+        <div class="card">
+            <h3>Student Registry (CSV)</h3>
+            <input type="file" id="csvInput" accept=".csv">
+            <button class="btn btn-primary" onclick="uploadCSV()">Sync Master List</button>
+        </div>
 
-  <!-- UPLOAD STUDENTS -->
-  <div class="page" id="page-upload">
-    <div class="page-title">Upload Student List</div>
-    <p class="page-sub">Import student data from a CSV file. Existing records with the same UID will be updated.</p>
-
-    <div class="card" style="margin-bottom:20px">
-      <div class="card-title">CSV Format Required</div>
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Your CSV file must have these column headers (case-insensitive):</p>
-      <code style="display:block;background:var(--surface2);padding:12px 16px;border-radius:8px;font-family:var(--mono);font-size:12px;color:var(--text-dim)">
-        uid, name, rollNo, branch, semester<br/>
-        AABB1122, Rina Das, CSE2024001, CSE, 3<br/>
-        CC334455, Amit Bora, CSE2024002, CSE, 3
-      </code>
+        <div class="card">
+            <h3>Live Attendance Log</h3>
+            <table id="attendanceTable">
+                <thead><tr><th>Name</th><th>UID</th><th>Arrival</th><th>Status</th></tr></thead>
+                <tbody id="logBody"></tbody>
+            </table>
+        </div>
     </div>
 
-    <div class="dropzone" id="csv-dropzone" onclick="document.getElementById('csv-file').click()">
-      <div class="dropzone-icon">📄</div>
-      <div class="dropzone-text">Drop CSV file here, or click to browse</div>
-      <div class="dropzone-hint">uid · name · rollNo · branch · semester</div>
-      <input type="file" id="csv-file" accept=".csv"/>
-    </div>
+    <script>
+        // CONFIG
+        const firebaseConfig = { 
+            databaseURL: "https://sams-190605-default-rtdb.firebaseio.com" 
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-    <div id="csv-status" class="status-msg" style="display:none"></div>
-    <div id="csv-preview"></div>
-  </div>
+        function attemptLogin() {
+            if(document.getElementById('adminPass').value === "admin123") {
+                document.getElementById('loginSection').style.display = "none";
+                document.getElementById('dashSection').style.display = "block";
+                startListeners();
+            } else { alert("Access Denied"); }
+        }
 
-  <!-- ADMIN -->
-  <div class="page" id="page-admin">
-    <div class="page-title">Admin Panel</div>
-    <p class="page-sub">Manage subjects and system configuration</p>
+        function controlSession(state) {
+            const sub = document.getElementById('subjectSel').value;
+            db.ref('current_session').set({
+                status: state,
+                subject: sub,
+                timestamp: Date.now()
+            });
+        }
 
-    <div class="card">
-      <div class="card-title">Add New Subject</div>
-      <div class="controls-row" style="flex-wrap:wrap">
-        <input id="new-subject-name" type="text" class="form-control" placeholder="Subject name (e.g. Data Structures)" style="max-width:300px"/>
-        <input id="new-subject-id" type="text" class="form-control" placeholder="Subject ID (e.g. cs301)" style="max-width:180px"/>
-        <button id="add-subject-btn" class="btn btn-primary btn-sm">Add Subject</button>
-      </div>
-      <div id="admin-status" class="status-msg" style="display:none"></div>
-    </div>
+        function uploadCSV() {
+            const file = document.getElementById('csvInput').files[0];
+            Papa.parse(file, {
+                header: true,
+                complete: function(results) {
+                    let updates = {};
+                    results.data.forEach(row => {
+                        if(row.UID) updates[row.UID.trim().toUpperCase()] = { name: row.Name };
+                    });
+                    db.ref('students').update(updates).then(() => alert("Master List Updated!"));
+                }
+            });
+        }
 
-    <div class="card" style="margin-top:16px">
-      <div class="card-title">ESP32 Device Configuration</div>
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">
-        Each ESP32 device is configured with a <code style="font-family:var(--mono);font-size:12px;color:var(--accent)">SUBJECT_ID</code> constant in the firmware.
-        The subject ID must match exactly what you enter above.
-      </p>
-      <p style="font-size:13px;color:var(--text-muted)">
-        To deploy multiple devices (one per classroom/subject), flash each ESP32 with the corresponding <code style="font-family:var(--mono);font-size:12px;color:var(--accent)">SUBJECT_ID</code>.
-      </p>
-    </div>
+        function startListeners() {
+            const today = new Date().toISOString().split('T')[0];
+            db.ref('current_session/subject').on('value', snap => {
+                const sub = snap.val();
+                if(!sub) return;
+                
+                db.ref(`attendance_logs/${sub}/${today}`).on('value', snapshot => {
+                    const tbody = document.getElementById('logBody');
+                    tbody.innerHTML = "";
+                    let p = 0, l = 0;
+                    
+                    snapshot.forEach(child => {
+                        const val = child.val();
+                        if(val.status === "Present") p++; else l++;
+                        tbody.innerHTML += `<tr><td>${val.name}</td><td>${child.key}</td><td>${val.arrival}</td><td>${val.status}</td></tr>`;
+                    });
+                    document.getElementById('countPresent').innerText = p;
+                    document.getElementById('countLeft').innerText = l;
+                });
+            });
+        }
 
-    <div class="card" style="margin-top:16px">
-      <div class="card-title">Default Admin Credentials Setup</div>
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:8px">
-        To create the first admin user, run this once in Firebase Functions shell or Firestore console:
-      </p>
-      <code style="display:block;background:var(--surface2);padding:12px 16px;border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.8;white-space:pre-wrap">firebase functions:shell
-> createUser({name:"Admin", passcode:"yourpasscode", role:"admin", subjectIds:[]})</code>
-    </div>
-  </div>
-</main>
+        async function downloadReport() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const sub = document.getElementById('subjectSel').value;
+            
+            // Get all students to show even those with 0 attendance
+            const allStudents = (await db.ref('students').once('value')).val();
+            const logs = (await db.ref(`attendance_logs/${sub}`).once('value')).val();
+
+            let rows = [];
+            Object.keys(allStudents).forEach(uid => {
+                rows.push([allStudents[uid].name, uid, "Absent"]); // Logic for report can be expanded here
+            });
+
+            doc.text(`SAMS Report: ${sub}`, 14, 20);
+            doc.autoTable({ head: [['Name', 'UID', 'Attendance']], body: rows, startY: 30 });
+            doc.save(`SAMS_${sub}_Report.pdf`);
+        }
+    </script>
 </body>
 </html>
