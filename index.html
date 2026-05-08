@@ -641,7 +641,7 @@ hr.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
 <body>
 
 <header id="app-header">
-  <div class="header-logo">Attend<span>IQ</span></div>
+  <div class="header-logo">SAMS</div>
   <div class="header-user">
     <span style="font-size:14px;color:var(--text-dim)" id="header-user"></span>
     <span class="header-role-badge" id="header-role"></span>
@@ -661,15 +661,15 @@ hr.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
   <!-- LOGIN -->
   <div class="page" id="page-login">
     <div class="login-card">
-      <div class="login-logo">Attend<span>IQ</span></div>
-      <p class="login-sub">RFID Smart Attendance System</p>
+      <div class="login-logo">Smart Attendance Monitoring System</div>
+      <p class="login-sub">Login</p>
       <div class="form-group">
         <label>Your Full Name</label>
-        <input id="login-name" type="text" class="form-control" placeholder="Exactly as registered e.g. Dr. Meghna Bora"/>
+        <input id="login-name" type="text" class="form-control" placeholder="Exactly as registered."/>
       </div>
       <div class="form-group">
         <label>Passcode</label>
-        <input id="login-passcode" type="password" class="form-control" placeholder="Your passcode"/>
+        <input id="login-passcode" type="password" class="form-control" placeholder="Enter your passcode"/>
       </div>
       <button id="login-btn" class="btn btn-primary btn-full" style="margin-top:4px">Sign In</button>
       <div id="login-error" class="status-msg error"></div>
@@ -758,10 +758,12 @@ hr.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
       <div class="card-title">Required CSV Format</div>
       <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Your file must have these exact headers (case-insensitive):</p>
       <code style="display:block;background:var(--surface2);padding:14px;border-radius:8px;font-family:var(--mono);font-size:12px;color:var(--text-dim);line-height:2.2">uid,name,rollNo,branch,semester
-AABB1122,Rina Das,CSE2024001,CSE,3
-CC334455,Amit Bora,CSE2024002,CSE,3
-EE667788,Priya Kalita,CSE2024003,CSE,3</code>
-      <p style="font-size:12px;color:var(--text-muted);margin-top:12px">💡 To find a card's UID: run the ESP32 and open Serial Monitor (115200 baud) in Arduino IDE. Tap the card — the UID will be printed like <code style="font-family:var(--mono);color:var(--accent)">[SCAN] UID: AABB1122</code></p>
+622FA904,Rina Das,CSE2024001,CSE,3
+14067105,Amit Bora,CSE2024002,CSE,3
+AC5C6A05,Priya Kalita,CSE2024003,CSE,3
+292E8A04,Jungle Naidu,CSE2024004,CSE,3
+8BD16905,Wasim Khan,CSE2024005,CSE,3</code>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:12px"> To find a card's UID: run the ESP32 and open Serial Monitor (115200 baud) in Arduino IDE. Tap the card — the UID will be printed like <code style="font-family:var(--mono);color:var(--accent)">[SCAN] UID: AABB1122</code></p>
     </div>
 
     <div class="dropzone" id="csv-dropzone" onclick="document.getElementById('csv-file').click()">
