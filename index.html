@@ -1,155 +1,849 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>SAMS Attendance Portal</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
-    
-    <style>
-        :root { --primary: #1e293b; --accent: #3b82f6; --bg: #f8fafc; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; }
-        .login-container { display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .dashboard { display: none; padding: 20px; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); margin-bottom: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
-        .stat { text-align: center; padding: 15px; border-radius: 8px; color: white; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; }
-        .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
-        .btn-primary { background: var(--accent); color: white; }
-        .btn-danger { background: #ef4444; color: white; }
-    </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Smart Attendance Monitoring Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+<script type="module">
+import { initializeApp }                          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword,
+         createUserWithEmailAndPassword,
+         signOut, onAuthStateChanged }            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, onValue,
+         get, set, update }                       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FIREBASE CONFIG
+// ─────────────────────────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey:            "AIzaSyC25jnEJ-6-t0hoE3m8xiPEHfWyC-ejMKE",
+  authDomain:        "sams-190605.firebaseapp.com",
+  databaseURL:       "https://sams-190605-default-rtdb.firebaseio.com",
+  projectId:         "sams-19060",
+  storageBucket:     "sams-190605.firebasestorage.app",
+  messagingSenderId: "157575474369",
+  appId:             "1:157575474369:web:87cc48405cee803da83840"
+};
+
+const app      = initializeApp(firebaseConfig);
+const auth     = getAuth(app);
+const db       = getDatabase(app);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────────────────────
+let currentUser  = null;   // { uid, name, role, subjectIds }
+let subjects     = {};
+let allStudents  = {};
+let liveUnsub    = null;
+let reportData   = null;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UTILITIES
+// ─────────────────────────────────────────────────────────────────────────────
+const $       = id => document.getElementById(id);
+const today   = () => new Date().toISOString().split("T")[0];
+
+function nameToEmail(name) {
+  return name.trim().toLowerCase().replace(/\s+/g, ".") + "@attendiq.local";
+}
+
+function datesBetween(start, end) {
+  const dates = [];
+  const cur = new Date(start), last = new Date(end);
+  while (cur <= last) { dates.push(cur.toISOString().split("T")[0]); cur.setDate(cur.getDate()+1); }
+  return dates;
+}
+
+function getRangeDates(key) {
+  const now   = new Date();
+  const end   = now.toISOString().split("T")[0];
+  const start = new Date(now);
+  start.setDate(start.getDate() - ({1:1,7:7,14:14,30:30}[parseInt(key)] || 7));
+  return { start: start.toISOString().split("T")[0], end };
+}
+
+function showErr(id, msg) {
+  const el = $(id); if (!el) return;
+  el.textContent = msg; el.className = "status-msg error"; el.style.display = "block";
+}
+function showOk(id, msg) {
+  const el = $(id); if (!el) return;
+  el.textContent = msg; el.className = "status-msg success"; el.style.display = "block";
+}
+function hideMsg(id) { const el=$(id); if(el) el.style.display="none"; }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ROUTER
+// ─────────────────────────────────────────────────────────────────────────────
+function showPage(page) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  const el = $("page-" + page);
+  if (el) el.classList.add("active");
+
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+  const nav = document.querySelector(`.nav-item[data-page="${page}"]`);
+  if (nav) nav.classList.add("active");
+
+  const loggedIn = page !== "login";
+  $("app-header").style.display = loggedIn ? "flex" : "none";
+  $("main-nav").style.display   = loggedIn ? "flex" : "none";
+
+  if (loggedIn && currentUser) {
+    $("header-user").textContent = currentUser.name;
+    $("header-role").textContent = currentUser.role.toUpperCase();
+
+    // hide admin tab for non-admin/hod
+    const adminTab = document.querySelector('.nav-item[data-page="admin"]');
+    if (adminTab) adminTab.style.display = ["admin","hod"].includes(currentUser.role) ? "" : "none";
+
+    const uploadTab = document.querySelector('.nav-item[data-page="upload"]');
+    if (uploadTab) uploadTab.style.display = ["admin","hod"].includes(currentUser.role) ? "" : "none";
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUTH STATE LISTENER
+// ─────────────────────────────────────────────────────────────────────────────
+onAuthStateChanged(auth, async fbUser => {
+  if (!fbUser) { currentUser = null; showPage("login"); return; }
+
+  const snap = await get(ref(db, `users/${fbUser.uid}`));
+  if (!snap.exists()) { await signOut(auth); return; }
+
+  currentUser = { uid: fbUser.uid, ...snap.val() };
+  await loadSubjects();
+  await loadStudents();
+  showPage("live");
+  initLiveView();
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LOGIN / LOGOUT
+// ─────────────────────────────────────────────────────────────────────────────
+async function handleLogin() {
+  const name     = $("login-name").value.trim();
+  const passcode = $("login-passcode").value.trim();
+  hideMsg("login-error");
+
+  if (!name || !passcode) { showErr("login-error", "Name and passcode are required."); return; }
+
+  const btn = $("login-btn");
+  btn.disabled = true; btn.textContent = "Signing in…";
+
+  try {
+    await signInWithEmailAndPassword(auth, nameToEmail(name), passcode);
+  } catch {
+    showErr("login-error", "Incorrect name or passcode. Try again.");
+    btn.disabled = false; btn.textContent = "Sign In";
+  }
+}
+
+async function handleLogout() {
+  if (liveUnsub) { liveUnsub(); liveUnsub = null; }
+  await signOut(auth);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LOAD SUBJECTS & STUDENTS
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadSubjects() {
+  const snap = await get(ref(db, "subjects"));
+  subjects = snap.val() || {};
+
+  if (currentUser?.role === "teacher" && currentUser.subjectIds?.length) {
+    const ok = new Set(currentUser.subjectIds);
+    Object.keys(subjects).forEach(id => { if (!ok.has(id)) delete subjects[id]; });
+  }
+  populateSubjectSelects();
+}
+
+async function loadStudents() {
+  const snap = await get(ref(db, "students"));
+  allStudents = snap.val() || {};
+}
+
+function populateSubjectSelects() {
+  document.querySelectorAll(".subject-select").forEach(sel => {
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Select subject…</option>';
+    Object.entries(subjects).forEach(([id, s]) => {
+      const o = document.createElement("option");
+      o.value = id; o.textContent = s.name; sel.appendChild(o);
+    });
+    if (cur) sel.value = cur;
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LIVE VIEW
+// ─────────────────────────────────────────────────────────────────────────────
+function initLiveView() {
+  const sel = $("live-subject");
+  if (sel.value) startLiveListener(sel.value);
+}
+
+function startLiveListener(subjectId) {
+  if (liveUnsub) { liveUnsub(); liveUnsub = null; }
+  const sessionRef = ref(db, `sessions/${subjectId}/${today()}`);
+  liveUnsub = onValue(sessionRef, snap => renderLive(allStudents, snap.val() || {}));
+}
+
+function renderLive(students, sessions) {
+  const total = Object.keys(students).length;
+  let present = 0, left = 0;
+  const rows = [];
+
+  Object.entries(students).forEach(([uid, s]) => {
+    const sess = sessions[uid];
+    let status = "absent", entry = "—", exit = "—";
+    if (sess) {
+      entry = sess.entry || "—";
+      if (sess.exit && sess.exit !== "null") { exit = sess.exit; status = "left"; left++; }
+      else { status = "present"; present++; }
+    }
+    rows.push({ name: s.name, rollNo: s.rollNo||"—", status, entry, exit });
+  });
+
+  const absent = total - present - left;
+  $("live-count-present").textContent = present;
+  $("live-count-absent").textContent  = absent;
+  $("live-count-left").textContent    = left;
+  $("live-count-total").textContent   = total;
+
+  const pct = total > 0 ? Math.round((present/total)*100) : 0;
+  $("live-progress-bar").style.width = pct + "%";
+  $("live-progress-pct").textContent = pct + "%";
+
+  rows.sort((a,b) => a.rollNo.localeCompare(b.rollNo));
+  $("live-table-body").innerHTML = rows.length
+    ? rows.map(r => `
+        <tr class="row-${r.status}">
+          <td class="mono">${r.rollNo}</td><td>${r.name}</td>
+          <td><span class="badge badge-${r.status}">${r.status==="left"?"Left Early":r.status[0].toUpperCase()+r.status.slice(1)}</span></td>
+          <td class="mono">${r.entry}</td><td class="mono">${r.exit}</td>
+        </tr>`).join("")
+    : `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:32px">No data yet for today</td></tr>`;
+
+  $("live-updated").textContent = "Live · updated " + new Date().toLocaleTimeString("en-IN");
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REPORT GENERATION
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadReport() {
+  const subjectId = $("report-subject").value;
+  const rangeKey  = $("report-range").value;
+  hideMsg("report-error");
+
+  if (!subjectId) { showErr("report-error", "Please select a subject."); return; }
+
+  const btn = $("report-calc-btn");
+  btn.disabled = true; btn.textContent = "Calculating…";
+
+  try {
+    const days = parseInt(rangeKey);
+    const { start, end } = getRangeDates(days);
+    const dates = datesBetween(start, end);
+
+    const snap     = await get(ref(db, `sessions/${subjectId}`));
+    const sessions = snap.val() || {};
+
+    const classDates   = dates.filter(d => sessions[d] && Object.keys(sessions[d]).length > 0);
+    const totalClasses = classDates.length;
+
+    const summary = {};
+    Object.entries(allStudents).forEach(([uid, s]) => {
+      let attended = 0;
+      classDates.forEach(d => { if (sessions[d]?.[uid]) attended++; });
+      summary[uid] = {
+        name: s.name, rollNo: s.rollNo||"", branch: s.branch||"", semester: s.semester||0,
+        attended, totalClasses,
+        percentage: totalClasses > 0 ? Math.round((attended/totalClasses)*1000)/10 : 0
+      };
+    });
+
+    // persist summary to DB
+    await set(ref(db, `attendance_summary/${subjectId}`), {
+      summary, range: rangeKey, start, end, totalClasses, computedAt: Date.now()
+    });
+
+    reportData = { summary, totalClasses, start, end, subjectId, rangeKey };
+    renderReport();
+
+  } catch(e) {
+    showErr("report-error", "Error: " + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = "Calculate Attendance";
+  }
+}
+
+function renderReport() {
+  const { summary, totalClasses, start, end, subjectId } = reportData;
+  const rows = Object.values(summary).sort((a,b) => a.rollNo.localeCompare(b.rollNo));
+  const above = rows.filter(r => r.percentage >= 75).length;
+
+  $("report-title").textContent = subjects[subjectId]?.name || subjectId;
+  $("report-meta").textContent  = `${start} → ${end}  ·  ${totalClasses} class${totalClasses!==1?"es":""} held`;
+  $("report-summary-total").textContent = rows.length;
+  $("report-summary-above").textContent = above;
+  $("report-summary-below").textContent = rows.length - above;
+
+  $("report-table-body").innerHTML = rows.map((r,i) => `
+    <tr class="${r.percentage<75?"row-danger":""}">
+      <td>${i+1}</td><td class="mono">${r.rollNo||"—"}</td><td>${r.name}</td>
+      <td>${r.attended}</td><td>${r.totalClasses}</td>
+      <td>
+        <div class="pct-cell">
+          <div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${r.percentage}%;background:${r.percentage>=75?"var(--green)":"var(--red)"}"></div></div>
+          <span class="mono">${r.percentage}%</span>
+        </div>
+      </td>
+    </tr>`).join("");
+
+  $("report-results").style.display = "block";
+  $("export-pdf-btn").disabled = false;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PDF EXPORT
+// ─────────────────────────────────────────────────────────────────────────────
+function exportPDF() {
+  if (!reportData) return;
+  const { jsPDF } = window.jspdf;
+  const doc  = new jsPDF({ orientation:"portrait", unit:"mm", format:"a4" });
+  const { summary, totalClasses, start, end, subjectId } = reportData;
+  const name = subjects[subjectId]?.name || subjectId;
+  const rows = Object.values(summary).sort((a,b) => a.rollNo.localeCompare(b.rollNo));
+  const above = rows.filter(r => r.percentage>=75).length;
+
+  // header
+  doc.setFillColor(15,23,42); doc.rect(0,0,210,32,"F");
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(17); doc.setFont("helvetica","bold");
+  doc.text("ATTENDANCE REPORT", 105, 13, {align:"center"});
+  doc.setFontSize(10); doc.setFont("helvetica","normal");
+  doc.text(name.toUpperCase(), 105, 21, {align:"center"});
+  doc.text(`Period: ${start}  →  ${end}   ·   ${totalClasses} classes held`, 105, 28, {align:"center"});
+
+  doc.setTextColor(40,40,40); doc.setFontSize(9);
+  doc.text(`Generated: ${new Date().toLocaleString("en-IN")}`, 14, 40);
+  doc.text(`By: ${currentUser?.name}  (${currentUser?.role})`, 14, 46);
+
+  // summary boxes
+  [
+    [14,  "≥ 75% Attendance", above,           [232,248,232], [15,100,15]],
+    [76,  "< 75% Attendance", rows.length-above,[255,235,235], [160,20,20]],
+    [138, "Total Students",   rows.length,      [232,232,255], [20,20,160]],
+  ].forEach(([x,label,val,bg,fg]) => {
+    doc.setFillColor(...bg); doc.roundedRect(x,52,55,20,2,2,"F");
+    doc.setTextColor(...fg); doc.setFontSize(16); doc.setFont("helvetica","bold");
+    doc.text(String(val), x+27, 64, {align:"center"});
+    doc.setFontSize(8); doc.setFont("helvetica","normal");
+    doc.text(label, x+27, 70, {align:"center"});
+  });
+
+  // table
+  doc.autoTable({
+    startY: 78,
+    head: [["#","Roll No","Student Name","Attended","Total","Percentage"]],
+    body: rows.map((r,i) => [i+1, r.rollNo||"—", r.name, r.attended, r.totalClasses, r.percentage+"%"]),
+    headStyles: { fillColor:[15,23,42], textColor:255, fontSize:9, fontStyle:"bold" },
+    bodyStyles: { fontSize:9 },
+    alternateRowStyles: { fillColor:[248,248,252] },
+    didParseCell: data => {
+      if (data.section==="body" && data.column.index===5) {
+        const p = parseFloat(data.cell.text[0]);
+        data.cell.styles.textColor = p<75 ? [180,20,20] : [20,120,20];
+        data.cell.styles.fontStyle = "bold";
+      }
+    },
+    columnStyles: {0:{cellWidth:10,halign:"center"},1:{cellWidth:30},2:{cellWidth:65},3:{cellWidth:23,halign:"center"},4:{cellWidth:20,halign:"center"},5:{cellWidth:27,halign:"center"}},
+    margin: {left:14,right:14}
+  });
+
+  const pages = doc.internal.getNumberOfPages();
+  for (let i=1; i<=pages; i++) {
+    doc.setPage(i); doc.setFontSize(8); doc.setTextColor(160);
+    doc.text(`Page ${i} of ${pages}  ·  AttendIQ`, 105, 290, {align:"center"});
+  }
+  doc.save(`Attendance_${name.replace(/\s+/g,"_")}_${start}_to_${end}.pdf`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CSV UPLOAD
+// ─────────────────────────────────────────────────────────────────────────────
+function handleCSVFile(file) {
+  if (!file) return;
+  hideMsg("csv-status");
+  $("csv-preview").innerHTML = "";
+
+  Papa.parse(file, {
+    header: true, skipEmptyLines: true,
+    complete: ({ data }) => {
+      const students = data.map(r => ({
+        uid:      (r.uid||r.UID||r.RFID||"").trim().toUpperCase(),
+        name:     (r.name||r.Name||r.NAME||"").trim(),
+        rollNo:   (r.rollNo||r.roll_no||r.Roll||"").trim(),
+        branch:   (r.branch||r.Branch||"").trim(),
+        semester: parseInt(r.semester||r.Semester||0)||0,
+      })).filter(s => s.uid && s.name);
+
+      if (!students.length) {
+        showErr("csv-status","No valid rows. Check headers: uid, name, rollNo, branch, semester"); return;
+      }
+
+      $("csv-preview").innerHTML = `
+        <p style="color:var(--text-muted);font-size:13px;margin-bottom:10px">${students.length} students found — preview:</p>
+        <div class="table-wrap" style="margin-bottom:16px">
+          <table class="data-table">
+            <thead><tr><th>UID</th><th>Name</th><th>Roll No</th><th>Branch</th><th>Sem</th></tr></thead>
+            <tbody>${students.slice(0,8).map(s=>`<tr><td class="mono">${s.uid}</td><td>${s.name}</td><td>${s.rollNo}</td><td>${s.branch}</td><td>${s.semester}</td></tr>`).join("")}
+            ${students.length>8?`<tr><td colspan="5" style="color:var(--text-muted);font-size:12px;text-align:center">… and ${students.length-8} more</td></tr>`:""}</tbody>
+          </table>
+        </div>
+        <button class="btn btn-primary btn-sm" id="confirm-upload-btn">Upload ${students.length} Students →</button>
+      `;
+
+      $("confirm-upload-btn").onclick = async () => {
+        const btn2 = $("confirm-upload-btn");
+        btn2.disabled = true; btn2.textContent = "Uploading…";
+        try {
+          const updates = {};
+          students.forEach(s => {
+            updates[`students/${s.uid}`] = { name:s.name, rollNo:s.rollNo, branch:s.branch, semester:s.semester, createdAt:Date.now() };
+          });
+          await update(ref(db), updates);
+          students.forEach(s => { allStudents[s.uid] = { name:s.name, rollNo:s.rollNo, branch:s.branch, semester:s.semester }; });
+          showOk("csv-status", `✓ ${students.length} students uploaded successfully!`);
+          $("csv-preview").innerHTML = "";
+          $("csv-file").value = "";
+        } catch(e) {
+          showErr("csv-status","Upload failed: " + e.message);
+          btn2.disabled = false; btn2.textContent = `Upload ${students.length} Students →`;
+        }
+      };
+    },
+    error: e => showErr("csv-status","Parse error: " + e.message)
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ADMIN — CREATE USER
+// ─────────────────────────────────────────────────────────────────────────────
+async function createUser() {
+  const name       = $("new-user-name").value.trim();
+  const passcode   = $("new-user-passcode").value.trim();
+  const role       = $("new-user-role").value;
+  const subjectRaw = $("new-user-subjects").value.trim();
+  const reAuth     = $("re-auth-passcode").value.trim();
+  hideMsg("admin-user-status");
+
+  if (!name || !passcode || !role)  { showErr("admin-user-status","Name, passcode and role required."); return; }
+  if (!reAuth)                       { showErr("admin-user-status","Enter your own passcode for re-authentication."); return; }
+
+  const btn = $("create-user-btn");
+  btn.disabled = true; btn.textContent = "Creating…";
+
+  const subjectIds = subjectRaw ? subjectRaw.split(",").map(s=>s.trim()).filter(Boolean) : [];
+  const newEmail   = nameToEmail(name);
+  const adminEmail = nameToEmail(currentUser.name);
+
+  try {
+    // Create the new Firebase Auth user
+    const cred = await createUserWithEmailAndPassword(auth, newEmail, passcode);
+    await set(ref(db, `users/${cred.user.uid}`), { name, role, subjectIds, email:newEmail, createdAt:Date.now() });
+
+    // Sign back in as admin
+    await signInWithEmailAndPassword(auth, adminEmail, reAuth);
+
+    showOk("admin-user-status", `✓ "${name}" created. They log in as: name="${name}" passcode="${passcode}" role="${role}"`);
+    $("new-user-name").value=""; $("new-user-passcode").value=""; $("new-user-subjects").value="";
+  } catch(e) {
+    showErr("admin-user-status","Error: " + e.message);
+    // Try to re-auth even on error so admin doesn't get stuck
+    try { await signInWithEmailAndPassword(auth, adminEmail, reAuth); } catch {}
+  } finally {
+    btn.disabled = false; btn.textContent = "Create User";
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ADMIN — ADD SUBJECT
+// ─────────────────────────────────────────────────────────────────────────────
+async function addSubject() {
+  const name = $("new-subject-name").value.trim();
+  const id   = $("new-subject-id").value.trim().toLowerCase().replace(/\s+/g,"_").replace(/[^a-z0-9_]/g,"");
+  hideMsg("admin-subject-status");
+
+  if (!name || !id) { showErr("admin-subject-status","Both subject name and ID are required."); return; }
+
+  try {
+    await set(ref(db, `subjects/${id}`), { name, createdAt:Date.now() });
+    subjects[id] = { name };
+    populateSubjectSelects();
+    showOk("admin-subject-status", `✓ Subject "${name}" (ID: ${id}) added successfully.`);
+    $("new-subject-name").value=""; $("new-subject-id").value="";
+  } catch(e) { showErr("admin-subject-status","Error: " + e.message); }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BOOT
+// ─────────────────────────────────────────────────────────────────────────────
+window.addEventListener("DOMContentLoaded", () => {
+  showPage("login");
+
+  $("login-btn").onclick = handleLogin;
+  $("login-passcode").addEventListener("keydown", e => { if(e.key==="Enter") handleLogin(); });
+  $("logout-btn").onclick = handleLogout;
+
+  document.querySelectorAll(".nav-item").forEach(btn => {
+    btn.addEventListener("click", () => {
+      showPage(btn.dataset.page);
+      if (btn.dataset.page === "live") initLiveView();
+    });
+  });
+
+  $("live-subject").addEventListener("change", e => { if(e.target.value) startLiveListener(e.target.value); });
+  $("report-calc-btn").onclick  = loadReport;
+  $("export-pdf-btn").onclick   = exportPDF;
+  $("create-user-btn").onclick  = createUser;
+  $("add-subject-btn").onclick  = addSubject;
+
+  $("csv-file").addEventListener("change", e => handleCSVFile(e.target.files[0]));
+  const dz = $("csv-dropzone");
+  dz.addEventListener("dragover",  e => { e.preventDefault(); dz.classList.add("drag-over"); });
+  dz.addEventListener("dragleave", () => dz.classList.remove("drag-over"));
+  dz.addEventListener("drop",      e => { e.preventDefault(); dz.classList.remove("drag-over"); handleCSVFile(e.dataTransfer.files[0]); });
+});
+</script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e1a;--surface:#111827;--surface2:#1a2235;--border:#1f2d45;
+  --accent:#3b82f6;--accent-dim:#1d4ed8;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;
+  --text:#e2e8f0;--text-muted:#64748b;--text-dim:#94a3b8;
+  --mono:"Space Mono",monospace;--sans:"DM Sans",sans-serif;
+  --radius:10px;--shadow:0 4px 24px rgba(0,0,0,.4);
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+
+#app-header{display:none;align-items:center;justify-content:space-between;padding:0 24px;height:56px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.header-logo{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);letter-spacing:-1px}
+.header-logo span{color:var(--text-muted)}
+.header-user{display:flex;align-items:center;gap:10px}
+.header-role-badge{font-family:var(--mono);font-size:10px;font-weight:700;background:var(--border);color:var(--accent);padding:2px 8px;border-radius:4px}
+#logout-btn{font-size:12px;font-weight:600;padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--text-muted);cursor:pointer;transition:.15s}
+#logout-btn:hover{border-color:var(--red);color:var(--red)}
+
+#main-nav{display:none;background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;gap:4px;overflow-x:auto}
+.nav-item{font-size:13px;font-weight:500;padding:12px 16px;border:none;background:none;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:.15s}
+.nav-item:hover{color:var(--text)}.nav-item.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+#app-content{flex:1;padding:28px;max-width:1100px;width:100%;margin:0 auto}
+.page{display:none}.page.active{display:block}
+
+#page-login{display:none;min-height:100vh;align-items:center;justify-content:center}
+#page-login.active{display:flex}
+.login-card{width:100%;max-width:400px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px;box-shadow:var(--shadow)}
+.login-logo{font-family:var(--mono);font-size:28px;font-weight:700;color:var(--accent);text-align:center;margin-bottom:4px;letter-spacing:-2px}
+.login-logo span{color:var(--text-muted)}
+.login-sub{text-align:center;color:var(--text-muted);font-size:13px;margin-bottom:32px}
+
+.form-group{margin-bottom:18px}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase}
+.form-control{width:100%;padding:11px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--sans);font-size:14px;transition:.15s}
+.form-control:focus{outline:none;border-color:var(--accent)}
+select.form-control{cursor:pointer}option{background:var(--surface2)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border:none;border-radius:var(--radius);font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent-dim)}.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-secondary{background:var(--surface2);color:var(--text-dim);border:1px solid var(--border)}.btn-secondary:hover{border-color:var(--text-muted);color:var(--text)}.btn-secondary:disabled{opacity:.4;cursor:not-allowed}
+.btn-sm{padding:7px 14px;font-size:13px}.btn-full{width:100%}
+
+.status-msg{font-size:13px;padding:10px 14px;border-radius:var(--radius);margin-top:12px;display:none}
+.status-msg.error{background:rgba(239,68,68,.1);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
+.status-msg.success{background:rgba(34,197,94,.1);color:#86efac;border:1px solid rgba(34,197,94,.3)}
+
+.page-title{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px;letter-spacing:-1px}
+.page-sub{color:var(--text-muted);font-size:13px;margin-bottom:24px}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.card+.card{margin-top:16px}
+.card-title{font-size:13px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px}
+
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px}
+.stat-label{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.stat-value{font-family:var(--mono);font-size:32px;font-weight:700;line-height:1}
+.stat-card.green .stat-value{color:var(--green)}.stat-card.red .stat-value{color:var(--red)}
+.stat-card.amber .stat-value{color:var(--amber)}.stat-card.blue .stat-value{color:var(--accent)}
+
+.progress-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px}
+.progress-bar-bg{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.progress-bar-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .5s ease}
+.progress-pct{font-family:var(--mono);font-size:13px;color:var(--accent);min-width:44px;text-align:right}
+.progress-label{font-size:12px;color:var(--text-muted);min-width:100px}
+
+.table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;background:var(--surface2);border-bottom:1px solid var(--border);white-space:nowrap}
+.data-table tbody td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text-dim)}
+.data-table tbody tr:last-child td{border-bottom:none}
+.data-table tbody tr:hover td{background:var(--surface2)}
+.row-present td{background:rgba(34,197,94,.03)}.row-absent td{opacity:.65}
+.row-left td{background:rgba(245,158,11,.05)}.row-danger td{background:rgba(239,68,68,.05)}
+.mono{font-family:var(--mono);font-size:12px}
+
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.3px}
+.badge-present{background:rgba(34,197,94,.15);color:var(--green)}
+.badge-absent{background:rgba(100,116,139,.15);color:var(--text-muted)}
+.badge-left{background:rgba(245,158,11,.15);color:var(--amber)}
+
+.controls-row{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.controls-row .form-control{max-width:260px}
+
+.pct-cell{display:flex;align-items:center;gap:8px}
+.pct-bar-bg{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;min-width:60px}
+.pct-bar-fill{height:100%;border-radius:3px;transition:width .3s}
+
+.report-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+
+.dropzone{border:2px dashed var(--border);border-radius:var(--radius);padding:40px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:20px}
+.dropzone:hover,.dropzone.drag-over{border-color:var(--accent);background:rgba(59,130,246,.05)}
+.dropzone-icon{font-size:32px;margin-bottom:12px;opacity:.5}
+.dropzone-text{color:var(--text-muted);font-size:14px;margin-bottom:8px}
+.dropzone-hint{color:var(--text-muted);font-size:12px;font-family:var(--mono)}
+#csv-file{display:none}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+hr.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+@media(max-width:640px){
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  #app-content{padding:16px}
+  .report-stats,.two-col{grid-template-columns:1fr}
+  .controls-row .form-control{max-width:100%}
+}
+</style>
 </head>
 <body>
 
-    <div id="loginSection" class="login-container">
-        <div class="card" style="width: 350px; text-align: center;">
-            <h2>SAMS Portal</h2>
-            <input type="password" id="adminPass" placeholder="Admin Password" style="width: 90%; padding: 10px; margin-bottom: 15px;">
-            <button class="btn btn-primary" onclick="attemptLogin()">Enter Dashboard</button>
-        </div>
+<header id="app-header">
+  <div class="header-logo">Attend<span>IQ</span></div>
+  <div class="header-user">
+    <span style="font-size:14px;color:var(--text-dim)" id="header-user"></span>
+    <span class="header-role-badge" id="header-role"></span>
+    <button id="logout-btn">Sign out</button>
+  </div>
+</header>
+
+<nav id="main-nav">
+  <button class="nav-item" data-page="live">Live Attendance</button>
+  <button class="nav-item" data-page="report">Report & Export</button>
+  <button class="nav-item" data-page="upload">Upload Students</button>
+  <button class="nav-item" data-page="admin">Admin</button>
+</nav>
+
+<main id="app-content">
+
+  <!-- LOGIN -->
+  <div class="page" id="page-login">
+    <div class="login-card">
+      <div class="login-logo">Attend<span>IQ</span></div>
+      <p class="login-sub">RFID Smart Attendance System</p>
+      <div class="form-group">
+        <label>Your Full Name</label>
+        <input id="login-name" type="text" class="form-control" placeholder="Exactly as registered e.g. Dr. Meghna Bora"/>
+      </div>
+      <div class="form-group">
+        <label>Passcode</label>
+        <input id="login-passcode" type="password" class="form-control" placeholder="Your passcode"/>
+      </div>
+      <button id="login-btn" class="btn btn-primary btn-full" style="margin-top:4px">Sign In</button>
+      <div id="login-error" class="status-msg error"></div>
+      <p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:16px">Role is determined automatically from your account</p>
+    </div>
+  </div>
+
+  <!-- LIVE ATTENDANCE -->
+  <div class="page" id="page-live">
+    <div class="page-title">Live Attendance</div>
+    <p class="page-sub" id="live-updated">Real-time tracking — updates instantly as students scan</p>
+
+    <div class="controls-row">
+      <select id="live-subject" class="form-control subject-select"><option value="">Select subject…</option></select>
     </div>
 
-    <div id="dashSection" class="dashboard">
-        <div class="grid">
-            <div class="stat" style="background: #3b82f6;"><h3>Present</h3><h2 id="countPresent">0</h2></div>
-            <div class="stat" style="background: #10b981;"><h3>Left Midway</h3><h2 id="countLeft">0</h2></div>
-            <div class="stat" style="background: #6366f1;"><h3>Total Class</h3><h2 id="countTotal">0</h2></div>
-        </div>
-
-        <div class="card">
-            <h3>Class Control Center</h3>
-            <select id="subjectSel" class="btn" style="background: white; border: 1px solid #ccc;">
-                <option value="Java">Java</option>
-                <option value="DBMS">DBMS</option>
-                <option value="Maths">Maths</option>
-                <option value="Computer Networks">Computer Networks</option>
-                <option value="Artificial Intelligence">Artificial Intelligence</option>
-                <option value="Data Structures">Data Structures</option>
-            </select>
-            <button class="btn btn-primary" onclick="controlSession(true)">Start Session</button>
-            <button class="btn btn-danger" onclick="controlSession(false)">End Session</button>
-            <button class="btn" onclick="downloadReport()" style="float: right; background: #8b5cf6; color: white;">Download PDF Report</button>
-        </div>
-
-        <div class="card">
-            <h3>Student Registry (CSV)</h3>
-            <input type="file" id="csvInput" accept=".csv">
-            <button class="btn btn-primary" onclick="uploadCSV()">Sync Master List</button>
-        </div>
-
-        <div class="card">
-            <h3>Live Attendance Log</h3>
-            <table id="attendanceTable">
-                <thead><tr><th>Name</th><th>UID</th><th>Arrival</th><th>Status</th></tr></thead>
-                <tbody id="logBody"></tbody>
-            </table>
-        </div>
+    <div class="stat-grid">
+      <div class="stat-card green"><div class="stat-label">Present</div>   <div class="stat-value" id="live-count-present">—</div></div>
+      <div class="stat-card red">  <div class="stat-label">Absent</div>    <div class="stat-value" id="live-count-absent">—</div></div>
+      <div class="stat-card amber"><div class="stat-label">Left Early</div><div class="stat-value" id="live-count-left">—</div></div>
+      <div class="stat-card blue"> <div class="stat-label">Total</div>     <div class="stat-value" id="live-count-total">—</div></div>
     </div>
 
-    <script>
-        // CONFIG
-        const firebaseConfig = { 
-            databaseURL: "https://sams-190605-default-rtdb.firebaseio.com" 
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+    <div class="progress-wrap">
+      <span class="progress-label">Attendance rate</span>
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="live-progress-bar" style="width:0%"></div></div>
+      <span class="progress-pct" id="live-progress-pct">0%</span>
+    </div>
 
-        function attemptLogin() {
-            if(document.getElementById('adminPass').value === "admin123") {
-                document.getElementById('loginSection').style.display = "none";
-                document.getElementById('dashSection').style.display = "block";
-                startListeners();
-            } else { alert("Access Denied"); }
-        }
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Roll No</th><th>Name</th><th>Status</th><th>Entry</th><th>Exit</th></tr></thead>
+        <tbody id="live-table-body">
+          <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:32px">Select a subject above to see live attendance</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-        function controlSession(state) {
-            const sub = document.getElementById('subjectSel').value;
-            db.ref('current_session').set({
-                status: state,
-                subject: sub,
-                timestamp: Date.now()
-            });
-        }
+  <!-- REPORT & EXPORT -->
+  <div class="page" id="page-report">
+    <div class="page-title">Attendance Report</div>
+    <p class="page-sub">Calculate attendance percentages and export a PDF for any subject and date range</p>
 
-        function uploadCSV() {
-            const file = document.getElementById('csvInput').files[0];
-            Papa.parse(file, {
-                header: true,
-                complete: function(results) {
-                    let updates = {};
-                    results.data.forEach(row => {
-                        if(row.UID) updates[row.UID.trim().toUpperCase()] = { name: row.Name };
-                    });
-                    db.ref('students').update(updates).then(() => alert("Master List Updated!"));
-                }
-            });
-        }
+    <div class="card" style="margin-bottom:20px">
+      <div class="controls-row" style="margin-bottom:0">
+        <select id="report-subject" class="form-control subject-select" style="max-width:300px"><option value="">Select subject…</option></select>
+        <select id="report-range" class="form-control" style="max-width:180px">
+          <option value="1">Last 1 day</option>
+          <option value="7" selected>Last 7 days</option>
+          <option value="14">Last 14 days</option>
+          <option value="30">Last 30 days</option>
+        </select>
+        <button id="report-calc-btn" class="btn btn-primary btn-sm">Calculate</button>
+        <button id="export-pdf-btn" class="btn btn-secondary btn-sm" disabled>⬇ Export PDF</button>
+      </div>
+    </div>
 
-        function startListeners() {
-            const today = new Date().toISOString().split('T')[0];
-            db.ref('current_session/subject').on('value', snap => {
-                const sub = snap.val();
-                if(!sub) return;
-                
-                db.ref(`attendance_logs/${sub}/${today}`).on('value', snapshot => {
-                    const tbody = document.getElementById('logBody');
-                    tbody.innerHTML = "";
-                    let p = 0, l = 0;
-                    
-                    snapshot.forEach(child => {
-                        const val = child.val();
-                        if(val.status === "Present") p++; else l++;
-                        tbody.innerHTML += `<tr><td>${val.name}</td><td>${child.key}</td><td>${val.arrival}</td><td>${val.status}</td></tr>`;
-                    });
-                    document.getElementById('countPresent').innerText = p;
-                    document.getElementById('countLeft').innerText = l;
-                });
-            });
-        }
+    <div id="report-error" class="status-msg error"></div>
 
-        async function downloadReport() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const sub = document.getElementById('subjectSel').value;
-            
-            // Get all students to show even those with 0 attendance
-            const allStudents = (await db.ref('students').once('value')).val();
-            const logs = (await db.ref(`attendance_logs/${sub}`).once('value')).val();
+    <div id="report-results" style="display:none">
+      <div style="margin-bottom:16px">
+        <div class="page-title" id="report-title"></div>
+        <p class="page-sub" id="report-meta"></p>
+      </div>
+      <div class="report-stats">
+        <div class="stat-card blue"> <div class="stat-label">Total Students</div>   <div class="stat-value" id="report-summary-total">0</div></div>
+        <div class="stat-card green"><div class="stat-label">≥ 75% Attendance</div><div class="stat-value" id="report-summary-above">0</div></div>
+        <div class="stat-card red">  <div class="stat-label">Below 75%</div>        <div class="stat-value" id="report-summary-below">0</div></div>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Roll No</th><th>Student Name</th><th>Attended</th><th>Total Classes</th><th>Percentage</th></tr></thead>
+          <tbody id="report-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
-            let rows = [];
-            Object.keys(allStudents).forEach(uid => {
-                rows.push([allStudents[uid].name, uid, "Absent"]); // Logic for report can be expanded here
-            });
+  <!-- UPLOAD STUDENTS -->
+  <div class="page" id="page-upload">
+    <div class="page-title">Upload Student List</div>
+    <p class="page-sub">Import all students from a CSV file. Students already in the system with the same UID will be updated.</p>
 
-            doc.text(`SAMS Report: ${sub}`, 14, 20);
-            doc.autoTable({ head: [['Name', 'UID', 'Attendance']], body: rows, startY: 30 });
-            doc.save(`SAMS_${sub}_Report.pdf`);
-        }
-    </script>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title">Required CSV Format</div>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Your file must have these exact headers (case-insensitive):</p>
+      <code style="display:block;background:var(--surface2);padding:14px;border-radius:8px;font-family:var(--mono);font-size:12px;color:var(--text-dim);line-height:2.2">uid,name,rollNo,branch,semester
+AABB1122,Rina Das,CSE2024001,CSE,3
+CC334455,Amit Bora,CSE2024002,CSE,3
+EE667788,Priya Kalita,CSE2024003,CSE,3</code>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:12px">💡 To find a card's UID: run the ESP32 and open Serial Monitor (115200 baud) in Arduino IDE. Tap the card — the UID will be printed like <code style="font-family:var(--mono);color:var(--accent)">[SCAN] UID: AABB1122</code></p>
+    </div>
+
+    <div class="dropzone" id="csv-dropzone" onclick="document.getElementById('csv-file').click()">
+      <div class="dropzone-icon">📄</div>
+      <div class="dropzone-text">Drop CSV file here, or click to browse</div>
+      <div class="dropzone-hint">uid · name · rollNo · branch · semester</div>
+      <input type="file" id="csv-file" accept=".csv"/>
+    </div>
+
+    <div id="csv-status" class="status-msg"></div>
+    <div id="csv-preview"></div>
+  </div>
+
+  <!-- ADMIN -->
+  <div class="page" id="page-admin">
+    <div class="page-title">Admin Panel</div>
+    <p class="page-sub">Create user accounts and manage subjects. Only Admins and HODs can access this page.</p>
+
+    <!-- Create User -->
+    <div class="card">
+      <div class="card-title">Create New User Account</div>
+      <div class="two-col">
+        <div class="form-group" style="margin:0">
+          <label>Full Name</label>
+          <input id="new-user-name" type="text" class="form-control" placeholder="e.g. Dr. Meghna Bora"/>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Passcode</label>
+          <input id="new-user-passcode" type="password" class="form-control" placeholder="Their login passcode"/>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Role</label>
+          <select id="new-user-role" class="form-control">
+            <option value="">Select role…</option>
+            <option value="teacher">Teacher</option>
+            <option value="hod">Head of Department</option>
+            <option value="principal">Principal</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Subject IDs — comma separated (teachers only)</label>
+          <input id="new-user-subjects" type="text" class="form-control" placeholder="e.g. cs301, cs302"/>
+        </div>
+      </div>
+
+      <hr class="divider"/>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">⚠ Firebase temporarily switches the active session when creating a new user. Enter your own passcode below so the system automatically signs you back in.</p>
+      <div class="form-group" style="max-width:320px;margin-bottom:16px">
+        <label>Your Passcode (for re-authentication)</label>
+        <input id="re-auth-passcode" type="password" class="form-control" placeholder="Your current login passcode"/>
+      </div>
+      <button id="create-user-btn" class="btn btn-primary btn-sm">Create User Account</button>
+      <div id="admin-user-status" class="status-msg"></div>
+    </div>
+
+    <!-- Add Subject -->
+    <div class="card">
+      <div class="card-title">Add New Subject</div>
+      <div class="controls-row" style="margin-bottom:8px">
+        <input id="new-subject-name" type="text" class="form-control" placeholder="Subject name  e.g. Data Structures" style="max-width:300px"/>
+        <input id="new-subject-id"   type="text" class="form-control" placeholder="Subject ID  e.g. cs301" style="max-width:180px"/>
+        <button id="add-subject-btn" class="btn btn-primary btn-sm">Add Subject</button>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted)">The Subject ID must exactly match <code style="font-family:var(--mono);color:var(--accent)">SUBJECT_ID</code> in the ESP32 firmware for that device.</p>
+      <div id="admin-subject-status" class="status-msg"></div>
+    </div>
+
+    <!-- Info card -->
+    <div class="card">
+      <div class="card-title">First Time Setup</div>
+      <p style="font-size:13px;color:var(--text-muted);line-height:1.8">
+        The very first Admin account cannot be created from this page — it must be created directly in Firebase Console.<br/>
+        Go to <strong style="color:var(--text-dim)">Firebase Console → Authentication → Add user</strong> and create a user with email
+        <code style="font-family:var(--mono);color:var(--accent)">yourname@attendiq.local</code> and your chosen passcode.<br/>
+        Then go to <strong style="color:var(--text-dim)">Realtime Database</strong> and manually add the entry:<br/>
+        <code style="font-family:var(--mono);color:var(--accent);font-size:11px">users → {uid from Auth} → { name:"YourName", role:"admin", subjectIds:[] }</code><br/>
+        After that, all future users are created from this panel.
+      </p>
+    </div>
+  </div>
+
+</main>
 </body>
 </html>
