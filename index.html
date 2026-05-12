@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SAMS | Smart Attendance Management System</title>
+<title>Smart Attendance Management System</title>
 
-<!-- Firebase compat (same as your original) -->
+<!-- Firebase Linker-->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
-<!-- PDF + CSV -->
+<!-- PDF Report Generation + CSV List Upload Linker-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <style>
-/* ── TOKENS ─────────────────────────────────────────────────────────────── */
+/*Tokens*/
 :root {
   --primary:#4f46e5; --primary-d:#3730a3;
   --bg:#f1f5f9; --surface:#ffffff;
@@ -26,7 +26,7 @@
 *{ box-sizing:border-box; margin:0; padding:0; }
 body{ font-family:'Segoe UI',sans-serif; background:var(--bg); color:var(--text); }
 
-/* ── LOGIN ──────────────────────────────────────────────────────────────── */
+/*Login Menu*/
 #login-screen{
   position:fixed; inset:0; background:#0f172a;
   z-index:999; display:flex; justify-content:center; align-items:center;
@@ -45,7 +45,7 @@ body{ font-family:'Segoe UI',sans-serif; background:var(--bg); color:var(--text)
 }
 .login-box input:focus{ border-color:var(--primary); }
 
-/* credential hint table inside login */
+/* Credential Hints*/
 .cred-table{ width:100%; border-collapse:collapse; margin-top:16px; text-align:left; }
 .cred-table th{
   font-size:10px; text-transform:uppercase; letter-spacing:.5px;
@@ -63,7 +63,7 @@ body{ font-family:'Segoe UI',sans-serif; background:var(--bg); color:var(--text)
 .tag-hod      { background:#dcfce7; color:#15803d; }
 .tag-teacher  { background:#fef3c7; color:#b45309; }
 
-/* ── HEADER ─────────────────────────────────────────────────────────────── */
+/*Header*/
 .header{
   background:var(--primary); color:white;
   padding:0 36px; height:58px;
@@ -78,9 +78,8 @@ body{ font-family:'Segoe UI',sans-serif; background:var(--bg); color:var(--text)
   border-radius:99px; font-size:11px; font-weight:700; letter-spacing:.5px;
 }
 
-/* ── LAYOUT ─────────────────────────────────────────────────────────────── */
+/*Layout*/
 .container{ padding:24px 36px; max-width:1440px; margin:auto; }
-
 .card{
   background:var(--surface); padding:22px;
   border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.08);
@@ -90,10 +89,9 @@ body{ font-family:'Segoe UI',sans-serif; background:var(--bg); color:var(--text)
   font-size:11px; font-weight:700; text-transform:uppercase;
   letter-spacing:.6px; color:var(--gray); margin-bottom:14px;
 }
-
 .grid-3{ display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:20px; }
 
-/* ── STAT CARDS ──────────────────────────────────────────────────────────── */
+/*Stats Cards*/
 .stat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px; }
 .stat-card{
   background:var(--surface); border-radius:12px; padding:18px 20px;
@@ -107,7 +105,7 @@ body{ font-family:'Segoe UI',sans-serif; background:var(--bg); color:var(--text)
 .stat-card .slabel{ font-size:11px; color:var(--gray); text-transform:uppercase; letter-spacing:.5px; }
 .stat-card .svalue{ font-size:28px; font-weight:800; color:var(--text); margin-top:6px; }
 
-/* ── CONTROLS ────────────────────────────────────────────────────────────── */
+/*Controls*/
 .controls{
   display:grid; grid-template-columns:1.3fr 1fr 1fr 1fr;
   gap:14px; align-items:end; margin-bottom:18px;
@@ -120,7 +118,7 @@ select, input[type=text], input[type=password], input[type=number]{
 }
 select:focus, input:focus{ border-color:var(--primary); }
 
-/* ── BUTTONS ─────────────────────────────────────────────────────────────── */
+/*Buttons*/
 .btn{
   padding:10px 18px; border:none; border-radius:8px;
   cursor:pointer; font-weight:700; color:white;
@@ -138,7 +136,7 @@ select:focus, input:focus{ border-color:var(--primary); }
 .btn:disabled{ opacity:.5; cursor:not-allowed; }
 .btn-w{ width:100%; }
 
-/* ── TABLE ───────────────────────────────────────────────────────────────── */
+/*Tables*/
 .table-wrap{ overflow-x:auto; border-radius:10px; border:1px solid var(--border); }
 table{ width:100%; border-collapse:collapse; }
 thead th{
@@ -151,7 +149,7 @@ tbody td{ padding:11px 14px; border-bottom:1px solid #f8fafc; font-size:13px; }
 tbody tr:last-child td{ border-bottom:none; }
 tbody tr:hover td{ background:#fafbff; }
 
-/* ── BADGES ──────────────────────────────────────────────────────────────── */
+/*Badges*/
 .badge{ display:inline-block; padding:3px 10px; border-radius:99px; font-size:11px; font-weight:700; }
 .badge-in   { background:#dbeafe; color:#1d4ed8; }
 .badge-out  { background:#dcfce7; color:#15803d; }
@@ -159,7 +157,7 @@ tbody tr:hover td{ background:#fafbff; }
 .pct-green  { background:#dcfce7; color:#15803d; }
 .pct-red    { background:#fee2e2; color:#b91c1c; }
 
-/* ── LIVE SESSION BAR ────────────────────────────────────────────────────── */
+/*Live Session Bar*/
 .session-bar{
   display:none; margin-top:12px; padding:10px 14px;
   background:#f0fdf4; border-left:4px solid var(--success);
@@ -168,12 +166,12 @@ tbody tr:hover td{ background:#fafbff; }
 .pulse{ animation:blink 2s infinite; color:var(--danger); font-weight:700; }
 @keyframes blink{ 0%,100%{opacity:1} 50%{opacity:.4} }
 
-/* ── PROGRESS BAR ────────────────────────────────────────────────────────── */
+/*Progress Bar*/
 .pct-cell{ display:flex; align-items:center; gap:8px; }
 .pct-bar-bg{ flex:1; height:6px; background:var(--border); border-radius:3px; overflow:hidden; min-width:50px; }
 .pct-bar-fill{ height:100%; border-radius:3px; }
 
-/* ── DROPZONE ────────────────────────────────────────────────────────────── */
+/*File Dropzone*/
 .dropzone{
   border:2px dashed var(--border); border-radius:10px;
   padding:28px; text-align:center; cursor:pointer; transition:.2s;
@@ -183,7 +181,7 @@ tbody tr:hover td{ background:#fafbff; }
 .dropzone small{ font-size:11px; color:#94a3b8; font-family:monospace; }
 #csvFile{ display:none; }
 
-/* ── STATUS MSG ──────────────────────────────────────────────────────────── */
+/*Status Messages*/
 .status-msg{
   font-size:13px; padding:10px 14px; border-radius:8px;
   margin-top:12px; display:none;
@@ -191,7 +189,7 @@ tbody tr:hover td{ background:#fafbff; }
 .msg-ok  { background:#f0fdf4; border-left:4px solid var(--success); color:#166534; }
 .msg-err { background:#fef2f2; border-left:4px solid var(--danger);  color:#991b1b; }
 
-/* ── TABS ────────────────────────────────────────────────────────────────── */
+/*Tabs*/
 .tab-bar{ display:flex; gap:4px; margin-bottom:20px; border-bottom:2px solid var(--border); }
 .tab{
   padding:10px 20px; border:none; background:none;
@@ -204,12 +202,11 @@ tbody tr:hover td{ background:#fafbff; }
 .tab-content{ display:none; }
 .tab-content.active{ display:block; }
 
-/* ── MISC ────────────────────────────────────────────────────────────────── */
+/*MISC Functions*/
 .mono{ font-family:monospace; font-size:12px; }
 .empty-row{ text-align:center; padding:28px !important; color:var(--gray) !important; }
 .section-hidden{ display:none; }
 hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
-
 @media(max-width:900px){
   .grid-3{ grid-template-columns:1fr; }
   .stat-grid{ grid-template-columns:repeat(2,1fr); }
@@ -220,12 +217,11 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════════ LOGIN ══════ -->
+<!-- Login -->
 <div id="login-screen">
   <div class="login-box">
     <h2>SAMS LOGIN</h2>
     <p>Smart Attendance Management System</p>
-
     <input type="text"     id="u" placeholder="Username" autocomplete="username"/>
     <input type="password" id="p" placeholder="Passcode"
            onkeydown="if(event.key==='Enter') login()"
@@ -234,7 +230,6 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
       Access Dashboard
     </button>
     <div id="login-error" style="color:var(--danger);margin-top:10px;font-size:12px"></div>
-
     <!-- default credentials hint -->
     <hr style="margin:20px 0"/>
     <p style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin-bottom:8px">
@@ -247,9 +242,8 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════ DASHBOARD ══ -->
+<!-- Dashboard -->
 <div id="dashboard" style="display:none">
-
   <div class="header">
     <h2>SAMS Dashboard &nbsp;|&nbsp; <span id="hdr-name">—</span></h2>
     <div class="header-right">
@@ -261,12 +255,9 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
       </button>
     </div>
   </div>
-
   <div class="container">
-
-    <!-- ── TOP ROW ── -->
+    <!-- Top Row -->
     <div class="grid-3">
-
       <!-- Active Class Control -->
       <div class="card">
         <div class="card-title">Active Class Control</div>
@@ -289,7 +280,6 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
           </div>
         </div>
       </div>
-
       <!-- Student Database -->
       <div class="card">
         <div class="card-title">Student Database</div>
@@ -300,7 +290,6 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
           Loading…
         </div>
       </div>
-
       <!-- System -->
       <div class="card">
         <div class="card-title">System</div>
@@ -311,10 +300,8 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
           <button class="btn btn-d"    onclick="logout()">Logout</button>
         </div>
       </div>
-
     </div><!-- /grid-3 -->
-
-    <!-- ── STAT CARDS ── -->
+    <!-- Stats Cards -->
     <div class="stat-grid">
       <div class="stat-card green">
         <div class="slabel">Present Today</div>
@@ -333,16 +320,15 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
         <div class="svalue" id="stat-pct">—</div>
       </div>
     </div>
-
-    <!-- ── TABS ── -->
+    <!-- Tabs -->
     <div class="tab-bar">
       <button class="tab active" onclick="switchTab('live')"   id="tab-live">Live View</button>
       <button class="tab"        onclick="switchTab('report')" id="tab-report">Attendance Report</button>
       <button class="tab"        onclick="switchTab('upload')" id="tab-upload" id="tab-upload">Upload Students</button>
       <button class="tab"        onclick="switchTab('admin')"  id="tab-admin">Admin</button>
     </div>
-
-    <!-- ════════════════════════════ TAB: LIVE VIEW ══ -->
+    
+    <!-- Live View Tab -->
     <div class="tab-content active" id="tc-live">
       <div class="card">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px">
@@ -356,7 +342,7 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
           <span style="font-size:12px;color:var(--gray)" id="live-updated">—</span>
         </div>
 
-        <!-- progress bar -->
+        <!-- Progress Bar -->
         <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
           <span style="font-size:12px;color:var(--gray);min-width:110px">Attendance rate</span>
           <div style="flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden">
@@ -367,7 +353,6 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
           <span style="font-size:13px;font-weight:700;color:var(--primary);min-width:44px"
                 id="live-prog-pct">0%</span>
         </div>
-
         <div class="table-wrap">
           <table>
             <thead>
@@ -384,7 +369,7 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
       </div>
     </div>
 
-    <!-- ════════════════════════ TAB: ATTENDANCE REPORT ══ -->
+    <!-- Attendance Report Tab -->
     <div class="tab-content" id="tc-report">
       <div class="card">
         <div class="controls">
@@ -411,10 +396,9 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
             <button class="btn btn-p btn-w" onclick="loadReport()">Refresh</button>
           </div>
         </div>
-
         <div id="report-error" class="status-msg msg-err"></div>
 
-        <!-- summary stats for report -->
+        <!-- Stats Summary For Report -->
         <div id="report-summary" style="display:none;margin-bottom:18px">
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
             <div class="stat-card blue">
@@ -431,7 +415,6 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
             </div>
           </div>
         </div>
-
         <div class="table-wrap">
           <table id="attendanceTable">
             <thead>
@@ -448,11 +431,10 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
       </div>
     </div>
 
-    <!-- ════════════════════════════ TAB: UPLOAD STUDENTS ══ -->
+    <!-- Student List Upload Tab -->
     <div class="tab-content" id="tc-upload">
       <div class="card">
         <div class="card-title">Upload Student List via CSV</div>
-
         <div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:18px">
           <p style="font-size:13px;color:var(--text-sm);margin-bottom:8px">
             <b>CSV Format</b> — column headers required (case-insensitive):
@@ -468,22 +450,19 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
             <code style="color:var(--primary)">[SCAN] UID: AABB1122</code>
           </p>
         </div>
-
         <div class="dropzone" id="csv-dropzone"
              onclick="document.getElementById('csvFile').click()">
-          <p>📄 Drop CSV file here, or click to browse</p>
+          <p>📄 Drop CSV file here or click to browse</p>
           <small>uid · name · rollNo · branch · semester</small>
           <input type="file" id="csvFile" accept=".csv"/>
         </div>
-
         <div id="csv-status" class="status-msg"></div>
         <div id="csv-preview"></div>
       </div>
     </div>
 
-    <!-- ════════════════════════════════════════ TAB: ADMIN ══ -->
+    <!-- Admin Tab -->
     <div class="tab-content" id="tc-admin">
-
       <!-- Add Subject -->
       <div class="card">
         <div class="card-title">Add New Subject</div>
@@ -506,8 +485,7 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
           in the ESP32 firmware for that device.
         </p>
       </div>
-
-      <!-- User credentials info -->
+      <!-- User Credentials Info -->
       <div class="card">
         <div class="card-title">User Credentials</div>
         <p style="font-size:13px;color:var(--text-sm);margin-bottom:14px;line-height:1.7">
@@ -537,16 +515,12 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
           </button>
         </div>
       </div>
-
     </div><!-- /tc-admin -->
-
   </div><!-- /container -->
 </div><!-- /dashboard -->
 
 <script>
-// ═══════════════════════════════════════════════════════════════════════════
-// FIREBASE CONFIG
-// ═══════════════════════════════════════════════════════════════════════════
+// Firebase Config
 const firebaseConfig = {
   apiKey:            "AIzaSyC25jnEJ-6-t0hoE3m8xiPEHfWyC-ejMKE",
   authDomain:        "sams-190605.firebaseapp.com",
@@ -559,9 +533,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ═══════════════════════════════════════════════════════════════════════════
-// USERS — edit this to add/change credentials
-// ═══════════════════════════════════════════════════════════════════════════
+// Users — edit this to add/change credentials
 const USERS = {
   "admin": {
     displayName: "Admin",
@@ -585,7 +557,7 @@ const USERS = {
     displayName: "Dr. Meghna Bora",
     passcode:    "teacher123",
     role:        "teacher",
-    subjects:    ["cs301", "cs302"]   // only these subjects visible
+    subjects:    ["cs301", "cs302"]   // only these subjects are visible
   },
   "mr_rahul": {
     displayName: "Mr. Rahul Das",
@@ -603,20 +575,15 @@ const ROLE_TAG = {
   teacher:   "tag-teacher"
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════════════════════════════════
+// System State
 let SESSION      = null;   // logged-in user from USERS
 let STUDENT_MAP  = {};     // { uid: { name, rollNo, branch, semester } }
 let SUBJECTS     = {};     // { id: { name } }
 let liveUnsub    = null;
 let reportData   = null;
 
-// ═══════════════════════════════════════════════════════════════════════════
-// UTILS
-// ═══════════════════════════════════════════════════════════════════════════
+// Utils
 const today = () => new Date().toISOString().split("T")[0];
-
 function datesBetween(start, end) {
   const dates = [], cur = new Date(start), last = new Date(end);
   while (cur <= last) {
@@ -625,16 +592,14 @@ function datesBetween(start, end) {
   }
   return dates;
 }
-
 function getRangeDates(days) {
   const now   = new Date();
   const end   = now.toISOString().split("T")[0];
   const start = new Date(now);
   if (days > 0) start.setDate(start.getDate() - days);
-  else start.setFullYear(2000); // "all time"
+  else start.setFullYear(2000); // all time data
   return { start: start.toISOString().split("T")[0], end };
 }
-
 function showMsg(id, msg, type) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -647,10 +612,7 @@ function hideMsg(id) {
   if (el) el.style.display = "none";
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// LOGIN / LOGOUT
-// ═══════════════════════════════════════════════════════════════════════════
-
+// Login/Logout
 // Build credential hint table
 (function buildCredTable() {
   const tbody = document.getElementById("cred-tbody");
@@ -663,35 +625,28 @@ function hideMsg(id) {
       </tr>`;
   });
 })();
-
 function login() {
   const uname   = document.getElementById("u").value.trim().toLowerCase();
   const passcode = document.getElementById("p").value.trim();
   const errEl   = document.getElementById("login-error");
-
   const user = USERS[uname];
   if (!user)                    { errEl.textContent = "Username not found.";   return; }
   if (user.passcode !== passcode){ errEl.textContent = "Incorrect passcode."; return; }
-
   SESSION = { username: uname, ...user };
-
   document.getElementById("login-screen").style.display = "none";
   document.getElementById("dashboard").style.display    = "block";
   document.getElementById("hdr-name").textContent       = SESSION.displayName;
   document.getElementById("hdr-role").textContent       = SESSION.role.toUpperCase();
-
-  // hide tabs not relevant to role
+  // Hide Tabs Not Relevant To Role
   const adminOnly = ["admin", "hod"];
   if (!adminOnly.includes(SESSION.role)) {
     document.getElementById("tab-upload").style.display = "none";
     document.getElementById("tab-admin").style.display  = "none";
   }
-
   fetchStudents();
   fetchSubjects();
   listenToSession();
 }
-
 function logout() {
   if (liveUnsub) { liveUnsub(); liveUnsub = null; }
   SESSION = null;
@@ -701,9 +656,7 @@ function logout() {
   document.getElementById("p").value = "";
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// DATA LOADERS
-// ═══════════════════════════════════════════════════════════════════════════
+// Date Loaders
 function fetchStudents() {
   db.ref("students").on("value", snap => {
     STUDENT_MAP = snap.val() || {};
@@ -713,22 +666,18 @@ function fetchStudents() {
     refreshLive();
   });
 }
-
 function fetchSubjects() {
   db.ref("subjects").on("value", snap => {
     SUBJECTS = snap.val() || {};
-
-    // filter by teacher's subjects
+    // Filter By Teacher's Subjects
     if (SESSION?.role === "teacher" && SESSION.subjects.length > 0) {
       const ok = new Set(SESSION.subjects);
       Object.keys(SUBJECTS).forEach(id => { if (!ok.has(id)) delete SUBJECTS[id]; });
     }
-
     populateSubjectSelects();
     loadReport();
   });
 }
-
 function populateSubjectSelects() {
   ["sessionSubj", "liveSubjSelect", "subjSelect"].forEach(id => {
     const sel = document.getElementById(id);
@@ -743,10 +692,8 @@ function populateSubjectSelects() {
     if (cur) sel.value = cur;
   });
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SESSION CONTROL (Start / Stop class)
-// ═══════════════════════════════════════════════════════════════════════════
+  
+// Session Control (Start/Stop Class)
 function startClass() {
   const subj = document.getElementById("sessionSubj").value;
   if (!subj) { alert("Select a subject first."); return; }
@@ -758,11 +705,9 @@ function startClass() {
     startTime: Date.now()
   });
 }
-
 function stopClass() {
   db.ref("current_session/active").set(false);
 }
-
 function listenToSession() {
   db.ref("current_session").on("value", snap => {
     const data = snap.val();
@@ -779,10 +724,8 @@ function listenToSession() {
     }
   });
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// LIVE VIEW — real-time Firebase listener
-// ═══════════════════════════════════════════════════════════════════════════
+  
+// Live Viewq(Real-Time Firebase Listener)
 function startLiveListener() {
   if (liveUnsub) { liveUnsub(); liveUnsub = null; }
   const subjectId = document.getElementById("liveSubjSelect").value;
@@ -793,18 +736,15 @@ function startLiveListener() {
     renderLive(subjectId, snap.val() || {});
   });
 }
-
 function refreshLive() {
   const subjectId = document.getElementById("liveSubjSelect")?.value;
   if (subjectId) startLiveListener();
 }
-
 function renderLive(subjectId, sessions) {
   const students = STUDENT_MAP;
   const total    = Object.keys(students).length;
   let present = 0, left = 0;
   const rows = [];
-
   Object.entries(students).forEach(([uid, s], i) => {
     const sess = sessions[uid];
     let status = "absent", entry = "—", exit = "—";
@@ -816,17 +756,14 @@ function renderLive(subjectId, sessions) {
     }
     rows.push({ uid, name: s.name || uid, rollNo: s.rollNo || "—", status, entry, exit });
   });
-
   const absent = total - present - left;
   const pct    = total > 0 ? Math.round((present / total) * 100) : 0;
-
   document.getElementById("stat-present").textContent = present;
   document.getElementById("stat-absent").textContent  = absent;
   document.getElementById("stat-done").textContent    = left;
   document.getElementById("stat-pct").textContent     = pct + "%";
   document.getElementById("live-prog-bar").style.width = pct + "%";
   document.getElementById("live-prog-pct").textContent = pct + "%";
-
   rows.sort((a, b) => a.rollNo.localeCompare(b.rollNo));
   document.getElementById("liveTableBody").innerHTML = rows.length
     ? rows.map((r, i) => `
@@ -845,42 +782,33 @@ function renderLive(subjectId, sessions) {
           <td>${r.exit}</td>
         </tr>`).join("")
     : `<tr><td colspan="6" class="empty-row">No scans yet for today</td></tr>`;
-
   document.getElementById("live-updated").textContent =
     "Live · updated " + new Date().toLocaleTimeString("en-IN");
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// ATTENDANCE REPORT — fully client-side calculation
-// ═══════════════════════════════════════════════════════════════════════════
+// Attendance Report Generation
 async function loadReport() {
   const subjectId = document.getElementById("subjSelect").value;
   const days      = parseInt(document.getElementById("dayRange").value);
   hideMsg("report-error");
   document.getElementById("report-summary").style.display = "none";
-
   if (!subjectId) {
     document.getElementById("reportTableBody").innerHTML =
       `<tr><td colspan="6" class="empty-row">Select a subject to load report</td></tr>`;
     return;
   }
-
   document.getElementById("reportTableBody").innerHTML =
     `<tr><td colspan="6" class="empty-row">Calculating…</td></tr>`;
-
   try {
     const { start, end } = getRangeDates(days);
     const dates = datesBetween(start, end);
-
     const snap     = await db.ref(`sessions/${subjectId}`).once("value");
     const sessions = snap.val() || {};
-
     // only dates that had at least one scan = class was held
     const classDates   = days === 0
       ? Object.keys(sessions)
       : dates.filter(d => sessions[d] && Object.keys(sessions[d]).length > 0);
     const totalClasses = classDates.length;
-
     const rows = [];
     Object.entries(STUDENT_MAP).forEach(([uid, s]) => {
       let attended = 0;
@@ -892,15 +820,12 @@ async function loadReport() {
         attended, totalClasses, pct
       });
     });
-
     rows.sort((a, b) => a.rollNo.localeCompare(b.rollNo));
-
     const above = rows.filter(r => r.pct >= 75).length;
     document.getElementById("rs-total").textContent = rows.length;
     document.getElementById("rs-above").textContent = above;
     document.getElementById("rs-below").textContent = rows.length - above;
     document.getElementById("report-summary").style.display = "block";
-
     document.getElementById("reportTableBody").innerHTML = rows.length
       ? rows.map((r, i) => `
           <tr>
@@ -921,10 +846,9 @@ async function loadReport() {
             </td>
           </tr>`).join("")
       : `<tr><td colspan="6" class="empty-row">No students in database</td></tr>`;
-
     reportData = { rows, totalClasses, start, end, subjectId };
 
-    // persist summary
+    // Persist Summary
     await db.ref(`attendance_summary/${subjectId}`).set({
       rows: rows.map(r => ({
         uid: r.uid, name: r.name, rollNo: r.rollNo,
@@ -932,15 +856,12 @@ async function loadReport() {
       })),
       start, end, totalClasses, computedAt: Date.now()
     });
-
   } catch (e) {
     showMsg("report-error", "Error: " + e.message, "err");
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// PDF REPORT
-// ═══════════════════════════════════════════════════════════════════════════
+// PDF Generation
 function genReport() {
   if (!reportData || !reportData.rows.length) {
     alert("Load the Attendance Report tab first, then click Download PDF.");
@@ -951,8 +872,7 @@ function genReport() {
   const { rows, totalClasses, start, end, subjectId } = reportData;
   const subjectName = SUBJECTS[subjectId]?.name || subjectId;
   const above = rows.filter(r => r.pct >= 75).length;
-
-  // header bar
+  // Header Bar
   doc.setFillColor(79, 70, 229);
   doc.rect(0, 0, 297, 28, "F");
   doc.setTextColor(255, 255, 255);
@@ -961,13 +881,11 @@ function genReport() {
   doc.setFontSize(10); doc.setFont("helvetica", "normal");
   doc.text(`${subjectName.toUpperCase()}   ·   ${start} → ${end}   ·   ${totalClasses} classes held`,
     148.5, 20, { align: "center" });
-
-  // meta
+  // Meta
   doc.setTextColor(40, 40, 40); doc.setFontSize(9);
   doc.text(`Generated: ${new Date().toLocaleString("en-IN")}`, 14, 36);
   doc.text(`By: ${SESSION?.displayName} (${SESSION?.role})`, 14, 42);
-
-  // summary boxes
+  // Summary Boxes
   [
     [14,  "≥ 75% Attendance", above,              [220, 252, 231], [22, 101, 52]],
     [80,  "< 75% Attendance", rows.length - above, [254, 226, 226], [153, 27, 27]],
@@ -979,8 +897,7 @@ function genReport() {
     doc.setFontSize(8); doc.setFont("helvetica", "normal");
     doc.text(label, x + 29, 62, { align: "center" });
   });
-
-  // table
+  // Table
   doc.autoTable({
     startY: 70,
     head: [["#", "Roll No", "Student Name", "Classes Held", "Attended", "Percentage"]],
@@ -1008,7 +925,6 @@ function genReport() {
     },
     margin: { left: 14, right: 14 }
   });
-
   const pages = doc.internal.getNumberOfPages();
   for (let i = 1; i <= pages; i++) {
     doc.setPage(i); doc.setFontSize(8); doc.setTextColor(160);
@@ -1016,21 +932,16 @@ function genReport() {
   }
   doc.save(`SAMS_${subjectName.replace(/\s+/g, "_")}_${start}_to_${end}.pdf`);
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// CSV UPLOAD
-// ═══════════════════════════════════════════════════════════════════════════
+  
+// CSV Student List Upload
 function handleCSVFile(file) {
   if (!file) return;
   hideMsg("csv-status");
   document.getElementById("csv-preview").innerHTML = "";
-
   Papa.parse(file, {
     header: true, skipEmptyLines: true,
     complete: ({ data }) => {
-      // support both new format (with headers) and old format (uid,name no headers)
       let students;
-
       if (data[0] && (data[0].uid || data[0].UID || data[0].RFID)) {
         // NEW FORMAT: with headers
         students = data.map(r => ({
@@ -1057,7 +968,6 @@ function handleCSVFile(file) {
           "No valid rows. Expected headers: uid,name,rollNo,branch,semester", "err");
         return;
       }
-
       document.getElementById("csv-preview").innerHTML = `
         <p style="font-size:13px;color:var(--gray);margin:14px 0 10px">
           ${students.length} students found — preview:
@@ -1080,7 +990,6 @@ function handleCSVFile(file) {
         <button class="btn btn-s" id="confirm-upload-btn">
           Sync ${students.length} Students to Firebase
         </button>`;
-
       document.getElementById("confirm-upload-btn").onclick = async () => {
         const btn = document.getElementById("confirm-upload-btn");
         btn.disabled = true; btn.textContent = "Uploading…";
@@ -1108,15 +1017,12 @@ function handleCSVFile(file) {
   });
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// ADMIN — ADD SUBJECT
-// ═══════════════════════════════════════════════════════════════════════════
+// Admin (Add Subjects)
 async function addSubject() {
   const name = document.getElementById("new-subj-name").value.trim();
   const id   = document.getElementById("new-subj-id").value.trim()
                  .toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
   hideMsg("subj-status");
-
   if (!name || !id) {
     showMsg("subj-status", "Both subject name and ID are required.", "err"); return;
   }
@@ -1130,9 +1036,7 @@ async function addSubject() {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// CLEAR LOGS
-// ═══════════════════════════════════════════════════════════════════════════
+// Clear Logs
 function clearLogs() {
   const subj = document.getElementById("subjSelect").value
             || document.getElementById("liveSubjSelect").value;
@@ -1143,9 +1047,7 @@ function clearLogs() {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TAB SWITCHER
-// ═══════════════════════════════════════════════════════════════════════════
+// Tab Switcher
 function switchTab(name) {
   document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
   document.querySelectorAll(".tab").forEach(el => el.classList.remove("active"));
@@ -1155,19 +1057,15 @@ function switchTab(name) {
   if (name === "report") loadReport();
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// CSV DRAG & DROP + FILE INPUT
-// ═══════════════════════════════════════════════════════════════════════════
+// CSV Drag & Drop Function 
 document.addEventListener("DOMContentLoaded", () => {
   setInterval(() => {
     document.getElementById("live-time").textContent =
       new Date().toLocaleTimeString("en-IN");
   }, 1000);
-
   document.getElementById("csvFile").addEventListener("change", e => {
     handleCSVFile(e.target.files[0]);
   });
-
   const dz = document.getElementById("csv-dropzone");
   dz.addEventListener("dragover",  e => { e.preventDefault(); dz.classList.add("over"); });
   dz.addEventListener("dragleave", () => dz.classList.remove("over"));
@@ -1175,8 +1073,8 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault(); dz.classList.remove("over");
     handleCSVFile(e.dataTransfer.files[0]);
   });
-
-  // enter key on username → focus password
+  
+  // ENTER Key Listener
   document.getElementById("u").addEventListener("keydown", e => {
     if (e.key === "Enter") document.getElementById("p").focus();
   });
