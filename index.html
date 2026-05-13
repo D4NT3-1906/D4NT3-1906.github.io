@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SAMS | Smart Attendance Management System</title>
+<title>Smart Attendance Management System</title>
 
 <!-- Firebase compat (same as your original) -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -429,7 +429,7 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
 
         <div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:18px">
           <p style="font-size:13px;color:var(--text-sm);margin-bottom:8px">
-            <b>CSV Format</b> — column headers required (case-insensitive):
+            <b>CSV Format</b> — Column Headers Required (Case-Insensitive):
           </p>
           <code style="font-family:monospace;font-size:12px;color:#5b21b6;line-height:2.2;display:block">
             uid,name,rollNo,branch,semester<br/>
@@ -437,9 +437,8 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
             CC334455,Amit Bora,CSE2024002,CSE,3
           </code>
           <p style="font-size:12px;color:var(--gray);margin-top:10px">
-            💡 To find a card's UID — open Arduino IDE → Serial Monitor at 115200 baud →
-            tap card → you'll see
-            <code style="color:var(--primary)">[SCAN] UID: AABB1122</code>
+            To find a card's UID — open Arduino IDE → Serial Monitor at 115200 baud →
+            tap card → you'll see [SCAN] UID: AABB1122 in output.
           </p>
         </div>
 
@@ -546,12 +545,12 @@ const db = firebase.database();
 // ═══════════════════════════════════════════════════════════════════════════
 
 const SUBJECTS_CONFIG = {
-  "cs301": { name: "Data Structures",        teacher: "Dr. Meghna Bora"  },
-  "cs302": { name: "Computer Networks",      teacher: "Dr. Meghna Bora"  },
-  "cs303": { name: "Operating Systems",      teacher: "Mr. Rahul Das"    },
-  "cs304": { name: "Database Management",    teacher: "Mr. Rahul Das"    },
-  "cs305": { name: "Software Engineering",   teacher: "Dr. Priya Kalita" },
-  "ma301": { name: "Engineering Mathematics",teacher: "Dr. Priya Kalita" }
+  "cs301": { name: "Data Structures",        teacher: "Mrs. Prakriti Prava Das"  },
+  "cs302": { name: "Computer Networks",      teacher: "Dr. Plabita Borbora"  },
+  "cs303": { name: "Operating Systems",      teacher: "Dr. Hitesh Tahbildar"    },
+  "cs304": { name: "Database Management",    teacher: "Dr. Maushumi Lahon"    },
+  "cs305": { name: "Java Programming",   teacher: "Mr. Abdul Barek" },
+  "ma301": { name: "Engineering Mathematics",teacher: "Dr. Parbin Ahmed" }
   // ↑ add / edit subjects here
 };
 
@@ -559,42 +558,60 @@ const USERS = {
   // ── Admin (sees everything, manages system) ──
   "admin": {
     displayName: "Admin",
-    passcode:    "admin123",
+    passcode:    "1906051",
     role:        "admin",
     subjects:    []
   },
   // ── Principal (sees everything, read-only report access) ──
   "principal": {
     displayName: "Principal",
-    passcode:    "principal123",
+    passcode:    "AEI",
     role:        "principal",
     subjects:    []
   },
   // ── HOD (sees everything for their department) ──
   "hod_cse": {
     displayName: "HOD CSE",
-    passcode:    "hod123",
+    passcode:    "CSE2023",
     role:        "hod",
     subjects:    []
   },
   // ── Teachers (each sees only their own subjects) ──
-  "dr_meghna": {
-    displayName: "Dr. Meghna Bora",
-    passcode:    "teacher123",
+  "mrs_prakriti": {
+    displayName: "Mrs. Prakriti Prava Das",
+    passcode:    "PPD2023",
     role:        "teacher",
-    subjects:    ["cs301", "cs302"]   // must match keys in SUBJECTS_CONFIG
+    subjects:    ["cs301"]   // must match keys in SUBJECTS_CONFIG
   },
-  "mr_rahul": {
-    displayName: "Mr. Rahul Das",
-    passcode:    "rahul123",
+  "dr_plabita": {
+    displayName: "Dr. Plabita Borbora",
+    passcode:    "PB2023",
     role:        "teacher",
-    subjects:    ["cs303", "cs304"]
+    subjects:    ["cs302"]
   },
-  "dr_priya": {
-    displayName: "Dr. Priya Kalita",
-    passcode:    "priya123",
+  "dr_hitesh": {
+    displayName: "Dr. Hitesh Tahbildar",
+    passcode:    "HT2023",
     role:        "teacher",
-    subjects:    ["cs305", "ma301"]
+    subjects:    ["cs303"]
+  },
+   "dr_maushumi": {
+    displayName: "Dr. Maushumi Lahon",
+    passcode:    "ML2023",
+    role:        "teacher",
+    subjects:    ["cs304"]
+  },
+   "mr_abdul": {
+    displayName: "Mr. Abdul Barek",
+    passcode:    "AB2023",
+    role:        "teacher",
+    subjects:    ["cs305"]
+  },
+   "dr_parbin": {
+    displayName: "Dr. Parbin Ahmed",
+    passcode:    "PA2023",
+    role:        "teacher",
+    subjects:    ["ma301"]
   }
   // ↑ add more users here in the same format
 };
