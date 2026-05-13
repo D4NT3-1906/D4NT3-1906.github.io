@@ -3,19 +3,15 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Smart Attendance Management System</title>
+<title>SAMS | Smart Attendance Management System</title>
 
-<!-- Firebase compat (same as your original) -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
-<!-- PDF + CSV -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <style>
-/* ── TOKENS ─────────────────────────────────────────────────────────────── */
 :root {
   --primary:#4f46e5; --primary-d:#3730a3;
   --bg:#f1f5f9; --surface:#ffffff;
@@ -26,172 +22,106 @@
 *{ box-sizing:border-box; margin:0; padding:0; }
 body{ font-family:'Segoe UI',sans-serif; background:var(--bg); color:var(--text); }
 
-/* ── LOGIN ──────────────────────────────────────────────────────────────── */
-#login-screen{
-  position:fixed; inset:0; background:#0f172a;
-  z-index:999; display:flex; justify-content:center; align-items:center;
-}
-.login-box{
-  background:var(--surface); padding:44px 40px;
-  border-radius:16px; width:380px; text-align:center;
-  box-shadow:0 25px 50px rgba(0,0,0,.5);
-}
+/* LOGIN */
+#login-screen{ position:fixed; inset:0; background:#0f172a; z-index:999; display:flex; justify-content:center; align-items:center; }
+.login-box{ background:var(--surface); padding:44px 40px; border-radius:16px; width:380px; text-align:center; box-shadow:0 25px 50px rgba(0,0,0,.5); }
 .login-box h2{ color:var(--primary); margin-bottom:6px; font-size:24px; }
 .login-box p{ color:var(--gray); font-size:13px; margin-bottom:28px; }
-.login-box input{
-  width:100%; padding:11px 14px; border-radius:9px;
-  border:1px solid var(--border); font-size:14px;
-  margin-bottom:12px; outline:none; transition:.15s;
-}
+.login-box input{ width:100%; padding:11px 14px; border-radius:9px; border:1px solid var(--border); font-size:14px; margin-bottom:12px; outline:none; transition:.15s; }
 .login-box input:focus{ border-color:var(--primary); }
 
-
-
-/* ── HEADER ─────────────────────────────────────────────────────────────── */
-.header{
-  background:var(--primary); color:white;
-  padding:0 36px; height:58px;
-  display:flex; justify-content:space-between; align-items:center;
-  position:sticky; top:0; z-index:50;
-  box-shadow:0 2px 8px rgba(79,70,229,.3);
-}
+/* HEADER */
+.header{ background:var(--primary); color:white; padding:0 36px; height:58px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:50; box-shadow:0 2px 8px rgba(79,70,229,.3); }
 .header h2{ font-size:18px; font-weight:700; }
 .header-right{ display:flex; align-items:center; gap:16px; font-size:13px; }
-.role-badge{
-  background:rgba(255,255,255,.2); padding:3px 12px;
-  border-radius:99px; font-size:11px; font-weight:700; letter-spacing:.5px;
-}
+.role-badge{ background:rgba(255,255,255,.2); padding:3px 12px; border-radius:99px; font-size:11px; font-weight:700; letter-spacing:.5px; }
 
-/* ── LAYOUT ─────────────────────────────────────────────────────────────── */
+/* LAYOUT */
 .container{ padding:24px 36px; max-width:1440px; margin:auto; }
-
-.card{
-  background:var(--surface); padding:22px;
-  border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.08);
-  margin-bottom:20px;
-}
-.card-title{
-  font-size:11px; font-weight:700; text-transform:uppercase;
-  letter-spacing:.6px; color:var(--gray); margin-bottom:14px;
-}
-
+.card{ background:var(--surface); padding:22px; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:20px; }
+.card-title{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--gray); margin-bottom:14px; }
 .grid-3{ display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:20px; }
 
-/* ── STAT CARDS ──────────────────────────────────────────────────────────── */
+/* STAT CARDS */
 .stat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px; }
-.stat-card{
-  background:var(--surface); border-radius:12px; padding:18px 20px;
-  box-shadow:0 1px 3px rgba(0,0,0,.08);
-  border-left:4px solid transparent;
-}
-.stat-card.green { border-left-color:var(--success); }
-.stat-card.red   { border-left-color:var(--danger);  }
-.stat-card.amber { border-left-color:var(--amber);   }
-.stat-card.blue  { border-left-color:var(--primary); }
+.stat-card{ background:var(--surface); border-radius:12px; padding:18px 20px; box-shadow:0 1px 3px rgba(0,0,0,.08); border-left:4px solid transparent; }
+.stat-card.green{ border-left-color:var(--success); }
+.stat-card.red  { border-left-color:var(--danger);  }
+.stat-card.amber{ border-left-color:var(--amber);   }
+.stat-card.blue { border-left-color:var(--primary); }
 .stat-card .slabel{ font-size:11px; color:var(--gray); text-transform:uppercase; letter-spacing:.5px; }
 .stat-card .svalue{ font-size:28px; font-weight:800; color:var(--text); margin-top:6px; }
 
-/* ── CONTROLS ────────────────────────────────────────────────────────────── */
-.controls{
-  display:grid; grid-template-columns:1.3fr 1fr 1fr 1fr;
-  gap:14px; align-items:end; margin-bottom:18px;
-}
+/* CONTROLS */
+.controls{ display:grid; grid-template-columns:1.3fr 1fr 1fr 1fr; gap:14px; align-items:end; margin-bottom:18px; }
 label{ font-size:11px; font-weight:700; color:var(--gray); display:block; margin-bottom:5px; text-transform:uppercase; letter-spacing:.4px; }
-select, input[type=text], input[type=password], input[type=number]{
-  width:100%; padding:9px 12px; border-radius:8px;
-  border:1px solid var(--border); font-size:14px;
-  outline:none; transition:.15s; background:#fff;
-}
+select, input[type=text], input[type=password], input[type=number]{ width:100%; padding:9px 12px; border-radius:8px; border:1px solid var(--border); font-size:14px; outline:none; transition:.15s; background:#fff; }
 select:focus, input:focus{ border-color:var(--primary); }
 
-/* ── BUTTONS ─────────────────────────────────────────────────────────────── */
-.btn{
-  padding:10px 18px; border:none; border-radius:8px;
-  cursor:pointer; font-weight:700; color:white;
-  transition:.15s; font-size:13px; text-align:center; display:inline-block;
-}
-.btn-p { background:var(--primary); }
-.btn-p:hover { background:var(--primary-d); }
-.btn-s { background:var(--success); }
-.btn-s:hover { background:#059669; }
-.btn-d { background:var(--danger); }
-.btn-d:hover { background:#dc2626; }
-.btn-amber { background:var(--amber); }
-.btn-ghost { background:var(--border); color:var(--gray); }
-.btn-ghost:hover { background:#cbd5e1; }
+/* BUTTONS */
+.btn{ padding:10px 18px; border:none; border-radius:8px; cursor:pointer; font-weight:700; color:white; transition:.15s; font-size:13px; text-align:center; display:inline-block; }
+.btn-p{ background:var(--primary); } .btn-p:hover{ background:var(--primary-d); }
+.btn-s{ background:var(--success); } .btn-s:hover{ background:#059669; }
+.btn-d{ background:var(--danger);  } .btn-d:hover{ background:#dc2626; }
+.btn-ghost{ background:var(--border); color:var(--gray); } .btn-ghost:hover{ background:#cbd5e1; }
 .btn:disabled{ opacity:.5; cursor:not-allowed; }
 .btn-w{ width:100%; }
 
-/* ── TABLE ───────────────────────────────────────────────────────────────── */
+/* TABLE */
 .table-wrap{ overflow-x:auto; border-radius:10px; border:1px solid var(--border); }
 table{ width:100%; border-collapse:collapse; }
-thead th{
-  background:#f8fafc; color:var(--gray); padding:12px 14px;
-  text-align:left; border-bottom:2px solid var(--border);
-  font-size:11px; text-transform:uppercase; letter-spacing:.5px;
-  white-space:nowrap;
-}
+thead th{ background:#f8fafc; color:var(--gray); padding:12px 14px; text-align:left; border-bottom:2px solid var(--border); font-size:11px; text-transform:uppercase; letter-spacing:.5px; white-space:nowrap; }
 tbody td{ padding:11px 14px; border-bottom:1px solid #f8fafc; font-size:13px; }
 tbody tr:last-child td{ border-bottom:none; }
 tbody tr:hover td{ background:#fafbff; }
 
-/* ── BADGES ──────────────────────────────────────────────────────────────── */
+/* BADGES */
 .badge{ display:inline-block; padding:3px 10px; border-radius:99px; font-size:11px; font-weight:700; }
-.badge-in   { background:#dbeafe; color:#1d4ed8; }
-.badge-out  { background:#dcfce7; color:#15803d; }
-.badge-abs  { background:#f1f5f9; color:var(--gray); }
-.pct-green  { background:#dcfce7; color:#15803d; }
-.pct-red    { background:#fee2e2; color:#b91c1c; }
+.badge-in { background:#dbeafe; color:#1d4ed8; }
+.badge-out{ background:#dcfce7; color:#15803d; }
+.badge-abs{ background:#f1f5f9; color:var(--gray); }
+.pct-green{ background:#dcfce7; color:#15803d; }
+.pct-red  { background:#fee2e2; color:#b91c1c; }
 
-/* ── LIVE SESSION BAR ────────────────────────────────────────────────────── */
-.session-bar{
-  display:none; margin-top:12px; padding:10px 14px;
-  background:#f0fdf4; border-left:4px solid var(--success);
-  border-radius:6px;
-}
+/* LIVE SESSION */
+.session-bar{ display:none; margin-top:12px; padding:10px 14px; background:#f0fdf4; border-left:4px solid var(--success); border-radius:6px; }
 .pulse{ animation:blink 2s infinite; color:var(--danger); font-weight:700; }
 @keyframes blink{ 0%,100%{opacity:1} 50%{opacity:.4} }
 
-/* ── PROGRESS BAR ────────────────────────────────────────────────────────── */
+/* PROGRESS */
 .pct-cell{ display:flex; align-items:center; gap:8px; }
 .pct-bar-bg{ flex:1; height:6px; background:var(--border); border-radius:3px; overflow:hidden; min-width:50px; }
 .pct-bar-fill{ height:100%; border-radius:3px; }
 
-/* ── DROPZONE ────────────────────────────────────────────────────────────── */
-.dropzone{
-  border:2px dashed var(--border); border-radius:10px;
-  padding:28px; text-align:center; cursor:pointer; transition:.2s;
-}
+/* DROPZONE */
+.dropzone{ border:2px dashed var(--border); border-radius:10px; padding:28px; text-align:center; cursor:pointer; transition:.2s; }
 .dropzone:hover,.dropzone.over{ border-color:var(--primary); background:#f5f3ff; }
 .dropzone p{ color:var(--gray); font-size:13px; margin-bottom:4px; }
 .dropzone small{ font-size:11px; color:#94a3b8; font-family:monospace; }
 #csvFile{ display:none; }
 
-/* ── STATUS MSG ──────────────────────────────────────────────────────────── */
-.status-msg{
-  font-size:13px; padding:10px 14px; border-radius:8px;
-  margin-top:12px; display:none;
-}
-.msg-ok  { background:#f0fdf4; border-left:4px solid var(--success); color:#166534; }
-.msg-err { background:#fef2f2; border-left:4px solid var(--danger);  color:#991b1b; }
+/* STATUS MSG */
+.status-msg{ font-size:13px; padding:10px 14px; border-radius:8px; margin-top:12px; display:none; }
+.msg-ok { background:#f0fdf4; border-left:4px solid var(--success); color:#166534; }
+.msg-err{ background:#fef2f2; border-left:4px solid var(--danger);  color:#991b1b; }
 
-/* ── TABS ────────────────────────────────────────────────────────────────── */
+/* TABS */
 .tab-bar{ display:flex; gap:4px; margin-bottom:20px; border-bottom:2px solid var(--border); }
-.tab{
-  padding:10px 20px; border:none; background:none;
-  font-size:13px; font-weight:600; color:var(--gray);
-  cursor:pointer; border-bottom:2px solid transparent;
-  margin-bottom:-2px; transition:.15s;
-}
+.tab{ padding:10px 20px; border:none; background:none; font-size:13px; font-weight:600; color:var(--gray); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; transition:.15s; }
 .tab:hover{ color:var(--text); }
 .tab.active{ color:var(--primary); border-bottom-color:var(--primary); }
 .tab-content{ display:none; }
 .tab-content.active{ display:block; }
 
-/* ── MISC ────────────────────────────────────────────────────────────────── */
+/* ADMIN FORMS */
+.form-grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+.form-group{ display:flex; flex-direction:column; gap:5px; }
+.delete-btn{ background:none; border:none; color:var(--danger); cursor:pointer; font-size:18px; padding:0 4px; line-height:1; }
+.delete-btn:hover{ opacity:.7; }
+
+/* MISC */
 .mono{ font-family:monospace; font-size:12px; }
 .empty-row{ text-align:center; padding:28px !important; color:var(--gray) !important; }
-.section-hidden{ display:none; }
 hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
 
 @media(max-width:900px){
@@ -199,83 +129,63 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
   .stat-grid{ grid-template-columns:repeat(2,1fr); }
   .controls{ grid-template-columns:1fr 1fr; }
   .container{ padding:16px; }
+  .form-grid-2{ grid-template-columns:1fr; }
 }
 </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════════ LOGIN ══════ -->
+<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-box">
     <h2>SAMS LOGIN</h2>
     <p>Smart Attendance Management System</p>
-
-    <input type="text"     id="u" placeholder="Username" autocomplete="username"/>
-    <input type="password" id="p" placeholder="Passcode"
-           onkeydown="if(event.key==='Enter') login()"
-           autocomplete="current-password"/>
-    <button class="btn btn-p" onclick="login()" style="width:100%;margin-top:4px">
-      Access Dashboard
-    </button>
+    <input type="text"     id="u" placeholder="Your Name"  autocomplete="name"/>
+    <input type="password" id="p" placeholder="Passcode"   autocomplete="current-password"
+           onkeydown="if(event.key==='Enter') login()"/>
+    <button class="btn btn-p" onclick="login()" style="width:100%;margin-top:4px">Access Dashboard</button>
     <div id="login-error" style="color:var(--danger);margin-top:10px;font-size:12px"></div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════ DASHBOARD ══ -->
+<!-- DASHBOARD -->
 <div id="dashboard" style="display:none">
 
   <div class="header">
-    <h2>SAMS Dashboard &nbsp;|&nbsp; <span id="hdr-name">—</span></h2>
+    <h2>SAMS &nbsp;|&nbsp; <span id="hdr-name">—</span></h2>
     <div class="header-right">
       <span class="role-badge" id="hdr-role">—</span>
       <span id="live-time"></span>
       <button class="btn btn-ghost" onclick="logout()"
-              style="color:white;background:rgba(255,255,255,.2);padding:6px 14px;font-size:12px">
-        Logout
-      </button>
+              style="color:white;background:rgba(255,255,255,.2);padding:6px 14px;font-size:12px">Logout</button>
     </div>
   </div>
 
   <div class="container">
 
-    <!-- ── TOP ROW ── -->
+    <!-- TOP ROW -->
     <div class="grid-3">
-
-      <!-- Active Class Control -->
       <div class="card">
         <div class="card-title">Active Class Control</div>
         <div style="display:flex;gap:10px;align-items:flex-end">
-          <div style="flex:1">
-            <label>Subject</label>
-            <select id="sessionSubj"></select>
-          </div>
-          <div style="width:80px">
-            <label>Min</label>
-            <input type="number" id="sessionDur" value="60"/>
-          </div>
+          <div style="flex:1"><label>Subject</label><select id="sessionSubj"></select></div>
+          <div style="width:80px"><label>Min</label><input type="number" id="sessionDur" value="60"/></div>
           <button class="btn btn-s" id="startBtn" onclick="startClass()">Start</button>
         </div>
         <div id="sessionStatus" class="session-bar">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <span class="pulse">LIVE: <span id="activeSubjName"></span></span>
-            <button class="btn btn-d" onclick="stopClass()"
-                    style="padding:5px 12px;font-size:11px">End Class</button>
+            <button class="btn btn-d" onclick="stopClass()" style="padding:5px 12px;font-size:11px">End Class</button>
           </div>
         </div>
       </div>
 
-      <!-- Student Database -->
       <div class="card">
         <div class="card-title">Student Database</div>
-        <button class="btn btn-p btn-w" onclick="switchTab('upload')" style="margin-top:6px">
-          Upload Student List (CSV)
-        </button>
-        <div style="margin-top:10px;font-size:12px;color:var(--gray)" id="student-count-info">
-          Loading…
-        </div>
+        <button class="btn btn-p btn-w" onclick="switchTab('upload')" style="margin-top:6px">Upload Student List (CSV)</button>
+        <div style="margin-top:10px;font-size:12px;color:var(--gray)" id="student-count-info">Loading…</div>
       </div>
 
-      <!-- System -->
       <div class="card">
         <div class="card-title">System</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px">
@@ -285,71 +195,43 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
           <button class="btn btn-d"    onclick="logout()">Logout</button>
         </div>
       </div>
-
-    </div><!-- /grid-3 -->
-
-    <!-- ── STAT CARDS ── -->
-    <div class="stat-grid">
-      <div class="stat-card green">
-        <div class="slabel">Present Today</div>
-        <div class="svalue" id="stat-present">—</div>
-      </div>
-      <div class="stat-card red">
-        <div class="slabel">Absent Today</div>
-        <div class="svalue" id="stat-absent">—</div>
-      </div>
-      <div class="stat-card amber">
-        <div class="slabel">Left Early</div>
-        <div class="svalue" id="stat-done">—</div>
-      </div>
-      <div class="stat-card blue">
-        <div class="slabel">Attendance %</div>
-        <div class="svalue" id="stat-pct">—</div>
-      </div>
     </div>
 
-    <!-- ── TABS ── -->
+    <!-- STAT CARDS -->
+    <div class="stat-grid">
+      <div class="stat-card green"><div class="slabel">Present Today</div><div class="svalue" id="stat-present">—</div></div>
+      <div class="stat-card red">  <div class="slabel">Absent Today</div> <div class="svalue" id="stat-absent">—</div></div>
+      <div class="stat-card amber"><div class="slabel">Left Early</div>   <div class="svalue" id="stat-done">—</div></div>
+      <div class="stat-card blue"> <div class="slabel">Attendance %</div> <div class="svalue" id="stat-pct">—</div></div>
+    </div>
+
+    <!-- TABS -->
     <div class="tab-bar">
       <button class="tab active" onclick="switchTab('live')"   id="tab-live">Live View</button>
       <button class="tab"        onclick="switchTab('report')" id="tab-report">Attendance Report</button>
-      <button class="tab"        onclick="switchTab('upload')" id="tab-upload" id="tab-upload">Upload Students</button>
+      <button class="tab"        onclick="switchTab('upload')" id="tab-upload">Upload Students</button>
       <button class="tab"        onclick="switchTab('admin')"  id="tab-admin">Admin</button>
     </div>
 
-    <!-- ════════════════════════════ TAB: LIVE VIEW ══ -->
+    <!-- TAB: LIVE VIEW -->
     <div class="tab-content active" id="tc-live">
       <div class="card">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px">
-          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-            <div>
-              <label>Subject</label>
-              <select id="liveSubjSelect" onchange="startLiveListener()"
-                      style="min-width:200px"></select>
-            </div>
+          <div><label>Subject</label>
+            <select id="liveSubjSelect" onchange="startLiveListener()" style="min-width:200px"></select>
           </div>
           <span style="font-size:12px;color:var(--gray)" id="live-updated">—</span>
         </div>
-
-        <!-- progress bar -->
         <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
           <span style="font-size:12px;color:var(--gray);min-width:110px">Attendance rate</span>
           <div style="flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden">
-            <div id="live-prog-bar"
-                 style="height:100%;background:var(--primary);border-radius:4px;transition:width .5s;width:0%">
-            </div>
+            <div id="live-prog-bar" style="height:100%;background:var(--primary);border-radius:4px;transition:width .5s;width:0%"></div>
           </div>
-          <span style="font-size:13px;font-weight:700;color:var(--primary);min-width:44px"
-                id="live-prog-pct">0%</span>
+          <span style="font-size:13px;font-weight:700;color:var(--primary);min-width:44px" id="live-prog-pct">0%</span>
         </div>
-
         <div class="table-wrap">
           <table>
-            <thead>
-              <tr>
-                <th>#</th><th>Roll No</th><th>Name</th>
-                <th>Status</th><th>Entry</th><th>Exit</th>
-              </tr>
-            </thead>
+            <thead><tr><th>#</th><th>Roll No</th><th>Name</th><th>Status</th><th>Entry</th><th>Exit</th></tr></thead>
             <tbody id="liveTableBody">
               <tr><td colspan="6" class="empty-row">Select a subject to view live attendance</td></tr>
             </tbody>
@@ -358,16 +240,12 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
       </div>
     </div>
 
-    <!-- ════════════════════════ TAB: ATTENDANCE REPORT ══ -->
+    <!-- TAB: ATTENDANCE REPORT -->
     <div class="tab-content" id="tc-report">
       <div class="card">
         <div class="controls">
-          <div>
-            <label>Subject</label>
-            <select id="subjSelect" onchange="loadReport()"></select>
-          </div>
-          <div>
-            <label>Time Range</label>
+          <div><label>Subject</label><select id="subjSelect" onchange="loadReport()"></select></div>
+          <div><label>Time Range</label>
             <select id="dayRange" onchange="loadReport()">
               <option value="1">Today Only</option>
               <option value="7">Last 7 Days</option>
@@ -376,44 +254,20 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
               <option value="0">All Time</option>
             </select>
           </div>
-          <div>
-            <label>&nbsp;</label>
-            <button class="btn btn-s btn-w" onclick="genReport()">⬇ Download PDF</button>
-          </div>
-          <div>
-            <label>&nbsp;</label>
-            <button class="btn btn-p btn-w" onclick="loadReport()">Refresh</button>
-          </div>
+          <div><label>&nbsp;</label><button class="btn btn-s btn-w" onclick="genReport()">⬇ Download PDF</button></div>
+          <div><label>&nbsp;</label><button class="btn btn-p btn-w" onclick="loadReport()">Refresh</button></div>
         </div>
-
         <div id="report-error" class="status-msg msg-err"></div>
-
-        <!-- summary stats for report -->
         <div id="report-summary" style="display:none;margin-bottom:18px">
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
-            <div class="stat-card blue">
-              <div class="slabel">Total Students</div>
-              <div class="svalue" id="rs-total">0</div>
-            </div>
-            <div class="stat-card green">
-              <div class="slabel">≥ 75% Attendance</div>
-              <div class="svalue" id="rs-above">0</div>
-            </div>
-            <div class="stat-card red">
-              <div class="slabel">Below 75%</div>
-              <div class="svalue" id="rs-below">0</div>
-            </div>
+            <div class="stat-card blue"> <div class="slabel">Total Students</div>   <div class="svalue" id="rs-total">0</div></div>
+            <div class="stat-card green"><div class="slabel">≥ 75% Attendance</div><div class="svalue" id="rs-above">0</div></div>
+            <div class="stat-card red">  <div class="slabel">Below 75%</div>        <div class="svalue" id="rs-below">0</div></div>
           </div>
         </div>
-
         <div class="table-wrap">
           <table id="attendanceTable">
-            <thead>
-              <tr>
-                <th>#</th><th>Roll No</th><th>Name</th>
-                <th>Classes Held</th><th>Attended</th><th>Overall %</th>
-              </tr>
-            </thead>
+            <thead><tr><th>#</th><th>Roll No</th><th>Name</th><th>Classes Held</th><th>Attended</th><th>Overall %</th></tr></thead>
             <tbody id="reportTableBody">
               <tr><td colspan="6" class="empty-row">Select a subject to load report</td></tr>
             </tbody>
@@ -422,81 +276,115 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
       </div>
     </div>
 
-    <!-- ════════════════════════════ TAB: UPLOAD STUDENTS ══ -->
+    <!-- TAB: UPLOAD STUDENTS -->
     <div class="tab-content" id="tc-upload">
       <div class="card">
         <div class="card-title">Upload Student List via CSV</div>
-
         <div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:18px">
-          <p style="font-size:13px;color:var(--text-sm);margin-bottom:8px">
-            <b>CSV Format</b> — Column Headers Required (Case-Insensitive):
-          </p>
+          <p style="font-size:13px;color:var(--text-sm);margin-bottom:8px"><b>CSV Format</b> — Column Headers Required:</p>
           <code style="font-family:monospace;font-size:12px;color:#5b21b6;line-height:2.2;display:block">
             uid,name,rollNo,branch,semester<br/>
             AABB1122,Rina Das,CSE2024001,CSE,3<br/>
             CC334455,Amit Bora,CSE2024002,CSE,3
           </code>
           <p style="font-size:12px;color:var(--gray);margin-top:10px">
-            To find a card's UID — open Arduino IDE → Serial Monitor at 115200 baud →
-            tap card → you'll see [SCAN] UID: AABB1122 in output.
+            💡 To find a card's UID — open Arduino IDE → Serial Monitor at 115200 baud → tap card → you'll see
+            <code style="color:var(--primary)">[SCAN] UID: AABB1122</code>
           </p>
         </div>
-
-        <div class="dropzone" id="csv-dropzone"
-             onclick="document.getElementById('csvFile').click()">
-          <p>Drop student list CSV file here or click to browse</p>
+        <div class="dropzone" id="csv-dropzone" onclick="document.getElementById('csvFile').click()">
+          <p>📄 Drop CSV file here or click to browse</p>
           <small>uid · name · rollNo · branch · semester</small>
           <input type="file" id="csvFile" accept=".csv"/>
         </div>
-
         <div id="csv-status" class="status-msg"></div>
         <div id="csv-preview"></div>
       </div>
     </div>
 
-    <!-- ════════════════════════════════════════ TAB: ADMIN ══ -->
+    <!-- TAB: ADMIN -->
     <div class="tab-content" id="tc-admin">
 
-      <!-- Subject List -->
+      <!-- ── ADD SUBJECT ── -->
       <div class="card">
-        <div class="card-title">Configured Subjects &amp; Teachers</div>
-        <p style="font-size:12px;color:var(--gray);margin-bottom:14px">
-          To add, remove, or reassign subjects, edit the
-          <code style="color:var(--primary)">SUBJECTS_CONFIG</code> block
-          at the top of <code style="color:var(--primary)">index.html</code>
-          and push to GitHub.
-        </p>
+        <div class="card-title">Add New Subject</div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Subject Name</label>
+            <input type="text" id="new-subj-name" placeholder="e.g. Data Structures"/>
+          </div>
+          <div class="form-group">
+            <label>Subject ID <span style="font-weight:400;text-transform:none">(must match ESP32 firmware)</span></label>
+            <input type="text" id="new-subj-id" placeholder="e.g. cs301  (lowercase, no spaces)"/>
+          </div>
+          <div class="form-group">
+            <label>Assigned Teacher</label>
+            <select id="new-subj-teacher">
+              <option value="">Select teacher…</option>
+            </select>
+          </div>
+          <div class="form-group" style="justify-content:flex-end">
+            <label>&nbsp;</label>
+            <button class="btn btn-p btn-w" onclick="addSubject()">Add Subject</button>
+          </div>
+        </div>
+        <div id="subj-status" class="status-msg"></div>
+        <hr/>
+        <div class="card-title" style="margin-bottom:10px">Current Subjects</div>
         <div class="table-wrap">
           <table>
-            <thead>
-              <tr><th>Subject ID</th><th>Subject Name</th><th>Teacher</th></tr>
-            </thead>
-            <tbody id="subj-list-tbody"></tbody>
+            <thead><tr><th>Subject ID</th><th>Subject Name</th><th>Teacher</th><th>Action</th></tr></thead>
+            <tbody id="subj-list-tbody">
+              <tr><td colspan="4" class="empty-row">Loading…</td></tr>
+            </tbody>
           </table>
         </div>
       </div>
 
-      <!-- User credentials info -->
+      <!-- ── ADD TEACHER / USER ── -->
       <div class="card">
-        <div class="card-title">User Credentials</div>
-        <p style="font-size:13px;color:var(--text-sm);margin-bottom:14px;line-height:1.7">
-          Users are defined in the <code style="color:var(--primary)">USERS</code> object
-          at the top of <code style="color:var(--primary)">index.html</code>.
-          To add a teacher or change a passcode, edit that block and push to GitHub.
+        <div class="card-title">Add New Teacher / User</div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="new-user-name" placeholder="e.g. Dr. Meghna Bora"/>
+          </div>
+          <div class="form-group">
+            <label>Passcode</label>
+            <input type="password" id="new-user-pass" placeholder="Their login passcode"/>
+          </div>
+          <div class="form-group">
+            <label>Role</label>
+            <select id="new-user-role">
+              <option value="teacher">Teacher</option>
+              <option value="hod">HOD</option>
+              <option value="principal">Principal</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="form-group" style="justify-content:flex-end">
+            <label>&nbsp;</label>
+            <button class="btn btn-p btn-w" onclick="addUser()">Create User</button>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--gray);margin-bottom:0">
+          For teachers, subject assignment is done via the Subject table above — assign the teacher when adding a subject.
+          Teachers will only see subjects assigned to them.
         </p>
-        <div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:14px">
-          <code style="font-family:monospace;font-size:12px;color:#5b21b6;line-height:2;display:block">
-"mr_rahul": {<br/>
-&nbsp;&nbsp;displayName: "Mr. Rahul Das",<br/>
-&nbsp;&nbsp;passcode: "rahul123",<br/>
-&nbsp;&nbsp;role: "teacher",<br/>
-&nbsp;&nbsp;subjects: ["cs301"]<br/>
-}
-          </code>
+        <div id="user-status" class="status-msg"></div>
+        <hr/>
+        <div class="card-title" style="margin-bottom:10px">Current Users</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Role</th><th>Assigned Subjects</th><th>Action</th></tr></thead>
+            <tbody id="user-list-tbody">
+              <tr><td colspan="4" class="empty-row">Loading…</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <!-- System maintenance -->
+      <!-- ── MAINTENANCE ── -->
       <div class="card">
         <div class="card-title">Maintenance</div>
         <div style="display:flex;gap:12px;flex-wrap:wrap">
@@ -508,19 +396,18 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
       </div>
 
     </div><!-- /tc-admin -->
-
   </div><!-- /container -->
 </div><!-- /dashboard -->
 
 <script>
-// ═══════════════════════════════════════════════════════════════════════════
-// FIREBASE CONFIG
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// FIREBASE CONFIG — your actual values
+// ═══════════════════════════════════════════════════════════════════
 const firebaseConfig = {
   apiKey:            "AIzaSyC25jnEJ-6-t0hoE3m8xiPEHfWyC-ejMKE",
   authDomain:        "sams-190605.firebaseapp.com",
   databaseURL:       "https://sams-190605-default-rtdb.firebaseio.com",
-  projectId:         "sams-19060",
+  projectId:         "sams-190605",
   storageBucket:     "sams-190605.firebasestorage.app",
   messagingSenderId: "157575474369",
   appId:             "1:157575474369:web:87cc48405cee803da83840"
@@ -528,168 +415,116 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ═══════════════════════════════════════════════════════════════════════════
-// ★  MAIN CONFIG — edit this section to set up your college
-//
-//  SUBJECTS:
-//    key      → unique ID used internally (no spaces, no special chars)
-//    name     → full subject name shown on screen
-//    teacher  → display name of the teacher (must match a USERS displayName)
-//
-//  USERS:
-//    key      → username typed at login (lowercase, no spaces)
-//    passcode → password typed at login
-//    role     → "admin" | "hod" | "principal" | "teacher"
-//    subjects → for teachers: list of subject keys they can see
-//               for admin/hod/principal: leave as [] (they see everything)
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// BOOTSTRAP — runs once if /sams_users is empty in Firebase.
+// Sets up the initial admin account so you can log in the first time.
+// After that, add all users and subjects from the Admin tab.
+// ═══════════════════════════════════════════════════════════════════
+async function maybeBootstrap() {
+  const snap = await db.ref("sams_users").once("value");
+  if (snap.exists()) return; // already set up
 
-const SUBJECTS_CONFIG = {
-  "cs301": { name: "Data Structures",        teacher: "Mrs. Prakriti Prava Das"  },
-  "cs302": { name: "Computer Networks",      teacher: "Dr. Plabita Borbora"  },
-  "cs303": { name: "Operating Systems",      teacher: "Dr. Hitesh Tahbildar"    },
-  "cs304": { name: "Database Management",    teacher: "Dr. Maushumi Lahon"    },
-  "cs305": { name: "Java Programming",   teacher: "Mr. Abdul Barek" },
-  "ma301": { name: "Engineering Mathematics",teacher: "Dr. Parbin Ahmed" }
-  // ↑ add / edit subjects here
-};
+  const defaults = [
+    { displayName:"Admin",     passcode:"admin123",     role:"admin",     subjects:[] },
+    { displayName:"Principal", passcode:"principal123", role:"principal", subjects:[] },
+    { displayName:"HOD CSE",   passcode:"hod123",       role:"hod",       subjects:[] }
+  ];
+  const updates = {};
+  defaults.forEach(u => {
+    const key = u.displayName.toLowerCase().replace(/[^a-z0-9]/g,"_");
+    updates[key] = u;
+  });
+  await db.ref("sams_users").set(updates);
+  console.log("[BOOTSTRAP] Default users created.");
+}
 
-const USERS = {
-  // ── Admin (sees everything, manages system) ──
-  "admin": {
-    displayName: "Admin",
-    passcode:    "190605",
-    role:        "admin",
-    subjects:    []
-  },
-  // ── Principal (sees everything, read-only report access) ──
-  "principal": {
-    displayName: "Principal",
-    passcode:    "AEI",
-    role:        "principal",
-    subjects:    []
-  },
-  // ── HOD (sees everything for their department) ──
-  "hod_cse": {
-    displayName: "HOD CSE",
-    passcode:    "CSE2023",
-    role:        "hod",
-    subjects:    []
-  },
-  // ── Teachers (each sees only their own subjects) ──
-  "mrs_prakriti": {
-    displayName: "Mrs. Prakriti Prava Das",
-    passcode:    "PPD2023",
-    role:        "teacher",
-    subjects:    ["cs301"]   // must match keys in SUBJECTS_CONFIG
-  },
-  "dr_plabita": {
-    displayName: "Dr. Plabita Borbora",
-    passcode:    "PB2023",
-    role:        "teacher",
-    subjects:    ["cs302"]
-  },
-  "dr_hitesh": {
-    displayName: "Dr. Hitesh Tahbildar",
-    passcode:    "HT2023",
-    role:        "teacher",
-    subjects:    ["cs303"]
-  },
-   "dr_maushumi": {
-    displayName: "Dr. Maushumi Lahon",
-    passcode:    "ML2023",
-    role:        "teacher",
-    subjects:    ["cs304"]
-  },
-   "mr_abdul": {
-    displayName: "Mr. Abdul Barek",
-    passcode:    "AB2023",
-    role:        "teacher",
-    subjects:    ["cs305"]
-  },
-   "dr_parbin": {
-    displayName: "Dr. Parbin Ahmed",
-    passcode:    "PA2023",
-    role:        "teacher",
-    subjects:    ["ma301"]
-  }
-  // ↑ add more users here in the same format
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
 // STATE
-// ═══════════════════════════════════════════════════════════════════════════
-let SESSION      = null;   // logged-in user from USERS
-let STUDENT_MAP  = {};     // { uid: { name, rollNo, branch, semester } }
-let SUBJECTS     = {};     // { id: { name } }
-let liveUnsub    = null;
-let reportData   = null;
+// ═══════════════════════════════════════════════════════════════════
+let SESSION     = null;
+let STUDENT_MAP = {};
+let SUBJECTS    = {};   // loaded from Firebase /sams_subjects
+let ALL_USERS   = {};   // loaded from Firebase /sams_users
+let liveUnsub   = null;
+let reportData  = null;
 
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
 // UTILS
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
 const today = () => new Date().toISOString().split("T")[0];
 
 function datesBetween(start, end) {
   const dates = [], cur = new Date(start), last = new Date(end);
-  while (cur <= last) {
-    dates.push(cur.toISOString().split("T")[0]);
-    cur.setDate(cur.getDate() + 1);
-  }
+  while (cur <= last) { dates.push(cur.toISOString().split("T")[0]); cur.setDate(cur.getDate()+1); }
   return dates;
 }
 
 function getRangeDates(days) {
-  const now   = new Date();
-  const end   = now.toISOString().split("T")[0];
+  const now = new Date(), end = now.toISOString().split("T")[0];
   const start = new Date(now);
-  if (days > 0) start.setDate(start.getDate() - days);
-  else start.setFullYear(2000); // "all time"
+  if (days > 0) start.setDate(start.getDate() - days); else start.setFullYear(2000);
   return { start: start.toISOString().split("T")[0], end };
 }
 
 function showMsg(id, msg, type) {
-  const el = document.getElementById(id);
-  if (!el) return;
+  const el = document.getElementById(id); if (!el) return;
   el.textContent = msg;
-  el.className   = "status-msg " + (type === "ok" ? "msg-ok" : "msg-err");
+  el.className = "status-msg " + (type==="ok" ? "msg-ok" : "msg-err");
   el.style.display = "block";
 }
-function hideMsg(id) {
-  const el = document.getElementById(id);
-  if (el) el.style.display = "none";
-}
+function hideMsg(id) { const el=document.getElementById(id); if(el) el.style.display="none"; }
 
-// ─────────────────────────────────────────────────────────────────────────
-// LOGIN / LOGOUT
-// ─────────────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+// LOGIN — looks up user by displayName (case-insensitive) from Firebase
+// ═══════════════════════════════════════════════════════════════════
+async function login() {
+  const nameTyped = document.getElementById("u").value.trim();
+  const passcode  = document.getElementById("p").value.trim();
+  const errEl     = document.getElementById("login-error");
+  const btn       = document.querySelector(".login-box .btn");
+  errEl.textContent = "";
 
-function login() {
-  const uname   = document.getElementById("u").value.trim().toLowerCase();
-  const passcode = document.getElementById("p").value.trim();
-  const errEl   = document.getElementById("login-error");
+  if (!nameTyped || !passcode) { errEl.textContent = "Enter your name and passcode."; return; }
 
-  const user = USERS[uname];
-  if (!user)                    { errEl.textContent = "Username not found.";   return; }
-  if (user.passcode !== passcode){ errEl.textContent = "Incorrect passcode."; return; }
+  btn.disabled = true; btn.textContent = "Signing in…";
 
-  SESSION = { username: uname, ...user };
+  try {
+    // load all users from Firebase
+    const snap = await db.ref("sams_users").once("value");
+    const users = snap.val() || {};
 
-  document.getElementById("login-screen").style.display = "none";
-  document.getElementById("dashboard").style.display    = "block";
-  document.getElementById("hdr-name").textContent       = SESSION.displayName;
-  document.getElementById("hdr-role").textContent       = SESSION.role.toUpperCase();
+    const lower = nameTyped.toLowerCase();
+    let matchedKey = null, matchedUser = null;
 
-  // hide tabs not relevant to role
-  const adminOnly = ["admin", "hod"];
-  if (!adminOnly.includes(SESSION.role)) {
-    document.getElementById("tab-upload").style.display = "none";
-    document.getElementById("tab-admin").style.display  = "none";
+    for (const [key, u] of Object.entries(users)) {
+      if (key === lower || (u.displayName || "").toLowerCase() === lower) {
+        matchedKey = key; matchedUser = u; break;
+      }
+    }
+
+    if (!matchedUser)                     { errEl.textContent = "Name not found.";     return; }
+    if (matchedUser.passcode !== passcode){ errEl.textContent = "Incorrect passcode."; return; }
+
+    SESSION = { key: matchedKey, ...matchedUser };
+
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("dashboard").style.display    = "block";
+    document.getElementById("hdr-name").textContent       = SESSION.displayName;
+    document.getElementById("hdr-role").textContent       = SESSION.role.toUpperCase();
+
+    const adminOnly = ["admin","hod"];
+    document.getElementById("tab-upload").style.display = adminOnly.includes(SESSION.role) ? "" : "none";
+    document.getElementById("tab-admin").style.display  = adminOnly.includes(SESSION.role) ? "" : "none";
+
+    fetchStudents();
+    fetchSubjects();
+    listenToSession();
+
+  } catch(e) {
+    errEl.textContent = "Error: " + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = "Access Dashboard";
   }
-
-  fetchStudents();
-  fetchSubjects();
-  listenToSession();
 }
 
 function logout() {
@@ -701,67 +536,64 @@ function logout() {
   document.getElementById("p").value = "";
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
 // DATA LOADERS
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
 function fetchStudents() {
   db.ref("students").on("value", snap => {
     STUDENT_MAP = snap.val() || {};
     const count = Object.keys(STUDENT_MAP).length;
     document.getElementById("student-count-info").textContent =
-      `${count} student${count !== 1 ? "s" : ""} in database`;
+      `${count} student${count!==1?"s":""} in database`;
     refreshLive();
   });
 }
 
 function fetchSubjects() {
-  // Load from hardcoded config — no Firebase needed for subject list
-  SUBJECTS = {};
-  const allowed = SESSION?.role === "teacher" ? new Set(SESSION.subjects) : null;
+  db.ref("sams_subjects").on("value", snap => {
+    const all = snap.val() || {};
 
-  Object.entries(SUBJECTS_CONFIG).forEach(([id, s]) => {
-    if (!allowed || allowed.has(id)) {
-      SUBJECTS[id] = s;
+    // teachers only see their assigned subjects
+    if (SESSION?.role === "teacher") {
+      const allowed = new Set(SESSION.subjects || []);
+      SUBJECTS = {};
+      Object.entries(all).forEach(([id,s]) => { if(allowed.has(id)) SUBJECTS[id]=s; });
+    } else {
+      SUBJECTS = all;
     }
-  });
 
-  populateSubjectSelects();
-  loadReport();
+    populateSubjectSelects();
+    loadReport();
+  });
 }
 
 function populateSubjectSelects() {
-  ["sessionSubj", "liveSubjSelect", "subjSelect"].forEach(id => {
-    const sel = document.getElementById(id);
-    if (!sel) return;
+  ["sessionSubj","liveSubjSelect","subjSelect"].forEach(id => {
+    const sel = document.getElementById(id); if (!sel) return;
     const cur = sel.value;
     sel.innerHTML = '<option value="">Select subject…</option>';
-    Object.entries(SUBJECTS).forEach(([sid, s]) => {
+    Object.entries(SUBJECTS).forEach(([sid,s]) => {
       const o = document.createElement("option");
-      o.value = sid; o.textContent = s.name;
-      sel.appendChild(o);
+      o.value = sid; o.textContent = s.name; sel.appendChild(o);
     });
     if (cur) sel.value = cur;
   });
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// SESSION CONTROL (Start / Stop class)
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// SESSION CONTROL
+// ═══════════════════════════════════════════════════════════════════
 function startClass() {
   const subj = document.getElementById("sessionSubj").value;
   if (!subj) { alert("Select a subject first."); return; }
   db.ref("current_session").set({
-    active:    true,
-    subject:   subj,
+    active: true, subject: subj,
     subjectName: SUBJECTS[subj]?.name || subj,
-    duration:  parseInt(document.getElementById("sessionDur").value) || 60,
+    duration: parseInt(document.getElementById("sessionDur").value)||60,
     startTime: Date.now()
   });
 }
-
-function stopClass() {
-  db.ref("current_session/active").set(false);
-}
+function stopClass() { db.ref("current_session/active").set(false); }
 
 function listenToSession() {
   db.ref("current_session").on("value", snap => {
@@ -770,8 +602,7 @@ function listenToSession() {
     const btn  = document.getElementById("startBtn");
     if (data && data.active) {
       bar.style.display = "block";
-      document.getElementById("activeSubjName").textContent =
-        data.subjectName || data.subject;
+      document.getElementById("activeSubjName").textContent = data.subjectName || data.subject;
       btn.disabled = true;
     } else {
       bar.style.display = "none";
@@ -780,16 +611,14 @@ function listenToSession() {
   });
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// LIVE VIEW — real-time Firebase listener
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// LIVE VIEW
+// ═══════════════════════════════════════════════════════════════════
 function startLiveListener() {
   if (liveUnsub) { liveUnsub(); liveUnsub = null; }
   const subjectId = document.getElementById("liveSubjSelect").value;
   if (!subjectId) return;
-
-  const sessionRef = db.ref(`sessions/${subjectId}/${today()}`);
-  liveUnsub = sessionRef.on("value", snap => {
+  liveUnsub = db.ref(`sessions/${subjectId}/${today()}`).on("value", snap => {
     renderLive(subjectId, snap.val() || {});
   });
 }
@@ -800,49 +629,42 @@ function refreshLive() {
 }
 
 function renderLive(subjectId, sessions) {
-  const students = STUDENT_MAP;
-  const total    = Object.keys(students).length;
+  const total = Object.keys(STUDENT_MAP).length;
   let present = 0, left = 0;
   const rows = [];
 
-  Object.entries(students).forEach(([uid, s], i) => {
+  Object.entries(STUDENT_MAP).forEach(([uid,s]) => {
     const sess = sessions[uid];
     let status = "absent", entry = "—", exit = "—";
     if (sess) {
       entry = sess.entry || "—";
-      if (sess.exit && sess.exit !== "null") {
-        exit = sess.exit; status = "left"; left++;
-      } else { status = "present"; present++; }
+      if (sess.exit && sess.exit !== "null") { exit=sess.exit; status="left"; left++; }
+      else { status="present"; present++; }
     }
-    rows.push({ uid, name: s.name || uid, rollNo: s.rollNo || "—", status, entry, exit });
+    rows.push({ name:s.name||uid, rollNo:s.rollNo||"—", status, entry, exit });
   });
 
   const absent = total - present - left;
-  const pct    = total > 0 ? Math.round((present / total) * 100) : 0;
+  const pct    = total>0 ? Math.round((present/total)*100) : 0;
 
-  document.getElementById("stat-present").textContent = present;
-  document.getElementById("stat-absent").textContent  = absent;
-  document.getElementById("stat-done").textContent    = left;
-  document.getElementById("stat-pct").textContent     = pct + "%";
+  document.getElementById("stat-present").textContent  = present;
+  document.getElementById("stat-absent").textContent   = absent;
+  document.getElementById("stat-done").textContent     = left;
+  document.getElementById("stat-pct").textContent      = pct + "%";
   document.getElementById("live-prog-bar").style.width = pct + "%";
   document.getElementById("live-prog-pct").textContent = pct + "%";
 
-  rows.sort((a, b) => a.rollNo.localeCompare(b.rollNo));
+  rows.sort((a,b) => a.rollNo.localeCompare(b.rollNo));
   document.getElementById("liveTableBody").innerHTML = rows.length
-    ? rows.map((r, i) => `
+    ? rows.map((r,i) => `
         <tr>
-          <td>${i + 1}</td>
+          <td>${i+1}</td>
           <td class="mono">${r.rollNo}</td>
           <td><b>${r.name}</b></td>
-          <td><span class="badge ${
-            r.status === "present" ? "badge-in" :
-            r.status === "left"    ? "badge-out" : "badge-abs"
-          }">${
-            r.status === "present" ? "Present" :
-            r.status === "left"    ? "Left Early" : "Absent"
-          }</span></td>
-          <td>${r.entry}</td>
-          <td>${r.exit}</td>
+          <td><span class="badge ${r.status==="present"?"badge-in":r.status==="left"?"badge-out":"badge-abs"}">
+            ${r.status==="present"?"Present":r.status==="left"?"Left Early":"Absent"}
+          </span></td>
+          <td>${r.entry}</td><td>${r.exit}</td>
         </tr>`).join("")
     : `<tr><td colspan="6" class="empty-row">No scans yet for today</td></tr>`;
 
@@ -850,9 +672,9 @@ function renderLive(subjectId, sessions) {
     "Live · updated " + new Date().toLocaleTimeString("en-IN");
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// ATTENDANCE REPORT — fully client-side calculation
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// ATTENDANCE REPORT
+// ═══════════════════════════════════════════════════════════════════
 async function loadReport() {
   const subjectId = document.getElementById("subjSelect").value;
   const days      = parseInt(document.getElementById("dayRange").value);
@@ -870,53 +692,44 @@ async function loadReport() {
 
   try {
     const { start, end } = getRangeDates(days);
-    const dates = datesBetween(start, end);
-
     const snap     = await db.ref(`sessions/${subjectId}`).once("value");
     const sessions = snap.val() || {};
 
-    // only dates that had at least one scan = class was held
-    const classDates   = days === 0
+    const dates      = datesBetween(start, end);
+    const classDates = days===0
       ? Object.keys(sessions)
-      : dates.filter(d => sessions[d] && Object.keys(sessions[d]).length > 0);
+      : dates.filter(d => sessions[d] && Object.keys(sessions[d]).length>0);
     const totalClasses = classDates.length;
 
     const rows = [];
-    Object.entries(STUDENT_MAP).forEach(([uid, s]) => {
+    Object.entries(STUDENT_MAP).forEach(([uid,s]) => {
       let attended = 0;
-      classDates.forEach(d => { if (sessions[d]?.[uid]) attended++; });
-      const pct = totalClasses > 0
-        ? Math.round((attended / totalClasses) * 1000) / 10 : 0;
-      rows.push({
-        uid, name: s.name || uid, rollNo: s.rollNo || "",
-        attended, totalClasses, pct
-      });
+      classDates.forEach(d => { if(sessions[d]?.[uid]) attended++; });
+      const pct = totalClasses>0 ? Math.round((attended/totalClasses)*1000)/10 : 0;
+      rows.push({ uid, name:s.name||uid, rollNo:s.rollNo||"", attended, totalClasses, pct });
     });
+    rows.sort((a,b) => a.rollNo.localeCompare(b.rollNo));
 
-    rows.sort((a, b) => a.rollNo.localeCompare(b.rollNo));
-
-    const above = rows.filter(r => r.pct >= 75).length;
+    const above = rows.filter(r => r.pct>=75).length;
     document.getElementById("rs-total").textContent = rows.length;
     document.getElementById("rs-above").textContent = above;
     document.getElementById("rs-below").textContent = rows.length - above;
     document.getElementById("report-summary").style.display = "block";
 
     document.getElementById("reportTableBody").innerHTML = rows.length
-      ? rows.map((r, i) => `
+      ? rows.map((r,i) => `
           <tr>
-            <td>${i + 1}</td>
-            <td class="mono">${r.rollNo || "—"}</td>
+            <td>${i+1}</td>
+            <td class="mono">${r.rollNo||"—"}</td>
             <td><b>${r.name}</b></td>
             <td>${r.totalClasses}</td>
             <td>${r.attended}</td>
             <td>
               <div class="pct-cell">
                 <div class="pct-bar-bg">
-                  <div class="pct-bar-fill"
-                       style="width:${r.pct}%;background:${r.pct>=75?"var(--success)":"var(--danger)"}">
-                  </div>
+                  <div class="pct-bar-fill" style="width:${r.pct}%;background:${r.pct>=75?"var(--success)":"var(--danger)"}"></div>
                 </div>
-                <span class="badge ${r.pct >= 75 ? "pct-green" : "pct-red"}">${r.pct}%</span>
+                <span class="badge ${r.pct>=75?"pct-green":"pct-red"}">${r.pct}%</span>
               </div>
             </td>
           </tr>`).join("")
@@ -924,102 +737,79 @@ async function loadReport() {
 
     reportData = { rows, totalClasses, start, end, subjectId };
 
-    // persist summary
     await db.ref(`attendance_summary/${subjectId}`).set({
-      rows: rows.map(r => ({
-        uid: r.uid, name: r.name, rollNo: r.rollNo,
-        attended: r.attended, totalClasses, pct: r.pct
-      })),
+      rows: rows.map(r=>({uid:r.uid,name:r.name,rollNo:r.rollNo,attended:r.attended,totalClasses,pct:r.pct})),
       start, end, totalClasses, computedAt: Date.now()
     });
-
-  } catch (e) {
+  } catch(e) {
     showMsg("report-error", "Error: " + e.message, "err");
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
 // PDF REPORT
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
 function genReport() {
   if (!reportData || !reportData.rows.length) {
-    alert("Load the Attendance Report tab first, then click Download PDF.");
-    return;
+    alert("Open the Attendance Report tab and calculate first, then click Download PDF."); return;
   }
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF("l", "mm", "a4");
+  const doc = new jsPDF("l","mm","a4");
   const { rows, totalClasses, start, end, subjectId } = reportData;
   const subjectName = SUBJECTS[subjectId]?.name || subjectId;
-  const above = rows.filter(r => r.pct >= 75).length;
+  const above = rows.filter(r => r.pct>=75).length;
 
-  // header bar
-  doc.setFillColor(79, 70, 229);
-  doc.rect(0, 0, 297, 28, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(16); doc.setFont("helvetica", "bold");
-  doc.text("SAMS — ATTENDANCE REPORT", 148.5, 11, { align: "center" });
-  doc.setFontSize(10); doc.setFont("helvetica", "normal");
-  doc.text(`${subjectName.toUpperCase()}   ·   ${start} → ${end}   ·   ${totalClasses} classes held`,
-    148.5, 20, { align: "center" });
+  doc.setFillColor(79,70,229); doc.rect(0,0,297,28,"F");
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(16); doc.setFont("helvetica","bold");
+  doc.text("SAMS — ATTENDANCE REPORT", 148.5, 11, {align:"center"});
+  doc.setFontSize(10); doc.setFont("helvetica","normal");
+  doc.text(`${subjectName.toUpperCase()}   ·   ${start} → ${end}   ·   ${totalClasses} classes held`, 148.5, 20, {align:"center"});
 
-  // meta
-  doc.setTextColor(40, 40, 40); doc.setFontSize(9);
+  doc.setTextColor(40,40,40); doc.setFontSize(9);
   doc.text(`Generated: ${new Date().toLocaleString("en-IN")}`, 14, 36);
   doc.text(`By: ${SESSION?.displayName} (${SESSION?.role})`, 14, 42);
 
-  // summary boxes
-  [
-    [14,  "≥ 75% Attendance", above,              [220, 252, 231], [22, 101, 52]],
-    [80,  "< 75% Attendance", rows.length - above, [254, 226, 226], [153, 27, 27]],
-    [146, "Total Students",   rows.length,          [219, 234, 254], [30, 64, 175]],
-  ].forEach(([x, label, val, bg, fg]) => {
-    doc.setFillColor(...bg); doc.roundedRect(x, 46, 58, 18, 2, 2, "F");
-    doc.setTextColor(...fg); doc.setFontSize(14); doc.setFont("helvetica", "bold");
-    doc.text(String(val), x + 29, 57, { align: "center" });
-    doc.setFontSize(8); doc.setFont("helvetica", "normal");
-    doc.text(label, x + 29, 62, { align: "center" });
+  [[14,"≥ 75%",above,[220,252,231],[22,101,52]],
+   [80,"< 75%",rows.length-above,[254,226,226],[153,27,27]],
+   [146,"Total",rows.length,[219,234,254],[30,64,175]]
+  ].forEach(([x,label,val,bg,fg]) => {
+    doc.setFillColor(...bg); doc.roundedRect(x,46,58,18,2,2,"F");
+    doc.setTextColor(...fg); doc.setFontSize(14); doc.setFont("helvetica","bold");
+    doc.text(String(val), x+29, 57, {align:"center"});
+    doc.setFontSize(8); doc.setFont("helvetica","normal");
+    doc.text(label, x+29, 62, {align:"center"});
   });
 
-  // table
   doc.autoTable({
     startY: 70,
-    head: [["#", "Roll No", "Student Name", "Classes Held", "Attended", "Percentage"]],
-    body: rows.map((r, i) => [
-      i + 1, r.rollNo || "—", r.name,
-      r.totalClasses, r.attended, r.pct + "%"
-    ]),
-    headStyles: { fillColor: [79, 70, 229], textColor: 255, fontSize: 9, fontStyle: "bold" },
-    bodyStyles: { fontSize: 9 },
-    alternateRowStyles: { fillColor: [248, 250, 252] },
+    head: [["#","Roll No","Student Name","Classes Held","Attended","Percentage"]],
+    body: rows.map((r,i) => [i+1, r.rollNo||"—", r.name, r.totalClasses, r.attended, r.pct+"%"]),
+    headStyles: {fillColor:[79,70,229], textColor:255, fontSize:9, fontStyle:"bold"},
+    bodyStyles: {fontSize:9},
+    alternateRowStyles: {fillColor:[248,250,252]},
     didParseCell: data => {
-      if (data.section === "body" && data.column.index === 5) {
+      if (data.section==="body" && data.column.index===5) {
         const p = parseFloat(data.cell.text[0]);
-        data.cell.styles.textColor = p < 75 ? [180, 20, 20] : [20, 120, 20];
+        data.cell.styles.textColor = p<75 ? [180,20,20] : [20,120,20];
         data.cell.styles.fontStyle = "bold";
       }
     },
-    columnStyles: {
-      0: { cellWidth: 12, halign: "center" },
-      1: { cellWidth: 35 },
-      2: { cellWidth: 80 },
-      3: { cellWidth: 32, halign: "center" },
-      4: { cellWidth: 28, halign: "center" },
-      5: { cellWidth: 30, halign: "center" },
-    },
-    margin: { left: 14, right: 14 }
+    columnStyles: {0:{cellWidth:12,halign:"center"},1:{cellWidth:35},2:{cellWidth:80},3:{cellWidth:32,halign:"center"},4:{cellWidth:28,halign:"center"},5:{cellWidth:30,halign:"center"}},
+    margin: {left:14,right:14}
   });
 
   const pages = doc.internal.getNumberOfPages();
-  for (let i = 1; i <= pages; i++) {
+  for (let i=1; i<=pages; i++) {
     doc.setPage(i); doc.setFontSize(8); doc.setTextColor(160);
-    doc.text(`Page ${i} of ${pages}  ·  SAMS`, 148.5, 200, { align: "center" });
+    doc.text(`Page ${i} of ${pages}  ·  SAMS`, 148.5, 200, {align:"center"});
   }
-  doc.save(`SAMS_${subjectName.replace(/\s+/g, "_")}_${start}_to_${end}.pdf`);
+  doc.save(`SAMS_${subjectName.replace(/\s+/g,"_")}_${start}_to_${end}.pdf`);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
 // CSV UPLOAD
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
 function handleCSVFile(file) {
   if (!file) return;
   hideMsg("csv-status");
@@ -1028,102 +818,197 @@ function handleCSVFile(file) {
   Papa.parse(file, {
     header: true, skipEmptyLines: true,
     complete: ({ data }) => {
-      // support both new format (with headers) and old format (uid,name no headers)
       let students;
-
-      if (data[0] && (data[0].uid || data[0].UID || data[0].RFID)) {
-        // NEW FORMAT: with headers
+      if (data[0] && (data[0].uid||data[0].UID||data[0].RFID)) {
         students = data.map(r => ({
-          uid:      (r.uid || r.UID || r.RFID || "").trim().toUpperCase(),
-          name:     (r.name || r.Name || r.NAME || "").trim(),
-          rollNo:   (r.rollNo || r.roll_no || r.Roll || "").trim(),
-          branch:   (r.branch || r.Branch || "").trim(),
-          semester: parseInt(r.semester || r.Semester || 0) || 0,
+          uid:      (r.uid||r.UID||r.RFID||"").trim().toUpperCase(),
+          name:     (r.name||r.Name||r.NAME||"").trim(),
+          rollNo:   (r.rollNo||r.roll_no||r.Roll||"").trim(),
+          branch:   (r.branch||r.Branch||"").trim(),
+          semester: parseInt(r.semester||r.Semester||0)||0,
         })).filter(s => s.uid && s.name);
       } else {
-        // OLD FORMAT: UID,Name (no headers — backward compat with your original SAMS)
         students = data.map(r => {
           const keys = Object.keys(r);
-          return {
-            uid:    (r[keys[0]] || "").trim().toUpperCase(),
-            name:   (r[keys[1]] || "").trim(),
-            rollNo: "", branch: "", semester: 0
-          };
+          return { uid:(r[keys[0]]||"").trim().toUpperCase(), name:(r[keys[1]]||"").trim(), rollNo:"", branch:"", semester:0 };
         }).filter(s => s.uid && s.name);
       }
 
       if (!students.length) {
-        showMsg("csv-status",
-          "No valid rows. Expected headers: uid,name,rollNo,branch,semester", "err");
-        return;
+        showMsg("csv-status","No valid rows. Expected headers: uid,name,rollNo,branch,semester","err"); return;
       }
 
       document.getElementById("csv-preview").innerHTML = `
-        <p style="font-size:13px;color:var(--gray);margin:14px 0 10px">
-          ${students.length} students found — preview:
-        </p>
+        <p style="font-size:13px;color:var(--gray);margin:14px 0 10px">${students.length} students found — preview:</p>
         <div class="table-wrap" style="margin-bottom:16px">
           <table>
             <thead><tr><th>UID</th><th>Name</th><th>Roll No</th><th>Branch</th><th>Sem</th></tr></thead>
             <tbody>
-              ${students.slice(0, 8).map(s => `
-                <tr>
-                  <td class="mono">${s.uid}</td><td>${s.name}</td>
-                  <td>${s.rollNo}</td><td>${s.branch}</td><td>${s.semester}</td>
-                </tr>`).join("")}
-              ${students.length > 8
-                ? `<tr><td colspan="5" class="empty-row">… and ${students.length - 8} more</td></tr>`
-                : ""}
+              ${students.slice(0,8).map(s=>`<tr><td class="mono">${s.uid}</td><td>${s.name}</td><td>${s.rollNo}</td><td>${s.branch}</td><td>${s.semester}</td></tr>`).join("")}
+              ${students.length>8?`<tr><td colspan="5" class="empty-row">… and ${students.length-8} more</td></tr>`:""}
             </tbody>
           </table>
         </div>
-        <button class="btn btn-s" id="confirm-upload-btn">
-          Sync ${students.length} Students to Firebase
-        </button>`;
+        <button class="btn btn-s" id="confirm-upload-btn">Sync ${students.length} Students to Firebase</button>`;
 
       document.getElementById("confirm-upload-btn").onclick = async () => {
         const btn = document.getElementById("confirm-upload-btn");
         btn.disabled = true; btn.textContent = "Uploading…";
         try {
           const updates = {};
-          students.forEach(s => {
-            updates[s.uid] = {
-              name: s.name, rollNo: s.rollNo,
-              branch: s.branch, semester: s.semester
-            };
-          });
+          students.forEach(s => { updates[s.uid] = {name:s.name,rollNo:s.rollNo,branch:s.branch,semester:s.semester}; });
           await db.ref("students").update(updates);
-          showMsg("csv-status",
-            `✓ ${students.length} students synced to Firebase!`, "ok");
+          showMsg("csv-status", `✓ ${students.length} students synced to Firebase!`, "ok");
           document.getElementById("csv-preview").innerHTML = "";
           document.getElementById("csvFile").value = "";
-        } catch (e) {
-          showMsg("csv-status", "Upload failed: " + e.message, "err");
-          btn.disabled = false;
-          btn.textContent = `Sync ${students.length} Students to Firebase`;
+        } catch(e) {
+          showMsg("csv-status","Upload failed: "+e.message,"err");
+          btn.disabled=false; btn.textContent=`Sync ${students.length} Students to Firebase`;
         }
       };
     },
-    error: e => showMsg("csv-status", "Parse error: " + e.message, "err")
+    error: e => showMsg("csv-status","Parse error: "+e.message,"err")
   });
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// ADMIN — ADD SUBJECT (stored in Firebase /sams_subjects)
+// ═══════════════════════════════════════════════════════════════════
+async function addSubject() {
+  const name    = document.getElementById("new-subj-name").value.trim();
+  const id      = document.getElementById("new-subj-id").value.trim()
+                    .toLowerCase().replace(/\s+/g,"_").replace(/[^a-z0-9_]/g,"");
+  const teacher = document.getElementById("new-subj-teacher").value.trim();
+  hideMsg("subj-status");
+
+  if (!name || !id) { showMsg("subj-status","Subject name and ID are required.","err"); return; }
+
+  try {
+    await db.ref(`sams_subjects/${id}`).set({ name, teacher, createdAt: Date.now() });
+
+    // if a teacher is assigned, add this subject to their subjects array
+    if (teacher) {
+      const snap = await db.ref("sams_users").once("value");
+      const users = snap.val() || {};
+      for (const [key, u] of Object.entries(users)) {
+        if ((u.displayName||"").toLowerCase() === teacher.toLowerCase() && u.role==="teacher") {
+          const existing = u.subjects || [];
+          if (!existing.includes(id)) {
+            await db.ref(`sams_users/${key}/subjects`).set([...existing, id]);
+          }
+          break;
+        }
+      }
+    }
+
+    showMsg("subj-status", `✓ Subject "${name}" (${id}) added successfully.`, "ok");
+    document.getElementById("new-subj-name").value = "";
+    document.getElementById("new-subj-id").value   = "";
+    document.getElementById("new-subj-teacher").value = "";
+  } catch(e) {
+    showMsg("subj-status","Error: "+e.message,"err");
+  }
+}
+
+async function deleteSubject(id) {
+  if (!confirm(`Delete subject "${SUBJECTS[id]?.name || id}"? This will NOT delete attendance logs.`)) return;
+  await db.ref(`sams_subjects/${id}`).remove();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ADMIN — ADD USER (stored in Firebase /sams_users)
+// ═══════════════════════════════════════════════════════════════════
+async function addUser() {
+  const name    = document.getElementById("new-user-name").value.trim();
+  const pass    = document.getElementById("new-user-pass").value.trim();
+  const role    = document.getElementById("new-user-role").value;
+  hideMsg("user-status");
+
+  if (!name || !pass) { showMsg("user-status","Name and passcode are required.","err"); return; }
+
+  const key = name.toLowerCase().replace(/[^a-z0-9]/g,"_");
+
+  try {
+    const snap = await db.ref(`sams_users/${key}`).once("value");
+    if (snap.exists()) { showMsg("user-status","A user with a similar name already exists.","err"); return; }
+
+    await db.ref(`sams_users/${key}`).set({
+      displayName: name, passcode: pass, role, subjects: [], createdAt: Date.now()
+    });
+
+    showMsg("user-status", `✓ User "${name}" created. They can log in immediately.`, "ok");
+    document.getElementById("new-user-name").value = "";
+    document.getElementById("new-user-pass").value = "";
+  } catch(e) {
+    showMsg("user-status","Error: "+e.message,"err");
+  }
+}
+
+async function deleteUser(key) {
+  if (!confirm(`Delete this user? They will no longer be able to log in.`)) return;
+  await db.ref(`sams_users/${key}`).remove();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ADMIN TAB RENDER — reads from Firebase, shows live tables
+// ═══════════════════════════════════════════════════════════════════
+function renderAdminTab() {
+  // Subjects table
+  db.ref("sams_subjects").once("value").then(snap => {
+    const all = snap.val() || {};
+    const tbody = document.getElementById("subj-list-tbody");
+    tbody.innerHTML = Object.entries(all).length
+      ? Object.entries(all).map(([id,s]) => `
+          <tr>
+            <td class="mono" style="color:var(--primary)">${id}</td>
+            <td><b>${s.name}</b></td>
+            <td>${s.teacher || "—"}</td>
+            <td><button class="delete-btn" onclick="deleteSubject('${id}')" title="Delete subject">🗑</button></td>
+          </tr>`).join("")
+      : `<tr><td colspan="4" class="empty-row">No subjects added yet</td></tr>`;
+  });
+
+  // Users table + populate teacher dropdown
+  db.ref("sams_users").once("value").then(snap => {
+    ALL_USERS = snap.val() || {};
+    const tbody = document.getElementById("user-list-tbody");
+    tbody.innerHTML = Object.entries(ALL_USERS).length
+      ? Object.entries(ALL_USERS).map(([key,u]) => `
+          <tr>
+            <td><b>${u.displayName}</b></td>
+            <td><span class="badge badge-in">${u.role}</span></td>
+            <td style="font-size:12px;color:var(--gray)">${(u.subjects||[]).join(", ") || "—"}</td>
+            <td><button class="delete-btn" onclick="deleteUser('${key}')" title="Delete user">🗑</button></td>
+          </tr>`).join("")
+      : `<tr><td colspan="4" class="empty-row">No users yet</td></tr>`;
+
+    // populate teacher dropdown in add-subject form
+    const sel = document.getElementById("new-subj-teacher");
+    sel.innerHTML = '<option value="">Select teacher…</option>';
+    Object.values(ALL_USERS).filter(u => u.role==="teacher").forEach(u => {
+      const o = document.createElement("option");
+      o.value = u.displayName; o.textContent = u.displayName;
+      sel.appendChild(o);
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // CLEAR LOGS
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
 function clearLogs() {
   const subj = document.getElementById("subjSelect").value
             || document.getElementById("liveSubjSelect").value;
   if (!subj) { alert("Select a subject first."); return; }
-  if (confirm(`Permanently wipe all session logs for "${SUBJECTS[subj]?.name || subj}"?`)) {
+  if (confirm(`Permanently wipe all session logs for "${SUBJECTS[subj]?.name||subj}"?`)) {
     db.ref(`sessions/${subj}`).remove();
     db.ref(`attendance_summary/${subj}`).remove();
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TAB SWITCHER
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// TAB SWITCHER — fixed to call renderAdminTab() correctly
+// ═══════════════════════════════════════════════════════════════════
 function switchTab(name) {
   document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
   document.querySelectorAll(".tab").forEach(el => el.classList.remove("active"));
@@ -1131,45 +1016,26 @@ function switchTab(name) {
   document.getElementById("tab-" + name).classList.add("active");
   if (name === "live")   startLiveListener();
   if (name === "report") loadReport();
-  if (name === "admin")  renderSubjectTable();
+  if (name === "admin")  renderAdminTab();   // ← was calling renderSubjectTable() which no longer exists
 }
 
-function renderSubjectTable() {
-  const tbody = document.getElementById("subj-list-tbody");
-  if (!tbody) return;
-  tbody.innerHTML = Object.entries(SUBJECTS_CONFIG).map(([id, s]) => `
-    <tr>
-      <td class="mono" style="color:var(--primary)">${id}</td>
-      <td><b>${s.name}</b></td>
-      <td>${s.teacher}</td>
-    </tr>`).join("");
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// CSV DRAG & DROP + FILE INPUT
-// ═══════════════════════════════════════════════════════════════════════════
-document.addEventListener("DOMContentLoaded", () => {
+// ═══════════════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════════════
+document.addEventListener("DOMContentLoaded", async () => {
   setInterval(() => {
-    document.getElementById("live-time").textContent =
-      new Date().toLocaleTimeString("en-IN");
+    document.getElementById("live-time").textContent = new Date().toLocaleTimeString("en-IN");
   }, 1000);
 
-  document.getElementById("csvFile").addEventListener("change", e => {
-    handleCSVFile(e.target.files[0]);
-  });
+  await maybeBootstrap();
 
+  document.getElementById("csvFile").addEventListener("change", e => handleCSVFile(e.target.files[0]));
   const dz = document.getElementById("csv-dropzone");
   dz.addEventListener("dragover",  e => { e.preventDefault(); dz.classList.add("over"); });
   dz.addEventListener("dragleave", () => dz.classList.remove("over"));
-  dz.addEventListener("drop", e => {
-    e.preventDefault(); dz.classList.remove("over");
-    handleCSVFile(e.dataTransfer.files[0]);
-  });
+  dz.addEventListener("drop", e => { e.preventDefault(); dz.classList.remove("over"); handleCSVFile(e.dataTransfer.files[0]); });
 
-  // enter key on username → focus password
-  document.getElementById("u").addEventListener("keydown", e => {
-    if (e.key === "Enter") document.getElementById("p").focus();
-  });
+  document.getElementById("u").addEventListener("keydown", e => { if(e.key==="Enter") document.getElementById("p").focus(); });
 });
 </script>
 </body>
