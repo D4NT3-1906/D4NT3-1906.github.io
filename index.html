@@ -204,7 +204,7 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
       <button class="tab active" onclick="switchTab('live')"   id="tab-live">Live View</button>
       <button class="tab"        onclick="switchTab('report')" id="tab-report">Attendance Report</button>
       <button class="tab"        onclick="switchTab('upload')" id="tab-upload">Upload Students</button>
-      <button class="tab"        onclick="switchTab('admin')"  id="tab-admin">Admin</button>
+      <button class="tab"        onclick="switchTab('admin')"  id="tab-admin">Manage</button>
     </div>
 
     <!-- TAB: LIVE VIEW -->
@@ -744,7 +744,7 @@ async function loadReport() {
 // ═══════════════════════════════════════════════════════════════════
 function genReport() {
   if (!reportData || !reportData.rows.length) {
-    alert("Open the Attendance Report tab and calculate first, then click Download PDF."); return;
+    alert("Open the Attendance Report tab and enter the values first to calculate, then click Download PDF."); return;
   }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF("l","mm","a4");
@@ -760,7 +760,7 @@ function genReport() {
   doc.text(`Subject: ${subjectName}   ·  Duration: ${start} to ${end}   ·   Total Classes Held: ${totalClasses}`, 148.5, 20, {align:"center"});
 
   doc.setTextColor(40,40,40); doc.setFontSize(9);
-  doc.text(`By: ${SESSION?.displayName} (${SESSION?.role})`, 14, 42);
+  doc.text(`By: ${SESSION?.displayName}`, 14, 42);
 
   [[14,"More Than/Equal To 75%",above,[220,252,231],[22,101,52]],
    [80,"Below 75%",rows.length-above,[254,226,226],[153,27,27]],
