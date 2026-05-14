@@ -227,7 +227,7 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
           <table>
             <thead><tr><th>#</th><th>Roll No</th><th>Name</th><th>Status</th><th>Entry</th><th>Exit</th></tr></thead>
             <tbody id="liveTableBody">
-              <tr><td colspan="6" class="empty-row">Select a subject to view live attendance</td></tr>
+              <tr><td colspan="6" class="empty-row">Please select a subject to view live attendance</td></tr>
             </tbody>
           </table>
         </div>
@@ -248,7 +248,7 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
               <option value="0">All Time</option>
             </select>
           </div>
-          <div><label>&nbsp;</label><button class="btn btn-s btn-w" onclick="genReport()">⬇ Download PDF</button></div>
+          <div><label>&nbsp;</label><button class="btn btn-s btn-w" onclick="genReport()">Download Report</button></div>
           <div><label>&nbsp;</label><button class="btn btn-p btn-w" onclick="loadReport()">Refresh</button></div>
         </div>
         <div id="report-error" class="status-msg msg-err"></div>
@@ -273,22 +273,21 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
     <!-- TAB: UPLOAD STUDENTS -->
     <div class="tab-content" id="tc-upload">
       <div class="card">
-        <div class="card-title">Upload Student List via CSV</div>
+        <div class="card-title">Upload Student List via .CSV File</div>
         <div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:18px">
-          <p style="font-size:13px;color:var(--text-sm);margin-bottom:8px"><b>CSV Format</b> — Column Headers Required:</p>
+          <p style="font-size:13px;color:var(--text-sm);margin-bottom:8px"><b>CSV Format</b> — Column Headers Required (Do as the example given):</p>
           <code style="font-family:monospace;font-size:12px;color:#5b21b6;line-height:2.2;display:block">
             uid,name,rollNo,branch,semester<br/>
             AABB1122,Rina Das,CSE2024001,CSE,3<br/>
             CC334455,Amit Bora,CSE2024002,CSE,3
           </code>
           <p style="font-size:12px;color:var(--gray);margin-top:10px">
-            💡 To find a card's UID — open Arduino IDE → Serial Monitor at 115200 baud → tap card → you'll see
-            <code style="color:var(--primary)">[SCAN] UID: AABB1122</code>
+            To find a card's UID, open Arduino IDE → Serial Monitor at 115200 baud → tap card → you'll see the unique 8-digit code of that card.
           </p>
         </div>
         <div class="dropzone" id="csv-dropzone" onclick="document.getElementById('csvFile').click()">
-          <p>📄 Drop CSV file here or click to browse</p>
-          <small>uid · name · rollNo · branch · semester</small>
+          <p>Drop the student list file here or click to browse</p>
+          <small>uid | name | rollNo | branch | semester</small>
           <input type="file" id="csvFile" accept=".csv"/>
         </div>
         <div id="csv-status" class="status-msg"></div>
@@ -337,11 +336,11 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
 
       <!-- ── ADD TEACHER / USER ── -->
       <div class="card">
-        <div class="card-title">Add New Teacher / User</div>
+        <div class="card-title">Add New User</div>
         <div class="form-grid-2">
           <div class="form-group">
             <label>Full Name</label>
-            <input type="text" id="new-user-name" placeholder="e.g. Dr. Meghna Bora"/>
+            <input type="text" id="new-user-name" placeholder="Their username (can be their actual name or shortname)"/>
           </div>
           <div class="form-group">
             <label>Passcode</label>
@@ -362,8 +361,8 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
           </div>
         </div>
         <p style="font-size:12px;color:var(--gray);margin-bottom:0">
-          For teachers, subject assignment is done via the Subject table above — assign the teacher when adding a subject.
-          Teachers will only see subjects assigned to them.
+          For teachers, subject assignment is done via the Subject table above, assign the teacher when adding a subject.
+          Teachers will only see subjects assigned to them. Only users with Teacher role can be assigned.
         </p>
         <div id="user-status" class="status-msg"></div>
         <hr/>
@@ -420,8 +419,8 @@ async function maybeBootstrap() {
 
   const defaults = [
     { displayName:"Admin",     passcode:"admin123",     role:"admin",     subjects:[] },
-    { displayName:"Principal", passcode:"principal123", role:"principal", subjects:[] },
-    { displayName:"HOD CSE",   passcode:"hod123",       role:"hod",       subjects:[] }
+    { displayName:"Principal", passcode:"aei123", role:"principal", subjects:[] },
+    { displayName:"HOD",   passcode:"hod123",       role:"hod",       subjects:[] }
   ];
   const updates = {};
   defaults.forEach(u => {
@@ -895,7 +894,7 @@ async function addSubject() {
       }
     }
 
-    showMsg("subj-status", `✓ Subject "${name}" (${id}) added successfully.`, "ok");
+    showMsg("subj-status", `Subject "${name}" (${id}) was added successfully!`, "ok");
     document.getElementById("new-subj-name").value = "";
     document.getElementById("new-subj-id").value   = "";
     document.getElementById("new-subj-teacher").value = "";
@@ -905,7 +904,7 @@ async function addSubject() {
 }
 
 async function deleteSubject(id) {
-  if (!confirm(`Delete subject "${SUBJECTS[id]?.name || id}"? This will NOT delete attendance logs.`)) return;
+  if (!confirm(`Delete subject "${SUBJECTS[id]?.name || id}"? This will not delete attendance logs.`)) return;
   await db.ref(`sams_subjects/${id}`).remove();
 }
 
@@ -930,7 +929,7 @@ async function addUser() {
       displayName: name, passcode: pass, role, subjects: [], createdAt: Date.now()
     });
 
-    showMsg("user-status", `✓ User "${name}" created. They can log in immediately.`, "ok");
+    showMsg("user-status", `User "${name}" was created successfully! They can log in immediately.`, "ok");
     document.getElementById("new-user-name").value = "";
     document.getElementById("new-user-pass").value = "";
   } catch(e) {
