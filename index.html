@@ -152,12 +152,10 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
 <div id="dashboard" style="display:none">
 
   <div class="header">
-    <h2>SAMS &nbsp;|&nbsp; <span id="hdr-name">—</span></h2>
+    <h2>SAMS &nbsp;| Hello, &nbsp; <span id="hdr-name">—</span></h2>
     <div class="header-right">
       <span class="role-badge" id="hdr-role">—</span>
       <span id="live-time"></span>
-      <button class="btn btn-ghost" onclick="logout()"
-              style="color:white;background:rgba(255,255,255,.2);padding:6px 14px;font-size:12px">Logout</button>
     </div>
   </div>
 
@@ -184,7 +182,7 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
         <div class="card-title">System</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px">
           <button class="btn btn-ghost" onclick="clearLogs()">Clear Logs</button>
-          <button class="btn btn-s"    onclick="genReport()">PDF Report</button>
+          <button class="btn btn-s"    onclick="genReport()">Download Report</button>
           <button class="btn btn-d" style="grid-column:span 2" onclick="logout()">Logout</button>
         </div>
         <div style="margin-top:10px;font-size:12px;color:var(--gray)" id="student-count-info">Loading…</div>
@@ -744,7 +742,7 @@ async function loadReport() {
 // ═══════════════════════════════════════════════════════════════════
 function genReport() {
   if (!reportData || !reportData.rows.length) {
-    alert("Open the Attendance Report tab and enter the values first to calculate, then click Download PDF."); return;
+    alert("Open the Attendance Report tab and enter the values first to calculate, then click Download Report."); return;
   }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF("l","mm","a4");
