@@ -755,17 +755,16 @@ function genReport() {
   doc.setFillColor(79,70,229); doc.rect(0,0,297,28,"F");
   doc.setTextColor(255,255,255);
   doc.setFontSize(16); doc.setFont("helvetica","bold");
-  doc.text("SAMS — ATTENDANCE REPORT", 148.5, 11, {align:"center"});
+  doc.text("ATTENDANCE REPORT", 148.5, 11, {align:"center"});
   doc.setFontSize(10); doc.setFont("helvetica","normal");
-  doc.text(`${subjectName.toUpperCase()}   ·   ${start} → ${end}   ·   ${totalClasses} classes held`, 148.5, 20, {align:"center"});
+  doc.text(`Subject: ${subjectName.toUpperCase()}   ·  Duration: ${start} to ${end}   ·   Total Classes Held: ${totalClasses}`, 148.5, 20, {align:"center"});
 
   doc.setTextColor(40,40,40); doc.setFontSize(9);
-  doc.text(`Generated: ${new Date().toLocaleString("en-IN")}`, 14, 36);
   doc.text(`By: ${SESSION?.displayName} (${SESSION?.role})`, 14, 42);
 
-  [[14,"≥ 75%",above,[220,252,231],[22,101,52]],
-   [80,"< 75%",rows.length-above,[254,226,226],[153,27,27]],
-   [146,"Total",rows.length,[219,234,254],[30,64,175]]
+  [[14,"more than/ewqual to 75%",above,[220,252,231],[22,101,52]],
+   [80,"below 75%",rows.length-above,[254,226,226],[153,27,27]],
+   [146,"Total Students",rows.length,[219,234,254],[30,64,175]]
   ].forEach(([x,label,val,bg,fg]) => {
     doc.setFillColor(...bg); doc.roundedRect(x,46,58,18,2,2,"F");
     doc.setTextColor(...fg); doc.setFontSize(14); doc.setFont("helvetica","bold");
@@ -776,7 +775,7 @@ function genReport() {
 
   doc.autoTable({
     startY: 70,
-    head: [["#","Roll No","Student Name","Classes Held","Attended","Percentage"]],
+    head: [["SL. No.","Roll No.","Student Name","Classes Held","Attended","Percentage"]],
     body: rows.map((r,i) => [i+1, r.rollNo||"—", r.name, r.totalClasses, r.attended, r.pct+"%"]),
     headStyles: {fillColor:[79,70,229], textColor:255, fontSize:9, fontStyle:"bold"},
     bodyStyles: {fontSize:9},
