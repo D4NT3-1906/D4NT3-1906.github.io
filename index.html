@@ -827,11 +827,11 @@ async function previewReport() {
   document.getElementById("preview-content").innerHTML = `
     <div class="preview-header">
       <h2>Attendance Report</h2>
-      <p>${subjectName} &nbsp;·&nbsp; ${rangeLabel} &nbsp;·&nbsp; ${start} to ${end} &nbsp;·&nbsp; ${totalClasses} class${totalClasses!==1?"es":""} held</p>
+      <p>${subjectName} &nbsp; | &nbsp; ${rangeLabel} &nbsp; | &nbsp; ${start} to ${end} &nbsp; | &nbsp; ${totalClasses} class${totalClasses!==1?"es":""} held</p>
     </div>
 
     <div class="preview-meta">
-      Generated: ${new Date().toLocaleString("en-IN")} &nbsp;·&nbsp; By: ${SESSION?.displayName} (${SESSION?.role})
+      Generated: ${new Date().toLocaleString("en-IN")} &nbsp;·&nbsp; By: ${SESSION?.displayName})
     </div>
 
     <div class="preview-summary">
