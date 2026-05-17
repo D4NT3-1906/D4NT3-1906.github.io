@@ -4,15 +4,14 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Smart Attendance Management System</title>
-
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-
 <style>
-:root {
+:root 
+{
   --primary:#4f46e5; --primary-d:#3730a3;
   --bg:#f1f5f9; --surface:#ffffff;
   --success:#10b981; --danger:#ef4444; --amber:#f59e0b;
@@ -21,8 +20,7 @@
 }
 *{ box-sizing:border-box; margin:0; padding:0; }
 body{ font-family:'Segoe UI',sans-serif; background:var(--bg); color:var(--text); }
-
-/* LOGIN */
+// -----------LOGIN BOX
 #login-screen{ position:fixed; inset:0; background:#0f172a; z-index:999; display:flex; justify-content:center; align-items:center; }
 .login-box{ background:var(--surface); padding:44px 40px; border-radius:16px; width:380px; text-align:center; box-shadow:0 25px 50px rgba(0,0,0,.5); }
 .login-box h2{ color:var(--primary); margin-bottom:6px; font-size:24px; }
@@ -30,19 +28,19 @@ body{ font-family:'Segoe UI',sans-serif; background:var(--bg); color:var(--text)
 .login-box input{ width:100%; padding:11px 14px; border-radius:9px; border:1px solid var(--border); font-size:14px; margin-bottom:12px; outline:none; transition:.15s; }
 .login-box input:focus{ border-color:var(--primary); }
 
-/* HEADER */
+// -----------HEADER
 .header{ background:var(--primary); color:white; padding:0 36px; height:58px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:50; box-shadow:0 2px 8px rgba(79,70,229,.3); }
 .header h2{ font-size:18px; font-weight:700; }
 .header-right{ display:flex; align-items:center; gap:16px; font-size:13px; }
 .role-badge{ background:rgba(255,255,255,.2); padding:3px 12px; border-radius:99px; font-size:11px; font-weight:700; letter-spacing:.5px; }
 
-/* LAYOUT */
+// -----------LAYOUT
 .container{ padding:24px 36px; max-width:1440px; margin:auto; }
 .card{ background:var(--surface); padding:22px; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:20px; }
 .card-title{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--gray); margin-bottom:14px; }
 .grid-3{ display:grid; grid-template-columns:1.6fr 1fr; gap:20px; }
 
-/* STAT CARDS */
+// -----------STAT CARDS
 .stat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px; }
 .stat-card{ background:var(--surface); border-radius:12px; padding:18px 20px; box-shadow:0 1px 3px rgba(0,0,0,.08); border-left:4px solid transparent; }
 .stat-card.green{ border-left-color:var(--success); }
@@ -52,14 +50,14 @@ body{ font-family:'Segoe UI',sans-serif; background:var(--bg); color:var(--text)
 .stat-card .slabel{ font-size:11px; color:var(--gray); text-transform:uppercase; letter-spacing:.5px; }
 .stat-card .svalue{ font-size:28px; font-weight:800; color:var(--text); margin-top:6px; }
 
-/* CONTROLS */
+// -----------CONTROLS
 .controls{ display:grid; grid-template-columns:1.3fr 1fr 1fr 1fr; gap:14px; align-items:end; margin-bottom:18px; }
 label{ font-size:11px; font-weight:700; color:var(--gray); display:block; margin-bottom:5px; text-transform:uppercase; letter-spacing:.4px; }
 select, input[type=text], input[type=password], input[type=number]{ width:100%; padding:9px 12px; border-radius:8px; border:1px solid var(--border); font-size:14px; outline:none; transition:.15s; background:#fff; }
 select:focus, input:focus{ border-color:var(--primary); }
 
-/* BUTTONS */
-.btn{ padding:10px 18px; border:none; border-radius:8px; cursor:pointer; font-weight:700; color:white; transition:.15s; font-size:13px; text-align:center; display:inline-block; }
+// -----------BUTTONS
+.btn{ padding:10px 18px; borderr:none; border-radius:8px; cursor:pointer; font-weight:700; color:white; transition:.15s; font-size:13px; text-align:center; display:inline-block; }
 .btn-p{ background:var(--primary); } .btn-p:hover{ background:var(--primary-d); }
 .btn-s{ background:var(--success); } .btn-s:hover{ background:#059669; }
 .btn-d{ background:var(--danger);  } .btn-d:hover{ background:#dc2626; }
@@ -68,7 +66,7 @@ select:focus, input:focus{ border-color:var(--primary); }
 .btn:disabled{ opacity:.5; cursor:not-allowed; }
 .btn-w{ width:100%; }
 
-/* TABLE */
+// -----------TABLES
 .table-wrap{ overflow-x:auto; border-radius:10px; border:1px solid var(--border); }
 table{ width:100%; border-collapse:collapse; }
 thead th{ background:#f8fafc; color:var(--gray); padding:12px 14px; text-align:left; border-bottom:2px solid var(--border); font-size:11px; text-transform:uppercase; letter-spacing:.5px; white-space:nowrap; }
@@ -76,7 +74,7 @@ tbody td{ padding:11px 14px; border-bottom:1px solid #f8fafc; font-size:13px; }
 tbody tr:last-child td{ border-bottom:none; }
 tbody tr:hover td{ background:#fafbff; }
 
-/* BADGES */
+// -----------BADGES
 .badge{ display:inline-block; padding:3px 10px; border-radius:99px; font-size:11px; font-weight:700; }
 .badge-in { background:#dbeafe; color:#1d4ed8; }
 .badge-out{ background:#dcfce7; color:#15803d; }
@@ -84,29 +82,29 @@ tbody tr:hover td{ background:#fafbff; }
 .pct-green{ background:#dcfce7; color:#15803d; }
 .pct-red  { background:#fee2e2; color:#b91c1c; }
 
-/* LIVE SESSION */
+// -----------LIVE SESSION
 .session-bar{ display:none; margin-top:12px; padding:10px 14px; background:#f0fdf4; border-left:4px solid var(--success); border-radius:6px; }
 .pulse{ animation:blink 2s infinite; color:var(--danger); font-weight:700; }
 @keyframes blink{ 0%,100%{opacity:1} 50%{opacity:.4} }
 
-/* PROGRESS */
+// -----------PROGRESS
 .pct-cell{ display:flex; align-items:center; gap:8px; }
 .pct-bar-bg{ flex:1; height:6px; background:var(--border); border-radius:3px; overflow:hidden; min-width:50px; }
 .pct-bar-fill{ height:100%; border-radius:3px; }
 
-/* DROPZONE */
+// -----------DROPZONE
 .dropzone{ border:2px dashed var(--border); border-radius:10px; padding:28px; text-align:center; cursor:pointer; transition:.2s; }
 .dropzone:hover,.dropzone.over{ border-color:var(--primary); background:#f5f3ff; }
 .dropzone p{ color:var(--gray); font-size:13px; margin-bottom:4px; }
 .dropzone small{ font-size:11px; color:#94a3b8; font-family:monospace; }
 #csvFile{ display:none; }
 
-/* STATUS MSG */
+// -----------STATUS MESSAGE
 .status-msg{ font-size:13px; padding:10px 14px; border-radius:8px; margin-top:12px; display:none; }
 .msg-ok { background:#f0fdf4; border-left:4px solid var(--success); color:#166534; }
 .msg-err{ background:#fef2f2; border-left:4px solid var(--danger);  color:#991b1b; }
 
-/* TABS */
+// -----------TABS
 .tab-bar{ display:flex; gap:4px; margin-bottom:20px; border-bottom:2px solid var(--border); }
 .tab{ padding:10px 20px; border:none; background:none; font-size:13px; font-weight:600; color:var(--gray); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; transition:.15s; }
 .tab:hover{ color:var(--text); }
@@ -114,13 +112,13 @@ tbody tr:hover td{ background:#fafbff; }
 .tab-content{ display:none; }
 .tab-content.active{ display:block; }
 
-/* ADMIN FORMS */
+// -----------ADMIN FORMS
 .form-grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
 .form-group{ display:flex; flex-direction:column; gap:5px; }
 .delete-btn{ background:none; border:none; color:var(--danger); cursor:pointer; font-size:18px; padding:0 4px; line-height:1; }
 .delete-btn:hover{ opacity:.7; }
 
-/* ── PREVIEW MODAL ───────────────────────────────────────────── */
+// -----------PREVIEW MODAL
 #preview-modal{
   display:none; position:fixed; inset:0; z-index:200;
   background:rgba(15,23,42,.75); backdrop-filter:blur(4px);
@@ -151,7 +149,7 @@ tbody tr:hover td{ background:#fafbff; }
   background:#f8fafc;
 }
 
-/* preview report card */
+// function to preview report card
 .preview-report{
   background:white; border-radius:10px; padding:32px 36px;
   box-shadow:0 2px 8px rgba(0,0,0,.08); max-width:820px; margin:0 auto;
@@ -190,7 +188,7 @@ tbody tr:hover td{ background:#fafbff; }
   font-size:11px; color:var(--gray); display:flex; justify-content:space-between;
 }
 
-/* MISC */
+// -----------MISC
 .mono{ font-family:monospace; font-size:12px; }
 .empty-row{ text-align:center; padding:28px !important; color:var(--gray) !important; }
 hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
@@ -208,7 +206,7 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
 </head>
 <body>
 
-<!-- ══ PREVIEW MODAL ══════════════════════════════════════════════ -->
+<!-- PREVIEW MODAL -->
 <div id="preview-modal">
   <div class="modal-box">
     <div class="modal-header">
@@ -252,7 +250,7 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
 
   <div class="container">
 
-    <!-- TOP ROW -->
+ <!-- TOP ROW -->
     <div class="grid-3">
       <div class="card">
         <div class="card-title">Active Class Control</div>
@@ -268,7 +266,6 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
           </div>
         </div>
       </div>
-
       <div class="card">
         <div class="card-title">System</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px">
@@ -280,7 +277,7 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
       </div>
     </div>
 
-    <!-- STAT CARDS -->
+<!-- STAT CARDS -->
     <div class="stat-grid">
       <div class="stat-card green"><div class="slabel">Present Today</div><div class="svalue" id="stat-present">—</div></div>
       <div class="stat-card red">  <div class="slabel">Absent Today</div> <div class="svalue" id="stat-absent">—</div></div>
@@ -288,7 +285,7 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
       <div class="stat-card blue"> <div class="slabel">Attendance %</div> <div class="svalue" id="stat-pct">—</div></div>
     </div>
 
-    <!-- TABS -->
+<!-- TABS -->
     <div class="tab-bar">
       <button class="tab active" onclick="switchTab('live')"   id="tab-live">Live View</button>
       <button class="tab"        onclick="switchTab('report')" id="tab-report">Attendance Report</button>
@@ -296,7 +293,7 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
       <button class="tab"        onclick="switchTab('admin')"  id="tab-admin">Manage</button>
     </div>
 
-    <!-- TAB: LIVE VIEW -->
+<!-- TAB: LIVE VIEW -->
     <div class="tab-content active" id="tc-live">
       <div class="card">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px">
@@ -323,7 +320,7 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
       </div>
     </div>
 
-    <!-- TAB: ATTENDANCE REPORT -->
+<!-- TAB: ATTENDANCE REPORT -->
     <div class="tab-content" id="tc-report">
       <div class="card">
         <div class="controls">
@@ -337,7 +334,6 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
               <option value="0">All Time</option>
             </select>
           </div>
-          <!-- CHANGED: was "Download Report", now "Preview Report" -->
           <div><label>&nbsp;</label><button class="btn btn-amber btn-w" onclick="previewReport()">Preview Report</button></div>
           <div><label>&nbsp;</label><button class="btn btn-p btn-w" onclick="loadReport()">Refresh</button></div>
         </div>
@@ -360,7 +356,7 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
       </div>
     </div>
 
-    <!-- TAB: UPLOAD STUDENTS -->
+<!-- TAB: UPLOAD STUDENTS -->
     <div class="tab-content" id="tc-upload">
       <div class="card">
         <div class="card-title">Upload Student List via .CSV File</div>
@@ -385,9 +381,8 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
       </div>
     </div>
 
-    <!-- TAB: ADMIN -->
+<!-- TAB: ADMIN -->
     <div class="tab-content" id="tc-admin">
-
       <div class="card">
         <div class="card-title">Add New Subject</div>
         <div class="form-grid-2">
@@ -418,7 +413,6 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
           </table>
         </div>
       </div>
-
       <div class="card">
         <div class="card-title">Add New User</div>
         <div class="form-grid-2">
@@ -458,7 +452,6 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
           </table>
         </div>
       </div>
-
       <div class="card">
         <div class="card-title">Maintenance</div>
         <div style="display:flex;gap:12px;flex-wrap:wrap">
@@ -468,16 +461,14 @@ hr{ border:none; border-top:1px solid var(--border); margin:18px 0; }
           </button>
         </div>
       </div>
-
     </div>
   </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════════════════
-// FIREBASE CONFIG
-// ═══════════════════════════════════════════════════════════════════
-const firebaseConfig = {
+// -----------FIREBASE CONFIG
+const firebaseConfig = 
+{
   apiKey:            "AIzaSyC25jnEJ-6-t0hoE3m8xiPEHfWyC-ejMKE",
   authDomain:        "sams-190605.firebaseapp.com",
   databaseURL:       "https://sams-190605-default-rtdb.firebaseio.com",
@@ -489,10 +480,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ═══════════════════════════════════════════════════════════════════
-// BOOTSTRAP
-// ═══════════════════════════════════════════════════════════════════
-async function maybeBootstrap() {
+// -----------BOOTSTRAP
+async function maybeBootstrap() 
+{
   const snap = await db.ref("sams_users").once("value");
   if (snap.exists()) return;
   const defaults = [
@@ -508,35 +498,31 @@ async function maybeBootstrap() {
   await db.ref("sams_users").set(updates);
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════════════════════════
+// -----------STATE
 let SESSION     = null;
 let STUDENT_MAP = {};
 let SUBJECTS    = {};
 let ALL_USERS   = {};
 let liveUnsub   = null;
-let reportData  = null;   // holds last calculated report — shared by preview + download
+let reportData  = null;   // holds last calculated report (shared by preview & download)
 
-// ═══════════════════════════════════════════════════════════════════
-// UTILS
-// ═══════════════════════════════════════════════════════════════════
+// -----------UTILS
 const today = () => new Date().toISOString().split("T")[0];
-
-function datesBetween(start, end) {
+function datesBetween(start, end) 
+{
   const dates = [], cur = new Date(start), last = new Date(end);
   while (cur <= last) { dates.push(cur.toISOString().split("T")[0]); cur.setDate(cur.getDate()+1); }
   return dates;
 }
-
-function getRangeDates(days) {
+function getRangeDates(days) 
+{
   const now = new Date(), end = now.toISOString().split("T")[0];
   const start = new Date(now);
   if (days > 0) start.setDate(start.getDate() - days); else start.setFullYear(2000);
   return { start: start.toISOString().split("T")[0], end };
 }
-
-function showMsg(id, msg, type) {
+function showMsg(id, msg, type) 
+{
   const el = document.getElementById(id); if (!el) return;
   el.textContent = msg;
   el.className = "status-msg " + (type==="ok" ? "msg-ok" : "msg-err");
@@ -544,55 +530,54 @@ function showMsg(id, msg, type) {
 }
 function hideMsg(id) { const el=document.getElementById(id); if(el) el.style.display="none"; }
 
-// ═══════════════════════════════════════════════════════════════════
-// LOGIN
-// ═══════════════════════════════════════════════════════════════════
-async function login() {
+// -----------LOGIN
+async function login() 
+{
   const nameTyped = document.getElementById("u").value.trim();
   const passcode  = document.getElementById("p").value.trim();
   const errEl     = document.getElementById("login-error");
   const btn       = document.querySelector(".login-box .btn");
   errEl.textContent = "";
-
   if (!nameTyped || !passcode) { errEl.textContent = "Enter your name and passcode."; return; }
   btn.disabled = true; btn.textContent = "Signing in…";
-
-  try {
+  try 
+  {
     const snap = await db.ref("sams_users").once("value");
     const users = snap.val() || {};
     const lower = nameTyped.toLowerCase();
     let matchedKey = null, matchedUser = null;
-
-    for (const [key, u] of Object.entries(users)) {
-      if (key === lower || (u.displayName || "").toLowerCase() === lower) {
+    for (const [key, u] of Object.entries(users)) 
+    {
+      if (key === lower || (u.displayName || "").toLowerCase() === lower) 
+      {
         matchedKey = key; matchedUser = u; break;
       }
     }
-
     if (!matchedUser)                     { errEl.textContent = "Name not found.";     return; }
     if (matchedUser.passcode !== passcode){ errEl.textContent = "Incorrect passcode."; return; }
-
     SESSION = { key: matchedKey, ...matchedUser };
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("dashboard").style.display    = "block";
     document.getElementById("hdr-name").textContent       = SESSION.displayName;
     document.getElementById("hdr-role").textContent       = SESSION.role.toUpperCase();
-
     const adminOnly = ["admin","hod"];
     document.getElementById("tab-upload").style.display = adminOnly.includes(SESSION.role) ? "" : "none";
     document.getElementById("tab-admin").style.display  = adminOnly.includes(SESSION.role) ? "" : "none";
-
     fetchStudents();
     fetchSubjects();
     listenToSession();
-  } catch(e) {
+  }
+  catch(e) 
+  {
     errEl.textContent = "Error: " + e.message;
-  } finally {
+  } 
+  finally 
+  {
     btn.disabled = false; btn.textContent = "Access Dashboard";
   }
 }
-
-function logout() {
+function logout() 
+{
   if (liveUnsub) { liveUnsub(); liveUnsub = null; }
   SESSION = null;
   document.getElementById("dashboard").style.display    = "none";
@@ -601,10 +586,9 @@ function logout() {
   document.getElementById("p").value = "";
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// DATA LOADERS
-// ═══════════════════════════════════════════════════════════════════
-function fetchStudents() {
+// -----------DATA LOADERS
+function fetchStudents() 
+{
   db.ref("students").on("value", snap => {
     STUDENT_MAP = snap.val() || {};
     const count = Object.keys(STUDENT_MAP).length;
@@ -613,23 +597,26 @@ function fetchStudents() {
     refreshLive();
   });
 }
-
-function fetchSubjects() {
+function fetchSubjects() 
+{
   db.ref("sams_subjects").on("value", snap => {
     const all = snap.val() || {};
-    if (SESSION?.role === "teacher") {
+    if (SESSION?.role === "teacher") 
+    {
       const allowed = new Set(SESSION.subjects || []);
       SUBJECTS = {};
       Object.entries(all).forEach(([id,s]) => { if(allowed.has(id)) SUBJECTS[id]=s; });
-    } else {
+    } 
+    else 
+    {
       SUBJECTS = all;
     }
     populateSubjectSelects();
     loadReport();
   });
 }
-
-function populateSubjectSelects() {
+function populateSubjectSelects() 
+{
   ["sessionSubj","liveSubjSelect","subjSelect"].forEach(id => {
     const sel = document.getElementById(id); if (!sel) return;
     const cur = sel.value;
@@ -642,10 +629,9 @@ function populateSubjectSelects() {
   });
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// SESSION CONTROL
-// ═══════════════════════════════════════════════════════════════════
-function startClass() {
+// -----------SESSION CONTROL
+function startClass() 
+{
   const subj = document.getElementById("sessionSubj").value;
   if (!subj) { alert("Select a subject first."); return; }
   db.ref("current_session").set({
@@ -656,27 +642,29 @@ function startClass() {
   });
 }
 function stopClass() { db.ref("current_session/active").set(false); }
-
-function listenToSession() {
+function listenToSession() 
+{
   db.ref("current_session").on("value", snap => {
     const data = snap.val();
     const bar  = document.getElementById("sessionStatus");
     const btn  = document.getElementById("startBtn");
-    if (data && data.active) {
+    if (data && data.active) 
+    {
       bar.style.display = "block";
       document.getElementById("activeSubjName").textContent = data.subjectName || data.subject;
       btn.disabled = true;
-    } else {
+    }
+    else 
+    {
       bar.style.display = "none";
       btn.disabled = false;
     }
   });
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// LIVE VIEW
-// ═══════════════════════════════════════════════════════════════════
-function startLiveListener() {
+// -----------LIVE VIEW
+function startLiveListener() 
+{
   if (liveUnsub) { liveUnsub(); liveUnsub = null; }
   const subjectId = document.getElementById("liveSubjSelect").value;
   if (!subjectId) return;
@@ -684,38 +672,35 @@ function startLiveListener() {
     renderLive(subjectId, snap.val() || {});
   });
 }
-
-function refreshLive() {
+function refreshLive() 
+{
   const subjectId = document.getElementById("liveSubjSelect")?.value;
   if (subjectId) startLiveListener();
 }
-
-function renderLive(subjectId, sessions) {
+function renderLive(subjectId, sessions) 
+{
   const total = Object.keys(STUDENT_MAP).length;
   let present = 0, left = 0;
   const rows = [];
-
   Object.entries(STUDENT_MAP).forEach(([uid,s]) => {
     const sess = sessions[uid];
     let status = "absent", entry = "—", exit = "—";
-    if (sess) {
+    if (sess) 
+    {
       entry = sess.entry || "—";
       if (sess.exit && sess.exit !== "null") { exit=sess.exit; status="left"; left++; }
       else { status="present"; present++; }
     }
     rows.push({ name:s.name||uid, rollNo:s.rollNo||"—", status, entry, exit });
   });
-
   const absent = total - present - left;
   const pct    = total>0 ? Math.round((present/total)*100) : 0;
-
   document.getElementById("stat-present").textContent  = present;
   document.getElementById("stat-absent").textContent   = absent;
   document.getElementById("stat-done").textContent     = left;
   document.getElementById("stat-pct").textContent      = pct + "%";
   document.getElementById("live-prog-bar").style.width = pct + "%";
   document.getElementById("live-prog-pct").textContent = pct + "%";
-
   rows.sort((a,b) => a.rollNo.localeCompare(b.rollNo));
   document.getElementById("liveTableBody").innerHTML = rows.length
     ? rows.map((r,i) => `
@@ -727,40 +712,35 @@ function renderLive(subjectId, sessions) {
           <td>${r.entry}</td><td>${r.exit}</td>
         </tr>`).join("")
     : `<tr><td colspan="6" class="empty-row">No scans yet for today</td></tr>`;
-
   document.getElementById("live-updated").textContent =
     "Live · updated " + new Date().toLocaleTimeString("en-IN");
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// ATTENDANCE REPORT — calculates and stores in reportData
-// ═══════════════════════════════════════════════════════════════════
-async function loadReport() {
+// -----------ATTENDANCE REPORT (calculates and stores in reportData)
+async function loadReport() 
+{
   const subjectId = document.getElementById("subjSelect").value;
   const days      = parseInt(document.getElementById("dayRange").value);
   hideMsg("report-error");
   document.getElementById("report-summary").style.display = "none";
-
-  if (!subjectId) {
+  if (!subjectId) 
+  {
     document.getElementById("reportTableBody").innerHTML =
       `<tr><td colspan="6" class="empty-row">Select a subject to load report</td></tr>`;
     return;
   }
-
   document.getElementById("reportTableBody").innerHTML =
     `<tr><td colspan="6" class="empty-row">Calculating…</td></tr>`;
-
-  try {
+  try 
+  {
     const { start, end } = getRangeDates(days);
     const snap     = await db.ref(`sessions/${subjectId}`).once("value");
     const sessions = snap.val() || {};
-
     const dates      = datesBetween(start, end);
     const classDates = days===0
       ? Object.keys(sessions)
       : dates.filter(d => sessions[d] && Object.keys(sessions[d]).length>0);
     const totalClasses = classDates.length;
-
     const rows = [];
     Object.entries(STUDENT_MAP).forEach(([uid,s]) => {
       let attended = 0;
@@ -769,13 +749,11 @@ async function loadReport() {
       rows.push({ uid, name:s.name||uid, rollNo:s.rollNo||"", attended, totalClasses, pct });
     });
     rows.sort((a,b) => a.rollNo.localeCompare(b.rollNo));
-
     const above = rows.filter(r => r.pct>=75).length;
     document.getElementById("rs-total").textContent = rows.length;
     document.getElementById("rs-above").textContent = above;
     document.getElementById("rs-below").textContent = rows.length - above;
     document.getElementById("report-summary").style.display = "block";
-
     document.getElementById("reportTableBody").innerHTML = rows.length
       ? rows.map((r,i) => `
           <tr>
@@ -791,49 +769,44 @@ async function loadReport() {
             </td>
           </tr>`).join("")
       : `<tr><td colspan="6" class="empty-row">No students in database</td></tr>`;
-
-    // store for preview + download
+    // function to store data for preview & download
     reportData = { rows, totalClasses, start, end, subjectId };
-
     await db.ref(`attendance_summary/${subjectId}`).set({
       rows: rows.map(r=>({uid:r.uid,name:r.name,rollNo:r.rollNo,attended:r.attended,totalClasses,pct:r.pct})),
-      start, end, totalClasses, computedAt: Date.now()
-    });
-  } catch(e) {
+      start, end, totalClasses, computedAt: Date.now()});
+  } 
+  catch(e) 
+  {
     showMsg("report-error", "Error: " + e.message, "err");
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// PREVIEW REPORT — renders a styled HTML version in a modal
-// ═══════════════════════════════════════════════════════════════════
-async function previewReport() {
-  // If no data yet, calculate first
-  if (!reportData) {
+// -----------PREVIEW REPORT (renders a styled HTML version in a modal)
+async function previewReport() 
+{
+  // Function to select subject first before calculating report
+  if (!reportData) 
+  {
     await loadReport();
   }
-  if (!reportData || !reportData.rows.length) {
+  if (!reportData || !reportData.rows.length) 
+  {
     alert("No report data. Select a subject and time range first."); return;
   }
-
   const { rows, totalClasses, start, end, subjectId } = reportData;
   const subjectName = SUBJECTS[subjectId]?.name || subjectId;
   const above = rows.filter(r => r.pct >= 75).length;
   const below = rows.length - above;
   const rangeLabel = document.getElementById("dayRange").options[document.getElementById("dayRange").selectedIndex].text;
-
   document.getElementById("modal-title").textContent = `Preview — ${subjectName}`;
-
   document.getElementById("preview-content").innerHTML = `
     <div class="preview-header">
       <h2>Attendance Report</h2>
       <p>${subjectName} &nbsp; | &nbsp; ${rangeLabel} &nbsp; | &nbsp; ${start} to ${end} &nbsp; | &nbsp; ${totalClasses} class${totalClasses!==1?"es":""} held</p>
     </div>
-
     <div class="preview-meta">
       Generated: ${new Date().toLocaleString("en-IN")} &nbsp;·&nbsp; By: ${SESSION?.displayName})
     </div>
-
     <div class="preview-summary">
       <div class="preview-summary-box ps-green">
         <div class="ps-val">${above}</div>
@@ -848,7 +821,6 @@ async function previewReport() {
         <div class="ps-label">Total Students</div>
       </div>
     </div>
-
     <table class="preview-table">
       <thead>
         <tr>
@@ -872,40 +844,38 @@ async function previewReport() {
           </tr>`).join("")}
       </tbody>
     </table>
-
     <div class="preview-footer">
       <span>Smart Attendance Management System</span>
       <span>${rows.length} students listed</span>
     </div>
   `;
-
   document.getElementById("preview-modal").classList.add("open");
   document.body.style.overflow = "hidden";
 }
-
-function closePreview() {
+function closePreview() 
+{
   document.getElementById("preview-modal").classList.remove("open");
   document.body.style.overflow = "";
 }
-
-// close modal on backdrop click
-document.addEventListener("DOMContentLoaded", () => {
+// Function to close modal on backdrop click
+document.addEventListener("DOMContentLoaded", () => 
+{
   document.getElementById("preview-modal").addEventListener("click", function(e) {
     if (e.target === this) closePreview();
   });
   document.addEventListener("keydown", e => { if (e.key === "Escape") closePreview(); });
 });
 
-// ═══════════════════════════════════════════════════════════════════
-// DOWNLOAD PDF — callable from both the modal and the system card
-// ═══════════════════════════════════════════════════════════════════
-function downloadFromPreview() {
+// -----------DOWNLOAD PDF (callable from both the modal and the system card)
+function downloadFromPreview() 
+{
   closePreview();
   genReport();
 }
-
-function genReport() {
-  if (!reportData || !reportData.rows.length) {
+function genReport() 
+{
+  if (!reportData || !reportData.rows.length) 
+  {
     alert("Open the Attendance Report tab and calculate first, then click Download Report."); return;
   }
   const { jsPDF } = window.jspdf;
@@ -913,18 +883,15 @@ function genReport() {
   const { rows, totalClasses, start, end, subjectId } = reportData;
   const subjectName = SUBJECTS[subjectId]?.name || subjectId;
   const above = rows.filter(r => r.pct>=75).length;
-
   doc.setFillColor(79,70,229); doc.rect(0,0,297,28,"F");
   doc.setTextColor(255,255,255);
   doc.setFontSize(16); doc.setFont("helvetica","bold");
   doc.text("ATTENDANCE REPORT", 148.5, 11, {align:"center"});
   doc.setFontSize(10); doc.setFont("helvetica","normal");
   doc.text(`Subject: ${subjectName}   ·  Duration: ${start} to ${end}   ·   Total Classes Held: ${totalClasses}`, 148.5, 20, {align:"center"});
-
   doc.setTextColor(40,40,40); doc.setFontSize(9);
   doc.text(`Generated: ${new Date().toLocaleString("en-IN")}`, 14, 36);
   doc.text(`By: ${SESSION?.displayName}`, 14, 42);
-
   [[14,"More Than/Equal To 75%",above,[220,252,231],[22,101,52]],
    [80,"Below 75%",rows.length-above,[254,226,226],[153,27,27]],
    [146,"Total Students",rows.length,[219,234,254],[30,64,175]]
@@ -935,7 +902,6 @@ function genReport() {
     doc.setFontSize(8); doc.setFont("helvetica","normal");
     doc.text(label, x+29, 62, {align:"center"});
   });
-
   doc.autoTable({
     startY: 70,
     head: [["SL. No.","Roll No.","Student Name","Classes Held","Attended","Percentage"]],
@@ -943,8 +909,10 @@ function genReport() {
     headStyles: {fillColor:[79,70,229], textColor:255, fontSize:9, fontStyle:"bold"},
     bodyStyles: {fontSize:9},
     alternateRowStyles: {fillColor:[248,250,252]},
-    didParseCell: data => {
-      if (data.section==="body" && data.column.index===5) {
+    didParseCell: data => 
+    {
+      if (data.section==="body" && data.column.index===5) 
+      {
         const p = parseFloat(data.cell.text[0]);
         data.cell.styles.textColor = p<75 ? [180,20,20] : [20,120,20];
         data.cell.styles.fontStyle = "bold";
@@ -953,28 +921,28 @@ function genReport() {
     columnStyles: {0:{cellWidth:12,halign:"center"},1:{cellWidth:35},2:{cellWidth:80},3:{cellWidth:32,halign:"center"},4:{cellWidth:28,halign:"center"},5:{cellWidth:30,halign:"center"}},
     margin: {left:14,right:14}
   });
-
   const pages = doc.internal.getNumberOfPages();
-  for (let i=1; i<=pages; i++) {
+  for (let i=1; i<=pages; i++) 
+  {
     doc.setPage(i); doc.setFontSize(8); doc.setTextColor(160);
     doc.text(`Page ${i} of ${pages}  ·  SAMS`, 148.5, 200, {align:"center"});
   }
   doc.save(`SAMS_${subjectName.replace(/\s+/g,"_")}_${start}_to_${end}.pdf`);
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// CSV UPLOAD
-// ═══════════════════════════════════════════════════════════════════
-function handleCSVFile(file) {
+// -----------CSV UPLOAD FUNCTION
+function handleCSVFile(file) 
+{
   if (!file) return;
   hideMsg("csv-status");
   document.getElementById("csv-preview").innerHTML = "";
-
   Papa.parse(file, {
     header: true, skipEmptyLines: true,
-    complete: ({ data }) => {
+    complete: ({ data }) => 
+    {
       let students;
-      if (data[0] && (data[0].uid||data[0].UID||data[0].RFID)) {
+      if (data[0] && (data[0].uid||data[0].UID||data[0].RFID)) 
+      {
         students = data.map(r => ({
           uid:      (r.uid||r.UID||r.RFID||"").trim().toUpperCase(),
           name:     (r.name||r.Name||r.NAME||"").trim(),
@@ -982,17 +950,19 @@ function handleCSVFile(file) {
           branch:   (r.branch||r.Branch||"").trim(),
           semester: parseInt(r.semester||r.Semester||0)||0,
         })).filter(s => s.uid && s.name);
-      } else {
-        students = data.map(r => {
+      }
+      else 
+      {
+        students = data.map(r => 
+        {
           const keys = Object.keys(r);
           return { uid:(r[keys[0]]||"").trim().toUpperCase(), name:(r[keys[1]]||"").trim(), rollNo:"", branch:"", semester:0 };
         }).filter(s => s.uid && s.name);
       }
-
-      if (!students.length) {
+      if (!students.length) 
+      {
         showMsg("csv-status","No valid rows. Expected headers: uid,name,rollNo,branch,semester","err"); return;
       }
-
       document.getElementById("csv-preview").innerHTML = `
         <p style="font-size:13px;color:var(--gray);margin:14px 0 10px">${students.length} students found — preview:</p>
         <div class="table-wrap" style="margin-bottom:16px">
@@ -1005,18 +975,21 @@ function handleCSVFile(file) {
           </table>
         </div>
         <button class="btn btn-s" id="confirm-upload-btn">Sync ${students.length} Students to Firebase</button>`;
-
-      document.getElementById("confirm-upload-btn").onclick = async () => {
+      document.getElementById("confirm-upload-btn").onclick = async () => 
+      {
         const btn = document.getElementById("confirm-upload-btn");
         btn.disabled = true; btn.textContent = "Uploading…";
-        try {
+        try 
+        {
           const updates = {};
           students.forEach(s => { updates[s.uid] = {name:s.name,rollNo:s.rollNo,branch:s.branch,semester:s.semester}; });
           await db.ref("students").update(updates);
           showMsg("csv-status", `✓ ${students.length} students synced to Firebase!`, "ok");
           document.getElementById("csv-preview").innerHTML = "";
           document.getElementById("csvFile").value = "";
-        } catch(e) {
+        }
+        catch(e) 
+        {
           showMsg("csv-status","Upload failed: "+e.message,"err");
           btn.disabled=false; btn.textContent=`Sync ${students.length} Students to Firebase`;
         }
@@ -1026,25 +999,26 @@ function handleCSVFile(file) {
   });
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// ADMIN — ADD SUBJECT
-// ═══════════════════════════════════════════════════════════════════
-async function addSubject() {
+// -----------ADMIN (Add Subject Function)
+async function addSubject() 
+{
   const name    = document.getElementById("new-subj-name").value.trim();
   const id      = document.getElementById("new-subj-id").value.trim()
                     .toLowerCase().replace(/\s+/g,"_").replace(/[^a-z0-9_]/g,"");
   const teacher = document.getElementById("new-subj-teacher").value.trim();
   hideMsg("subj-status");
-
   if (!name || !id) { showMsg("subj-status","Subject name and ID are required.","err"); return; }
-
-  try {
+  try 
+  {
     await db.ref(`sams_subjects/${id}`).set({ name, teacher, createdAt: Date.now() });
-    if (teacher) {
+    if (teacher) 
+    {
       const snap = await db.ref("sams_users").once("value");
       const users = snap.val() || {};
-      for (const [key, u] of Object.entries(users)) {
-        if ((u.displayName||"").toLowerCase() === teacher.toLowerCase() && u.role==="teacher") {
+      for (const [key, u] of Object.entries(users)) 
+      {
+        if ((u.displayName||"").toLowerCase() === teacher.toLowerCase() && u.role==="teacher") 
+        {
           const existing = u.subjects || [];
           if (!existing.includes(id)) await db.ref(`sams_users/${key}/subjects`).set([...existing, id]);
           break;
@@ -1055,46 +1029,50 @@ async function addSubject() {
     document.getElementById("new-subj-name").value = "";
     document.getElementById("new-subj-id").value   = "";
     document.getElementById("new-subj-teacher").value = "";
-  } catch(e) { showMsg("subj-status","Error: "+e.message,"err"); }
+  } 
+  catch(e) { showMsg("subj-status","Error: "+e.message,"err"); }
 }
-
-async function deleteSubject(id) {
+async function deleteSubject(id) 
+{
   if (!confirm(`Delete subject "${SUBJECTS[id]?.name || id}"? This will not delete attendance logs.`)) return;
   await db.ref(`sams_subjects/${id}`).remove();
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// ADMIN — ADD USER
-// ═══════════════════════════════════════════════════════════════════
-async function addUser() {
+// -----------ADMIN (Add User Function)
+async function addUser() 
+{
   const name = document.getElementById("new-user-name").value.trim();
   const pass = document.getElementById("new-user-pass").value.trim();
   const role = document.getElementById("new-user-role").value;
   hideMsg("user-status");
-
-  if (!name || !pass) { showMsg("user-status","Name and passcode are required.","err"); return; }
-
+  if (!name || !pass) { showMsg("user-status","Name and passcode are required.","err"); return; 
+  }
   const key = name.toLowerCase().replace(/[^a-z0-9]/g,"_");
-  try {
+  try 
+  {
     const snap = await db.ref(`sams_users/${key}`).once("value");
     if (snap.exists()) { showMsg("user-status","A user with a similar name already exists.","err"); return; }
     await db.ref(`sams_users/${key}`).set({ displayName: name, passcode: pass, role, subjects: [], createdAt: Date.now() });
     showMsg("user-status", `User "${name}" was created successfully! They can log in immediately.`, "ok");
     document.getElementById("new-user-name").value = "";
     document.getElementById("new-user-pass").value = "";
-  } catch(e) { showMsg("user-status","Error: "+e.message,"err"); }
+  } 
+  catch(e) 
+  { 
+      showMsg("user-status","Error: "+e.message,"err"); 
+  }
 }
-
-async function deleteUser(key) {
+async function deleteUser(key) 
+{
   if (!confirm(`Delete this user? They will no longer be able to log in.`)) return;
   await db.ref(`sams_users/${key}`).remove();
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// ADMIN TAB RENDER
-// ═══════════════════════════════════════════════════════════════════
-function renderAdminTab() {
-  db.ref("sams_subjects").once("value").then(snap => {
+// -----------ADMIN TAB RENDER
+function renderAdminTab() 
+{
+  db.ref("sams_subjects").once("value").then(snap => 
+  {
     const all = snap.val() || {};
     document.getElementById("subj-list-tbody").innerHTML = Object.entries(all).length
       ? Object.entries(all).map(([id,s]) => `
@@ -1106,8 +1084,8 @@ function renderAdminTab() {
           </tr>`).join("")
       : `<tr><td colspan="4" class="empty-row">No subjects added yet</td></tr>`;
   });
-
-  db.ref("sams_users").once("value").then(snap => {
+  db.ref("sams_users").once("value").then(snap => 
+  {
     ALL_USERS = snap.val() || {};
     document.getElementById("user-list-tbody").innerHTML = Object.entries(ALL_USERS).length
       ? Object.entries(ALL_USERS).map(([key,u]) => `
@@ -1118,7 +1096,6 @@ function renderAdminTab() {
             <td><button class="delete-btn" onclick="deleteUser('${key}')" title="Delete">🗑</button></td>
           </tr>`).join("")
       : `<tr><td colspan="4" class="empty-row">No users yet</td></tr>`;
-
     const sel = document.getElementById("new-subj-teacher");
     sel.innerHTML = '<option value="">Select teacher…</option>';
     Object.values(ALL_USERS).filter(u => u.role==="teacher").forEach(u => {
@@ -1128,23 +1105,22 @@ function renderAdminTab() {
   });
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// CLEAR LOGS
-// ═══════════════════════════════════════════════════════════════════
-function clearLogs() {
+// -----------CLEAR LOGS
+function clearLogs() 
+{
   const subj = document.getElementById("subjSelect").value
             || document.getElementById("liveSubjSelect").value;
   if (!subj) { alert("Select a subject first."); return; }
-  if (confirm(`Permanently wipe all session logs for "${SUBJECTS[subj]?.name||subj}"?`)) {
+  if (confirm(`Permanently wipe all session logs for "${SUBJECTS[subj]?.name||subj}"?`)) 
+  {
     db.ref(`sessions/${subj}`).remove();
     db.ref(`attendance_summary/${subj}`).remove();
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// TAB SWITCHER
-// ═══════════════════════════════════════════════════════════════════
-function switchTab(name) {
+// -----------TAB SWITCHER
+function switchTab(name) 
+{
   document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
   document.querySelectorAll(".tab").forEach(el => el.classList.remove("active"));
   document.getElementById("tc-" + name).classList.add("active");
@@ -1154,16 +1130,14 @@ function switchTab(name) {
   if (name === "admin")  renderAdminTab();
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// BOOT
-// ═══════════════════════════════════════════════════════════════════
-document.addEventListener("DOMContentLoaded", async () => {
-  setInterval(() => {
+// -----------BOOT
+document.addEventListener("DOMContentLoaded", async () => 
+{
+  setInterval(() => 
+  {
     document.getElementById("live-time").textContent = new Date().toLocaleTimeString("en-IN");
   }, 1000);
-
   await maybeBootstrap();
-
   document.getElementById("csvFile").addEventListener("change", e => handleCSVFile(e.target.files[0]));
   const dz = document.getElementById("csv-dropzone");
   dz.addEventListener("dragover",  e => { e.preventDefault(); dz.classList.add("over"); });
